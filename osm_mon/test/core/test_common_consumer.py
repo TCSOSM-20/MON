@@ -1,12 +1,25 @@
 import unittest
 
 import mock
+from kafka import KafkaProducer
+from kafka.errors import KafkaError
 
 from osm_mon.core.database import VimCredentials
 from osm_mon.core.message_bus.common_consumer import *
 
 
+@mock.patch.object(dbmongo.DbMongo, "db_connect", mock.Mock())
 class CommonConsumerTest(unittest.TestCase):
+
+    def setUp(self):
+        try:
+            KafkaProducer(bootstrap_servers='localhost:9092',
+                          key_serializer=str.encode,
+                          value_serializer=str.encode
+                          )
+        except KafkaError:
+            self.skipTest('Kafka server not present.')
+
     @mock.patch.object(DatabaseManager, "get_credentials")
     def test_get_vim_type(self, get_creds):
         mock_creds = VimCredentials()
@@ -19,8 +32,8 @@ class CommonConsumerTest(unittest.TestCase):
 
         get_creds.return_value = mock_creds
 
-        db_manager = DatabaseManager()
-        vim_type = get_vim_type(db_manager, 'test_id')
+        common_consumer = CommonConsumer()
+        vim_type = common_consumer.get_vim_type('test_id')
 
         self.assertEqual(vim_type, 'openstack')
 
@@ -46,9 +59,8 @@ class CommonConsumerTest(unittest.TestCase):
                                 'created-time': 1526044312.0999322,
                                 'vnfd-id': 'a314c865-aee7-4d9b-9c9d-079d7f857f01',
                                 'id': 'a314c865-aee7-4d9b-9c9d-079d7f857f01'}
-
-        common_db = dbmongo.DbMongo()
-        vdur = get_vdur(common_db, '5ec3f571-d540-4cb0-9992-971d1b08312e', '1', 'ubuntuvnf_vnfd-VM')
+        common_consumer = CommonConsumer()
+        vdur = common_consumer.get_vdur('5ec3f571-d540-4cb0-9992-971d1b08312e', '1', 'ubuntuvnf_vnfd-VM')
         expected_vdur = {
             'internal-connection-point': [],
             'vdu-id-ref': 'ubuntuvnf_vnfd-VM',

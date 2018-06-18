@@ -107,7 +107,7 @@ class NotifierHandler(BaseHTTPRequestHandler):
             sev=values['severity'],
             date=a_date,
             state=values['current'])
-        producer.notify_alarm(
+        producer.publish_alarm_response(
             'notify_alarm', resp_message)
         log.info("Sent alarm notification: %s", resp_message)
 

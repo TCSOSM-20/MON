@@ -177,7 +177,7 @@ class Alarming(object):
                 log.exception("Error updating alarm")
                 raise e
             finally:
-                self._generate_and_send_response('create_alarm_response',
+                self._generate_and_send_response('update_alarm_response',
                                                  alarm_details['correlation_id'],
                                                  status=status,
                                                  alarm_id=alarm_id)
@@ -387,13 +387,13 @@ class Alarming(object):
             log.exception("Desired Gnocchi metric not found:", e)
             raise e
 
-    def _generate_and_send_response(self, topic, correlation_id, **kwargs):
+    def _generate_and_send_response(self, key, correlation_id, **kwargs):
         try:
             resp_message = self._response.generate_response(
-                topic, cor_id=correlation_id, **kwargs)
+                key, cor_id=correlation_id, **kwargs)
             log.info("Response Message: %s", resp_message)
-            self._producer.create_alarm_response(
-                topic, resp_message)
+            self._producer.publish_alarm_response(
+                key, resp_message)
         except Exception as e:
             log.exception("Response creation failed:")
             raise e

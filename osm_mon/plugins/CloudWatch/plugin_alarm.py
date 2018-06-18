@@ -87,12 +87,12 @@ class plugin_alarms():
                         log.debug("Alarm Already exists")
                         payload = json.dumps(config_resp)                                   
                         file = open('../../core/models/create_alarm_resp.json','wb').write((payload))
-                        self.producer.create_alarm_response(key='create_alarm_response',message=payload)
+                        self.producer.publish_alarm_response(key='create_alarm_response',message=payload)
              
                     else: 
                         payload = json.dumps(config_resp)                                
                         file = open('../../core/models/create_alarm_resp.json','wb').write((payload))                           
-                        self.producer.create_alarm_response(key='create_alarm_response',message=payload)
+                        self.producer.publish_alarm_response(key='create_alarm_response',message=payload)
                         log.info("New alarm created with alarm info: %s", config_resp)                           
              
                 else:

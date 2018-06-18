@@ -119,8 +119,8 @@ class MockNotifierHandler(BaseHTTPRequestHandler):
                         r_id=resource_id,
                         sev=values['severity'], date=a_date,
                         state=values['current'], vim_type="OpenStack")
-                    self._producer.notify_alarm(
-                        'notify_alarm', resp_message, 'alarm_response')
+                    self._producer.publish_alarm_response(
+                        'notify_alarm', resp_message)
                 except Exception:
                     pass
 
@@ -154,7 +154,7 @@ def test_do_get():
 
 
 class AlarmNotificationTest(unittest.TestCase):
-    @mock.patch.object(KafkaProducer, "notify_alarm")
+    @mock.patch.object(KafkaProducer, "publish_alarm_response")
     @mock.patch.object(OpenStack_Response, "generate_response")
     @mock.patch.object(Common, "perform_request")
     @mock.patch.object(Common, "get_endpoint")
@@ -188,4 +188,4 @@ class AlarmNotificationTest(unittest.TestCase):
             vim_type="OpenStack")
 
         # Response message is sent back to the SO via MON's producer
-        notify.assert_called_with("notify_alarm", mock.ANY, "alarm_response")
+        notify.assert_called_with("notify_alarm", mock.ANY)
