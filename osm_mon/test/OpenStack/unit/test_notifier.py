@@ -100,7 +100,7 @@ class TestNotifier(unittest.TestCase):
         set_head.assert_called_once()
         notify.assert_called_with(json.dumps(post_data))
 
-    @mock.patch.object(KafkaProducer, "notify_alarm")
+    @mock.patch.object(KafkaProducer, "publish_alarm_response")
     @mock.patch.object(DatabaseManager, "get_alarm")
     def test_notify_alarm_valid_alarm(
             self, get_alarm, notify):
@@ -116,7 +116,7 @@ class TestNotifier(unittest.TestCase):
 
         notify.assert_called_with("notify_alarm", mock.ANY)
 
-    @mock.patch.object(KafkaProducer, "notify_alarm")
+    @mock.patch.object(KafkaProducer, "publish_alarm_response")
     @mock.patch.object(DatabaseManager, "get_alarm")
     def test_notify_alarm_invalid_alarm(
             self, get_alarm, notify):

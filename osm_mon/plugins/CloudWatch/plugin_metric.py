@@ -91,7 +91,7 @@ class plugin_metrics():
                             metric_response['metric_create_response'] = metric_resp
                             payload = json.dumps(metric_response)                                                                  
                             file = open('../../core/models/create_metric_resp.json','wb').write((payload))
-                            self.producer.create_metrics_resp(key='create_metric_response',message=payload,topic = 'metric_response')
+                            self.producer.publish_metrics_response(key='create_metric_response', message=payload, topic ='metric_response')
                             
                             log.info("Metric configured: %s", metric_resp)
                             return metric_response

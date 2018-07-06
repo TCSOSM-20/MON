@@ -103,7 +103,7 @@ class Metrics(object):
                     metric_id=metric_id,
                     r_id=resource_id)
                 log.info("Response messages: %s", resp_message)
-                self._producer.create_metrics_resp(
+                self._producer.publish_metrics_response(
                     'create_metric_response', resp_message)
             except Exception as exc:
                 log.warning("Failed to create response: %s", exc)
