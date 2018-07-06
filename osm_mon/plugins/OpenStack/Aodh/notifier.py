@@ -72,11 +72,11 @@ class NotifierHandler(BaseHTTPRequestHandler):
             post_data = post_data.decode()
         except AttributeError:
             pass
-        log.info("This alarm was triggered: %s", json.dumps(post_data))
+        log.info("This alarm was triggered: %s", post_data)
 
         # Send alarm notification to message bus
         try:
-            self.notify_alarm(json.dumps(post_data))
+            self.notify_alarm(json.loads(post_data))
         except Exception:
             log.exception("Error notifying alarm")
 
