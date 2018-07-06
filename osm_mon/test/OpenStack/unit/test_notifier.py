@@ -52,7 +52,7 @@ class Response(object):
 
 class RFile():
     def read(self, content_length):
-        return post_data
+        return json.dumps(post_data, sort_keys=True)
 
 
 class MockNotifierHandler(NotifierHandler):
@@ -98,7 +98,7 @@ class TestNotifier(unittest.TestCase):
         self.handler.do_POST()
 
         set_head.assert_called_once()
-        notify.assert_called_with(json.dumps(post_data))
+        notify.assert_called_with(post_data)
 
     @mock.patch.object(KafkaProducer, "notify_alarm")
     @mock.patch.object(DatabaseManager, "get_alarm")
