@@ -45,11 +45,10 @@ class PolicyModuleAgent:
 
         # Initialize Kafka consumer
         log.info("Connecting to Kafka server at %s", kafka_server)
-        # TODO: Add logic to handle deduplication of messages when using group_id.
-        # See: https://stackoverflow.com/a/29836412
         consumer = KafkaConsumer(bootstrap_servers=kafka_server,
                                  key_deserializer=bytes.decode,
-                                 value_deserializer=bytes.decode)
+                                 value_deserializer=bytes.decode,
+                                 group_id="pm-consumer")
         consumer.subscribe(['lcm_pm', 'alarm_response'])
 
         for message in consumer:
