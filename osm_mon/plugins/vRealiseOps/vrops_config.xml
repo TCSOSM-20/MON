@@ -79,50 +79,50 @@
         <impact>risk</impact>
         <unit>msec</unit>
     </CPU_Utilization_Above_Threshold>
-    <AVERAGE_MEMORY_UTILIZATION>
+    <average_memory_utilization>
         <metric_key>mem|usage_average</metric_key>
         <unit>%</unit>
-    </AVERAGE_MEMORY_UTILIZATION>
-    <CPU_UTILIZATION>
+    </average_memory_utilization>
+    <cpu_utilization>
         <metric_key>cpu|usage_average</metric_key>
         <unit>%</unit>
-    </CPU_UTILIZATION>
-    <READ_LATENCY_0>
+    </cpu_utilization>
+    <read_latency_0>
         <metric_key>virtualDisk:scsi0:0|totalReadLatency_average</metric_key>
         <unit>msec</unit>
-    </READ_LATENCY_0>
-    <WRITE_LATENCY_0>
+    </read_latency_0>
+    <write_latency_0>
         <metric_key>virtualDisk:scsi0:0|totalWriteLatency_average</metric_key>
         <unit>msec</unit>
-    </WRITE_LATENCY_0>
-    <READ_LATENCY_1>
+    </write_latency_0>
+    <read_latency_1>
         <metric_key>virtualDisk:scsi0:1|totalReadLatency_average</metric_key>
         <unit>msec</unit>
-    </READ_LATENCY_1>
-    <WRITE_LATENCY_1>
+    </read_latency_1>
+    <write_latency_1>
         <metric_key>virtualDisk:scsi0:1|totalWriteLatency_average</metric_key>
         <unit>msec</unit>
-    </WRITE_LATENCY_1>
-    <PACKETS_DROPPED_0>
+    </write_latency_1>
+    <packets_dropped_0>
         <metric_key>net:4000|dropped</metric_key>
         <unit>nos</unit>
-    </PACKETS_DROPPED_0>
-    <PACKETS_DROPPED_1>
+    </packets_dropped_0>
+    <packets_dropped_1>
         <metric_key>net:4001|dropped</metric_key>
         <unit>nos</unit>
-    </PACKETS_DROPPED_1>
-    <PACKETS_DROPPED_2>
+    </packets_dropped_1>
+    <packets_dropped_2>
         <metric_key>net:4002|dropped</metric_key>
         <unit>nos</unit>
-    </PACKETS_DROPPED_2>
-    <PACKETS_RECEIVED>
+    </packets_dropped_2>
+    <packets_received>
         <metric_key>net:Aggregate of all instances|packetsRxPerSec</metric_key>
         <unit>nos</unit>
-    </PACKETS_RECEIVED>
-    <PACKETS_SENT>
+    </packets_received>
+    <packets_sent>
         <metric_key>net:Aggregate of all instances|packetsTxPerSec</metric_key>
         <unit>nos</unit>
-    </PACKETS_SENT>
+    </packets_sent>
     <Access_Config>
         <vrops_site>https://192.169.241.123</vrops_site>
         <vrops_user>admin</vrops_user>
@@ -130,7 +130,7 @@
         <vcloud-site>https://192.169.241.15</vcloud-site>
         <admin_username>admin</admin_username>
         <admin_password>vmware</admin_password>
-        <nsx_manager>https://192.169.241.104</nsx_manager>
+        <nsx_manager>https://192.169.241.181</nsx_manager>
         <nsx_user>admin</nsx_user>
         <nsx_password>VMware1!</nsx_password>
         <vcenter_ip>192.169.241.13</vcenter_ip>

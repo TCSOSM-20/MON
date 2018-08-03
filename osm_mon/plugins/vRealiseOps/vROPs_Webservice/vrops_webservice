@@ -45,6 +45,9 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '
 from osm_mon.core.message_bus.producer import KafkaProducer
 #from core.message_bus.producer import KafkaProducer
 
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..'))
+from osm_mon.core.database import DatabaseManager
+
 try:
     from cheroot.wsgi import Server as WSGIServer
     from cheroot.ssl.pyopenssl import pyOpenSSLAdapter
@@ -101,7 +104,7 @@ def format_datetime(str_date):
 
     return formated_datetime
 
-def get_alarm_config():
+def get_alarm_config(alarm_name):
     """
         Method to get configuration parameters
         Args:
@@ -109,47 +112,76 @@ def get_alarm_config():
         Returns:
             dictionary of config parameters
     """
-    alarm_config = {}
+    vim_account = {}
+    database_manager = DatabaseManager()
+    vim_account_details = database_manager.get_credentials_for_alarm_name(alarm_name,'VMware')
+
     try:
-        xml_content = ET.parse(CONFIG_FILE)
-        alarms = xml_content.getroot()
-        for alarm in alarms:
-            if alarm.tag == 'Access_Config':
-                for param in alarm:
-                    alarm_config[param.tag] = param.text
+        if vim_account_details is not None:
+            vim_account['name'] = vim_account_details.name
+            vim_account['vim_tenant_name'] = vim_account_details.tenant_name
+            vim_account['vim_type'] = vim_account_details.type
+            vim_account['vim_uuid'] = vim_account_details._id
+            vim_account['vim_url'] = vim_account_details.url
+            vim_account['org_user'] = vim_account_details.user
+            vim_account['org_password'] = vim_account_details.password
+
+            vim_config = json.loads(vim_account_details.config) 
+            vim_account['tenant_id'] = vim_config['tenant_id']
+            vim_account['admin_username'] = vim_config['admin_username']
+            vim_account['admin_password'] = vim_config['admin_password']
+            vim_account['vrops_site'] = vim_config['vrops_site']
+            vim_account['vrops_user'] = vim_config['vrops_user']
+            vim_account['vrops_password'] = vim_config['vrops_password']
+            vim_account['vcenter_ip'] = vim_config['vcenter_ip']
+            vim_account['vcenter_port'] = vim_config['vcenter_port']
+            vim_account['vcenter_user'] = vim_config['vcenter_user']
+            vim_account['vcenter_password'] = vim_config['vcenter_password']
+            if vim_config['nsx_manager'] is not None:
+                vim_account['nsx_manager'] = vim_config['nsx_manager']
+            if vim_config['nsx_user'] is not None:
+                vim_account['nsx_user'] = vim_config['nsx_user']
+            if vim_config['nsx_password'] is not None:
+                vim_account['nsx_password'] = vim_config['nsx_password']
+            if vim_config['orgname'] is not None:
+                vim_account['orgname'] = vim_config['orgname']
     except Exception as exp:
-        logger.error('Exception: {} occured while parsing config file.'.format(exp))
+        logger.error("VIM account details not sufficient: {}".format(exp))
+    return vim_account
 
-    return alarm_config
 
-def get_alarm_definationID(alarm_uuid):
+def get_alarm_definationID(alarm_instance_uuid, access_config):
     """
          Method to get alarm/alert defination ID
             Args:
-                alarm_uuid : UUID of alarm
+                alarm_instance_uuid : UUID of alarm
             Returns:
                 alarm defination ID
     """
     alarm_definationID = None
-    if alarm_uuid :
+    if alarm_instance_uuid :
         try:
-            access_config = get_alarm_config()
+            #access_config = get_alarm_config()
             headers = {'Accept': 'application/json'}
-            api_url = '{}/suite-api/api/alerts/{}'.format(access_config.get('vrops_site'), alarm_uuid)
-            api_response = requests.get(
-                            api_url,
-                            auth=(access_config.get('vrops_user'), access_config.get('vrops_password')),
-                            verify = False, headers = headers
-                            )
+            api_url = '{}/suite-api/api/alerts/{}'\
+                        .format(access_config.get('vrops_site'), alarm_instance_uuid)
+            api_response = requests.get(api_url,
+                                        auth=(access_config.get('vrops_user'),\
+                                              access_config.get('vrops_password')),
+                                        verify = False,
+                                        headers = headers
+                                        )
 
             if  api_response.status_code == 200:
                 data = api_response.json()
                 if data.get("alertDefinitionId") is not None:
                     alarm_definationID = '-'.join(data.get("alertDefinitionId").split('-')[1:])
             else:
-                logger.error("Failed to get alert definition ID for alarm {}".format(alarm_uuid))
+                logger.error("Failed to get alert definition ID for alarm {}"\
+                             .format(alarm_instance_uuid))
         except Exception as exp:
-            logger.error( "Exception occured while getting alert definition ID for alarm : {}".format(exp, alarm_uuid))
+            logger.error("Exception occured while getting alert definition ID for alarm : {}"\
+                          .format(exp, alarm_instance_uuid))
 
     return alarm_definationID
 
@@ -163,20 +195,24 @@ def notify_alarm(alarmID):
         Returns:
            response code
     """
-    logger.info("Request:{} from:{} {} {} ".format(request, request.remote_addr, request.method, request.url))
+    logger.info("Request:{} from:{} {} {} "\
+                .format(request, request.remote_addr, request.method, request.url))
     response.headers['Content-Type'] = 'application/json'
     try:
         postdata = json.loads(request.body.read())
         notify_details = {}
-        alaram_config = get_alarm_config()
+        vim_access_config = get_alarm_config(postdata.get('alertName'))
         #Parse noditfy data
-        notify_details['alarm_uuid'] = get_alarm_definationID(postdata.get('alertId'))
+        notify_details['vim_uuid'] = vim_access_config.get('vim_uuid') 
+        notify_details['alarm_uuid'] = get_alarm_definationID(postdata.get('alertId'),\
+                                                              vim_access_config)
         notify_details['description'] = postdata.get('info')
         notify_details['alarm_instance_uuid'] = alarmID
         notify_details['resource_uuid'] = '-'.join(postdata.get('alertName').split('-')[1:])
-        notify_details['tenant_uuid'] =  alaram_config.get('tenant_id')
+        notify_details['tenant_uuid'] =  vim_access_config.get('tenant_id')
         notify_details['vim_type'] = "VMware"
-        notify_details['severity'] = VROPS_SEVERITY_TO_OSM_MAPPING.get(postdata.get('criticality'), 'INDETERMINATE')
+        notify_details['severity'] = VROPS_SEVERITY_TO_OSM_MAPPING.get(postdata.get('criticality'),\
+                                                                       'INDETERMINATE')
         notify_details['status'] = postdata.get('status')
         if postdata.get('startDate'):
             notify_details['start_date_time'] = format_datetime(postdata.get('startDate'))
@@ -237,6 +273,3 @@ if __name__ == "__main__":
     app = default_app()
     server_names['sslwebserver'] = SSLWebServer
     run(app=app,host=getfqdn(), port=8080, server='sslwebserver')
-
-
-

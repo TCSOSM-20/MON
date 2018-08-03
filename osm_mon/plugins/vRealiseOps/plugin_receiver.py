@@ -22,7 +22,7 @@
 ##
 
 """
-Montoring plugin receiver that consumes the request messages &
+Monitoring plugin receiver that consumes the request messages &
 responds using producer for vROPs
 """
 
@@ -31,8 +31,6 @@ import logging
 import os
 import sys
 import traceback
-
-
 #Core producer
 import six
 
@@ -40,14 +38,18 @@ from osm_mon.plugins.vRealiseOps.mon_plugin_vrops import MonPlugin
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..'))
 from osm_mon.core.message_bus.producer import KafkaProducer
+
+from osm_mon.core.auth import AuthManager
+
 #from core.message_bus.producer import KafkaProducer
 from xml.etree import ElementTree as XmlElementTree
+
 
 schema_version = "1.0"
 req_config_params = ('vrops_site', 'vrops_user', 'vrops_password',
                     'vcloud-site','admin_username','admin_password',
                     'vcenter_ip','vcenter_port','vcenter_user','vcenter_password',
-                    'vim_tenant_name','orgname','tenant_id')
+                    'vim_tenant_name','orgname')
 MODULE_DIR = os.path.dirname(__file__)
 CONFIG_FILE_NAME = 'vrops_config.xml'
 CONFIG_FILE_PATH = os.path.join(MODULE_DIR, CONFIG_FILE_NAME)
@@ -82,65 +84,72 @@ class PluginReceiver():
         self.producer_access_credentials = KafkaProducer('vim_access_credentials_response')
 
 
-    def consume(self, message):
+    def consume(self, message, vim_uuid):
         """Consume the message, act on it & respond
         """
         try:
-            self.logger.info("Message received:\nTopic={}:{}:{}:\nKey={}\nValue={}"\
-                .format(message.topic, message.partition, message.offset, message.key, message.value))
+            self.logger.info("Message received for VIM: {} :\nMessage Topic={}:{}:{}:\n"\
+                             "Message Key={}\nMessage Value={}"\
+                             .format(vim_uuid, message.topic, message.partition, message.offset,\
+                                     message.key, message.value))
             message_values = json.loads(message.value)
+            #Adding vim_uuid to message
+            message_values['vim_uuid'] = vim_uuid
             self.logger.info("Action required for: {}".format(message.topic))
             if message.topic == 'alarm_request':
                 if message.key == "create_alarm_request":
-                    config_alarm_info = json.loads(message.value)
-                    alarm_uuid = self.create_alarm(config_alarm_info['alarm_create_request'])
+                    config_alarm_info = message_values
+                    alarm_uuid = self.create_alarm(config_alarm_info)
                     self.logger.info("Alarm created with alarm uuid: {}".format(alarm_uuid))
                     #Publish message using producer
                     self.publish_create_alarm_status(alarm_uuid, config_alarm_info)
                 elif message.key == "update_alarm_request":
-                    update_alarm_info = json.loads(message.value)
-                    alarm_uuid = self.update_alarm(update_alarm_info['alarm_update_request'])
-                    self.logger.info("Alarm defination updated : alarm uuid: {}".format(alarm_uuid))
+                    update_alarm_info = message_values
+                    alarm_uuid = self.update_alarm(update_alarm_info)
+                    self.logger.info("Alarm definition updated : alarm uuid: {}".format(alarm_uuid))
                     #Publish message using producer
                     self.publish_update_alarm_status(alarm_uuid, update_alarm_info)
                 elif message.key == "delete_alarm_request":
-                    delete_alarm_info = json.loads(message.value)
-                    alarm_uuid = self.delete_alarm(delete_alarm_info['alarm_delete_request'])
-                    self.logger.info("Alarm defination deleted : alarm uuid: {}".format(alarm_uuid))
+                    delete_alarm_info = message_values
+                    alarm_uuid = self.delete_alarm(delete_alarm_info)
+                    self.logger.info("Alarm definition deleted : alarm uuid: {}".format(alarm_uuid))
                     #Publish message using producer
                     self.publish_delete_alarm_status(alarm_uuid, delete_alarm_info)
                 elif message.key == "list_alarm_request":
-                    request_input = json.loads(message.value)
-                    triggered_alarm_list = self.list_alarms(request_input['alarm_list_request'])
+                    request_input = message_values
+                    triggered_alarm_list = self.list_alarms(request_input)
                     #Publish message using producer
                     self.publish_list_alarm_response(triggered_alarm_list, request_input)
             elif message.topic == 'metric_request':
                 if message.key == "read_metric_data_request":
-                    metric_request_info = json.loads(message.value)
-                    mon_plugin_obj = MonPlugin()
+                    metric_request_info = message_values
+                    access_config = None
+                    access_config = self.get_vim_access_config(metric_request_info['vim_uuid'])
+                    mon_plugin_obj = MonPlugin(access_config)
                     metrics_data = mon_plugin_obj.get_metrics_data(metric_request_info)
                     self.logger.info("Collected Metrics Data: {}".format(metrics_data))
                     #Publish message using producer
                     self.publish_metrics_data_status(metrics_data)
                 elif message.key == "create_metric_request":
-                    metric_info = json.loads(message.value)
-                    metric_status = self.verify_metric(metric_info['metric_create_request'])
+                    metric_info = message_values
+                    metric_status = self.verify_metric(metric_info)
                     #Publish message using producer
                     self.publish_create_metric_response(metric_info, metric_status)
                 elif message.key == "update_metric_request":
-                    metric_info = json.loads(message.value)
-                    metric_status = self.verify_metric(metric_info['metric_create_request'])
+                    metric_info = message_values
+                    metric_status = self.verify_metric(metric_info)
                     #Publish message using producer
                     self.publish_update_metric_response(metric_info, metric_status)
                 elif message.key == "delete_metric_request":
-                    metric_info = json.loads(message.value)
+                    metric_info = message_values
                     #Deleting Metric Data is not allowed. Publish status as False
-                    self.logger.warning("Deleting Metric is not allowed: {}".format(metric_info['metric_name']))
+                    self.logger.warning("Deleting Metric is not allowed by VMware vROPs plugin: {}"\
+                                        .format(metric_info['metric_name']))
                     #Publish message using producer
                     self.publish_delete_metric_response(metric_info)
             elif message.topic == 'access_credentials':
                 if message.key == "vim_access_credentials":
-                    access_info = json.loads(message.value)
+                    access_info = message_values
                     access_update_status = self.update_access_credentials(access_info['access_config'])
                     self.publish_access_update_response(access_update_status, access_info)
 
@@ -151,9 +160,11 @@ class PluginReceiver():
     def create_alarm(self, config_alarm_info):
         """Create alarm using vROPs plugin
         """
-        mon_plugin = MonPlugin()
+        access_config = None
+        access_config = self.get_vim_access_config(config_alarm_info['vim_uuid'])
+        mon_plugin = MonPlugin(access_config)
         plugin_uuid = mon_plugin.configure_rest_plugin()
-        alarm_uuid = mon_plugin.configure_alarm(config_alarm_info)
+        alarm_uuid = mon_plugin.configure_alarm(config_alarm_info['alarm_create_request'])
         return alarm_uuid
 
     def publish_create_alarm_status(self, alarm_uuid, config_alarm_info):
@@ -163,6 +174,7 @@ class PluginReceiver():
         msg_key = 'create_alarm_response'
         response_msg = {"schema_version":schema_version,
                          "schema_type":"create_alarm_response",
+                         "vim_uuid":config_alarm_info["vim_uuid"],
                          "alarm_create_response":
                             {"correlation_id":config_alarm_info["alarm_create_request"]["correlation_id"],
                              "alarm_uuid":alarm_uuid,
@@ -175,10 +187,12 @@ class PluginReceiver():
         self.producer_alarms.publish(key=msg_key, value=json.dumps(response_msg), topic=topic)
 
     def update_alarm(self, update_alarm_info):
-        """Updare already created alarm
+        """Update already created alarm
         """
-        mon_plugin = MonPlugin()
-        alarm_uuid = mon_plugin.update_alarm_configuration(update_alarm_info)
+        access_config = None
+        access_config = self.get_vim_access_config(update_alarm_info['vim_uuid'])
+        mon_plugin = MonPlugin(access_config)
+        alarm_uuid = mon_plugin.update_alarm_configuration(update_alarm_info['alarm_update_request'])
         return alarm_uuid
 
     def publish_update_alarm_status(self, alarm_uuid, update_alarm_info):
@@ -188,6 +202,7 @@ class PluginReceiver():
         msg_key = 'update_alarm_response'
         response_msg = {"schema_version":schema_version,
                          "schema_type":"update_alarm_response",
+                         "vim_uuid":update_alarm_info["vim_uuid"],
                          "alarm_update_response":
                             {"correlation_id":update_alarm_info["alarm_update_request"]["correlation_id"],
                              "alarm_uuid":update_alarm_info["alarm_update_request"]["alarm_uuid"] \
@@ -203,8 +218,10 @@ class PluginReceiver():
     def delete_alarm(self, delete_alarm_info):
         """Delete alarm configuration
         """
-        mon_plugin = MonPlugin()
-        alarm_uuid = mon_plugin.delete_alarm_configuration(delete_alarm_info)
+        access_config = None
+        access_config = self.get_vim_access_config(delete_alarm_info['vim_uuid'])
+        mon_plugin = MonPlugin(access_config)
+        alarm_uuid = mon_plugin.delete_alarm_configuration(delete_alarm_info['alarm_delete_request'])
         return alarm_uuid
 
     def publish_delete_alarm_status(self, alarm_uuid, delete_alarm_info):
@@ -214,6 +231,7 @@ class PluginReceiver():
         msg_key = 'delete_alarm_response'
         response_msg = {"schema_version":schema_version,
                          "schema_type":"delete_alarm_response",
+                         "vim_uuid":delete_alarm_info['vim_uuid'],
                          "alarm_deletion_response":
                             {"correlation_id":delete_alarm_info["alarm_delete_request"]["correlation_id"],
                              "alarm_uuid":delete_alarm_info["alarm_delete_request"]["alarm_uuid"],
@@ -240,8 +258,13 @@ class PluginReceiver():
     def verify_metric(self, metric_info):
         """Verify if metric is supported or not
         """
-        mon_plugin = MonPlugin()
-        metric_key_status = mon_plugin.verify_metric_support(metric_info)
+        access_config = None
+        access_config = self.get_vim_access_config(metric_info['vim_uuid'])
+        mon_plugin = MonPlugin(access_config)
+        if 'metric_create_request' in metric_info:
+            metric_key_status = mon_plugin.verify_metric_support(metric_info['metric_create_request'])
+        else:
+            metric_key_status = mon_plugin.verify_metric_support(metric_info['metric_update_request'])
         return metric_key_status
 
     def publish_create_metric_response(self, metric_info, metric_status):
@@ -251,11 +274,14 @@ class PluginReceiver():
         msg_key = 'create_metric_response'
         response_msg = {"schema_version":schema_version,
                          "schema_type":"create_metric_response",
-                         "correlation_id":metric_info['correlation_id'],
+                         ##"vim_uuid":metric_info['vim_uuid'],
+                         ##"correlation_id":metric_info['correlation_id'],
                          "metric_create_response":
                             {
-                             "metric_uuid":'0',
-                             "resource_uuid":metric_info['metric_create_request']['resource_uuid'],
+                             ##"metric_uuid":'0',
+                             ##"resource_uuid":metric_info['metric_create']['resource_uuid'],
+                             ##"vim_uuid":metric_info['vim_uuid'], #May be required. TODO - Confirm
+                             "correlation_id":metric_info['correlation_id'],
                              "status":metric_status
                             }
                        }
@@ -271,11 +297,12 @@ class PluginReceiver():
         msg_key = 'update_metric_response'
         response_msg = {"schema_version":schema_version,
                         "schema_type":"metric_update_response",
-                        "correlation_id":metric_info['correlation_id'],
+                        "vim_uuid":metric_info['vim_uuid'],
                         "metric_update_response":
                             {
                              "metric_uuid":'0',
-                             "resource_uuid":metric_info['metric_create_request']['resource_uuid'],
+                             "correlation_id":metric_info['correlation_id'],
+                             "resource_uuid":metric_info['metric_create']['resource_uuid'],
                              "status":metric_status
                             }
                        }
@@ -285,7 +312,7 @@ class PluginReceiver():
         self.producer_metrics.publish(key=msg_key, value=json.dumps(response_msg), topic=topic)
 
     def publish_delete_metric_response(self, metric_info):
-        """
+        """Publish delete metric response
         """
         topic = 'metric_response'
         msg_key = 'delete_metric_response'
@@ -296,6 +323,7 @@ class PluginReceiver():
 
         response_msg = {"schema_version":schema_version,
                         "schema_type":"delete_metric_response",
+                        "vim_uuid":metric_info['vim_uuid'],
                         "correlation_id":metric_info['correlation_id'],
                         "metric_name":metric_info['metric_name'],
                         "metric_uuid":'0',
@@ -311,8 +339,10 @@ class PluginReceiver():
     def list_alarms(self, list_alarm_input):
         """Collect list of triggered alarms based on input
         """
-        mon_plugin = MonPlugin()
-        triggered_alarms = mon_plugin.get_triggered_alarms_list(list_alarm_input)
+        access_config = None
+        access_config = self.get_vim_access_config(list_alarm_input['vim_uuid'])
+        mon_plugin = MonPlugin(access_config)
+        triggered_alarms = mon_plugin.get_triggered_alarms_list(list_alarm_input['alarm_list_request'])
         return triggered_alarms
 
 
@@ -323,6 +353,8 @@ class PluginReceiver():
         msg_key = 'list_alarm_response'
         response_msg = {"schema_version":schema_version,
                         "schema_type":"list_alarm_response",
+                        "vim_type":"VMware",
+                        "vim_uuid":list_alarm_input['vim_uuid'],
                         "correlation_id":list_alarm_input['alarm_list_request']['correlation_id'],
                         "list_alarm_response":triggered_alarm_list
                        }
@@ -387,6 +419,48 @@ class PluginReceiver():
         #Core Add producer
         self.producer_access_credentials.publish(key=msg_key, value=json.dumps(response_msg), topic=topic)
 
+
+    def get_vim_access_config(self, vim_uuid):
+        """Get VIM access configuration & account details from path: VIM_ACCOUNTS_FILE_PATH
+        """
+        vim_account_details = None
+        vim_account = {}
+        auth_manager = AuthManager()
+        vim_account_details = auth_manager.get_credentials(vim_uuid)
+
+        try:
+            if vim_account_details is not None:
+                vim_account['name'] = vim_account_details.name
+                vim_account['vim_tenant_name'] = vim_account_details.tenant_name
+                vim_account['vim_type'] = vim_account_details.type
+                vim_account['vim_url'] = vim_account_details.url
+                vim_account['org_user'] = vim_account_details.user
+                vim_account['org_password'] = vim_account_details.password
+                vim_account['vim_uuid'] = vim_account_details.uuid
+
+                vim_config = json.loads(vim_account_details.config)
+                vim_account['admin_username'] = vim_config['admin_username']
+                vim_account['admin_password'] = vim_config['admin_password']
+                vim_account['vrops_site'] = vim_config['vrops_site']
+                vim_account['vrops_user'] = vim_config['vrops_user']
+                vim_account['vrops_password'] = vim_config['vrops_password']
+                vim_account['vcenter_ip'] = vim_config['vcenter_ip']
+                vim_account['vcenter_port'] = vim_config['vcenter_port']
+                vim_account['vcenter_user'] = vim_config['vcenter_user']
+                vim_account['vcenter_password'] = vim_config['vcenter_password']
+
+                if vim_config['nsx_manager'] is not None:
+                    vim_account['nsx_manager'] = vim_config['nsx_manager']
+                if vim_config['nsx_user'] is not None:
+                    vim_account['nsx_user'] = vim_config['nsx_user']
+                if vim_config['nsx_password'] is not None:
+                    vim_account['nsx_password'] = vim_config['nsx_password']
+                if vim_config['orgname'] is not None:
+                    vim_account['orgname'] = vim_config['orgname']
+        except Exception as exp:
+            self.logger.error("VIM account details not sufficient: {}".format(exp))
+        return vim_account
+
 """
 def main():
     #log.basicConfig(filename='mon_vrops_log.log',level=log.DEBUG)
@@ -397,3 +471,4 @@ def main():
 if __name__ == "__main__":
     main()
 """
+

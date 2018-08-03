@@ -39,11 +39,15 @@ import time
 import json
 from OpenSSL.crypto import load_certificate, FILETYPE_PEM
 import os
+import sys
 import datetime
 from socket import getfqdn
 
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..'))
+from osm_mon.core.database import DatabaseManager
 
 OPERATION_MAPPING = {'GE':'GT_EQ', 'LE':'LT_EQ', 'GT':'GT', 'LT':'LT', 'EQ':'EQ'}
 severity_mano2vrops = {'WARNING':'WARNING', 'MINOR':'WARNING', 'MAJOR':"IMMEDIATE",\
@@ -65,7 +69,7 @@ SSL_CERTIFICATE_FILE_PATH = os.path.join(MODULE_DIR, SSL_CERTIFICATE_FILE_NAME)
 class MonPlugin():
     """MON Plugin class for vROPs telemetry plugin
     """
-    def __init__(self):
+    def __init__(self, access_config=None):
         """Constructor of MON plugin
         Params:
             'access_config': dictionary with VIM access information based on VIM type.
@@ -82,26 +86,35 @@ class MonPlugin():
         Returns: Raise an exception if some needed parameter is missing, but it must not do any connectivity
             check against the VIM
         """
+
         self.logger = logging.getLogger('PluginReceiver.MonPlugin')
         self.logger.setLevel(logging.DEBUG)
 
-        access_config = self.get_default_Params('Access_Config')
+        if access_config is None:
+            self.logger.error("VIM Access Configuration not provided")
+            raise KeyError("VIM Access Configuration not provided")
+
+        self.database_manager = DatabaseManager()
+
         self.access_config = access_config
         if not bool(access_config):
-            self.logger.error("Access configuration not provided in vROPs Config file")
-            raise KeyError("Access configuration not provided in vROPs Config file")
+            self.logger.error("VIM Account details are not added. Please add a VIM account")
+            raise KeyError("VIM Account details are not added. Please add a VIM account")
 
         try:
             self.vrops_site =  access_config['vrops_site']
             self.vrops_user = access_config['vrops_user']
             self.vrops_password = access_config['vrops_password']
-            self.vcloud_site = access_config['vcloud-site']
+            self.vcloud_site = access_config['vim_url']
             self.admin_username = access_config['admin_username']
             self.admin_password = access_config['admin_password']
-            self.tenant_id = access_config['tenant_id']
+            #self.tenant_id = access_config['tenant_id']
+            self.vim_uuid = access_config['vim_uuid']
+
         except KeyError as exp:
-            self.logger.error("Check Access configuration in vROPs Config file: {}".format(exp))
-            raise KeyError("Check Access configuration in vROPs Config file: {}".format(exp))
+            self.logger.error("Required VIM account details not provided: {}".format(exp))
+            raise KeyError("Required VIM account details not provided: {}".format(exp))
+
 
 
     def configure_alarm(self, config_dict = {}):
@@ -116,7 +129,6 @@ class MonPlugin():
         "operation": One of ('GE', 'LE', 'GT', 'LT', 'EQ')
         "threshold_value": Defines the threshold (up to 2 fraction digits) that,
                             if crossed, will trigger the alarm.
-        "unit": Unit of measurement in string format
         "statistic": AVERAGE, MINIMUM, MAXIMUM, COUNT, SUM
 
         Default parameters for each alarm are read from the plugin specific config file.
@@ -151,10 +163,11 @@ class MonPlugin():
                         'resource_kind_key': def_a_params['resource_kind'],
                         'adapter_kind_key': def_a_params['adapter_kind'],
                         'symptom_name':vrops_alarm_name,
-                        'severity': severity_mano2vrops[config_dict['severity']],
+                        'severity': severity_mano2vrops[config_dict['severity'].upper()],
                         'metric_key':metric_key_params['metric_key'],
                         'operation':OPERATION_MAPPING[config_dict['operation']],
                         'threshold_value':config_dict['threshold_value']}
+
         symptom_uuid = self.create_symptom(symptom_params)
         if symptom_uuid is not None:
             self.logger.info("Symptom defined: {} with ID: {}".format(symptom_params['symptom_name'],symptom_uuid))
@@ -170,7 +183,7 @@ class MonPlugin():
                         'resourceKindKey':def_a_params['resource_kind'],
                         'waitCycles':1, 'cancelCycles':1,
                         'type':def_a_params['alarm_type'], 'subType':def_a_params['alarm_subType'],
-                        'severity':severity_mano2vrops[config_dict['severity']],
+                        'severity':severity_mano2vrops[config_dict['severity'].upper()],
                         'symptomDefinitionId':symptom_uuid,
                         'impact':def_a_params['impact']}
 
@@ -199,9 +212,21 @@ class MonPlugin():
             return None
         else:
             alarm_def_uuid = alarm_def.split('-', 1)[1]
-            self.logger.info("Alarm defination created with notification: {} with ID: {}"\
+            self.logger.info("Alarm definition created with notification: {} with ID: {}"\
                     .format(alarm_params['name'],alarm_def_uuid))
-            #Return alarm defination UUID by removing 'AlertDefinition' from UUID
+            ##self.database_manager.save_alarm(alarm_def_uuid, alarm_params['name'], self.vim_uuid)
+            self.database_manager.save_alarm(alarm_def_uuid,
+                                              self.vim_uuid,
+                                              ##alarm_params['name'],
+                                              config_dict['threshold_value'],
+                                              config_dict['operation'],
+                                              config_dict['metric_name'].lower(),
+                                              config_dict['vdu_name'].lower(),
+                                              config_dict['vnf_member_index'].lower(),
+                                              config_dict['ns_id'].lower()
+                                              )
+
+            #Return alarm definition UUID by removing 'AlertDefinition' from UUID
             return (alarm_def_uuid)
 
     def get_default_Params(self, metric_alarm_name):
@@ -222,7 +247,7 @@ class MonPlugin():
         tree = XmlElementTree.parse(source)
         alarms = tree.getroot()
         for alarm in alarms:
-            if alarm.tag == metric_alarm_name:
+            if alarm.tag.lower() == metric_alarm_name.lower():
                 for param in alarm:
                     if param.tag in ("period", "evaluation", "cancel_period", "alarm_type",\
                                     "cancel_cycles", "alarm_subType"):
@@ -603,7 +628,7 @@ class MonPlugin():
         vca = None
 
         if vapp_uuid is None:
-            return None
+            return parsed_respond
 
         vca = self.connect_as_admin()
         if not vca:
@@ -741,6 +766,7 @@ class MonPlugin():
         return_data = {}
         return_data['schema_version'] = "1.0"
         return_data['schema_type'] = 'read_metric_data_response'
+        return_data['vim_uuid'] = metric['vim_uuid']
         return_data['metric_name'] = metric['metric_name']
         #To do - No metric_uuid in vROPs, thus returning '0'
         return_data['metric_uuid'] = '0'
@@ -748,10 +774,10 @@ class MonPlugin():
         return_data['resource_uuid'] = metric['resource_uuid']
         return_data['metrics_data'] = {'time_series':[], 'metrics_series':[]}
         #To do - Need confirmation about uuid & id
-        if 'tenant_uuid' in metric and metric['tenant_uuid'] is not None:
-            return_data['tenant_uuid'] = metric['tenant_uuid']
-        else:
-            return_data['tenant_uuid'] = None
+        ##if 'tenant_uuid' in metric and metric['tenant_uuid'] is not None:
+        ##    return_data['tenant_uuid'] = metric['tenant_uuid']
+        ##else:
+        ##    return_data['tenant_uuid'] = None
         return_data['unit'] = None
         #return_data['tenant_id'] = self.tenant_id
         #self.logger.warning("return_data: {}".format(return_data))
@@ -800,7 +826,7 @@ class MonPlugin():
                             verify = False, headers = headers)
 
         if resp.status_code is not 200:
-            self.logger.warning("Failed to retrive Metric data from vROPs for {}\nResponse code:{}\nResponse Content: {}"\
+            self.logger.warning("Failed to retrieve Metric data from vROPs for {}\nResponse code:{}\nResponse Content: {}"\
                     .format(metric['metric_name'], resp.status_code, resp.content))
             return return_data
 
@@ -830,24 +856,24 @@ class MonPlugin():
         if new_alarm_config.get('alarm_uuid') is None:
             self.logger.warning("alarm_uuid is required to update an Alarm")
             return None
-        #1) Get Alarm details from it's uuid & find the symptom defination
+        #1) Get Alarm details from it's uuid & find the symptom definition
         alarm_details_json, alarm_details = self.get_alarm_defination_details(new_alarm_config['alarm_uuid'])
         if alarm_details_json is None:
             return None
 
         try:
-            #2) Update the symptom defination
+            #2) Update the symptom definition
             if alarm_details['alarm_id'] is not None and alarm_details['symptom_definition_id'] is not None:
                 symptom_defination_id = alarm_details['symptom_definition_id']
             else:
-                self.logger.info("Symptom Defination ID not found for {}".format(new_alarm_config['alarm_uuid']))
+                self.logger.info("Symptom Definition ID not found for {}".format(new_alarm_config['alarm_uuid']))
                 return None
 
             symptom_uuid = self.update_symptom_defination(symptom_defination_id, new_alarm_config)
 
-            #3) Update the alarm defination & Return UUID if successful update
+            #3) Update the alarm definition & Return UUID if successful update
             if symptom_uuid is None:
-                self.logger.info("Symptom Defination details not found for {}"\
+                self.logger.info("Symptom Definition details not found for {}"\
                                 .format(new_alarm_config['alarm_uuid']))
                 return None
             else:
@@ -891,7 +917,7 @@ class MonPlugin():
                 alarm_details['sub_type'] = json_data['subType']
                 alarm_details['symptom_definition_id'] = json_data['states'][0]['base-symptom-set']['symptomDefinitionIds'][0]
         except Exception as exp:
-            self.logger.warning("Exception while retriving alarm defination details: {}".format(exp))
+            self.logger.warning("Exception while retrieving alarm definition details: {}".format(exp))
             return None, None
 
         return json_data, alarm_details
@@ -931,14 +957,14 @@ class MonPlugin():
             return alert_match_list
 
         except Exception as exp:
-            self.logger.warning("Exception while searching alarm defination: {}".format(exp))
+            self.logger.warning("Exception while searching alarm definition: {}".format(exp))
             return alert_match_list
 
 
     def update_symptom_defination(self, symptom_uuid, new_alarm_config):
-        """Update symptom defination based on new alarm input configuration
+        """Update symptom definition based on new alarm input configuration
         """
-        #1) Get symptom defination details
+        #1) Get symptom definition details
         symptom_details = self.get_symptom_defination_details(symptom_uuid)
         #print "\n\nsymptom_details: {}".format(symptom_details)
         if symptom_details is None:
@@ -977,17 +1003,17 @@ class MonPlugin():
 
 
         if symptom_uuid is not None:
-            self.logger.info("Symptom defination updated {} for alarm: {}"\
+            self.logger.info("Symptom definition updated {} for alarm: {}"\
                     .format(symptom_uuid, new_alarm_config['alarm_uuid']))
             return symptom_uuid
         else:
-            self.logger.warning("Failed to update Symptom Defination {} for : {}"\
+            self.logger.warning("Failed to update Symptom Definition {} for : {}"\
                     .format(symptom_uuid, new_alarm_config['alarm_uuid']))
             return None
 
 
     def get_symptom_defination_details(self, symptom_uuid):
-        """Get symptom defination details
+        """Get symptom definition details
         """
         symptom_details = {}
         if symptom_uuid is None:
@@ -1002,7 +1028,7 @@ class MonPlugin():
                             verify = False, headers = headers)
 
         if resp.status_code is not 200:
-            self.logger.warning("Symptom defination not found {} \nResponse code:{}\nResponse Content: {}"\
+            self.logger.warning("Symptom definition not found {} \nResponse code:{}\nResponse Content: {}"\
                     .format(symptom_uuid, resp.status_code, resp.content))
             return None
 
@@ -1012,7 +1038,7 @@ class MonPlugin():
 
 
     def reconfigure_alarm(self, alarm_details_json, new_alarm_config):
-        """Reconfigure alarm defination as per input
+        """Reconfigure alarm definition as per input
         """
         if 'severity' in new_alarm_config and new_alarm_config['severity'] is not None:
             alarm_details_json['states'][0]['severity'] = new_alarm_config['severity']
@@ -1117,7 +1143,7 @@ class MonPlugin():
             return None
 
     def delete_alarm_defination(self, alarm_id):
-        """Delete created Alarm defination
+        """Delete created Alarm definition
         """
         api_url = '/suite-api/api/alertdefinitions/'
         headers = {'Accept':'application/json'}
@@ -1132,7 +1158,7 @@ class MonPlugin():
             return alarm_id
 
     def delete_symptom_definition(self, symptom_id):
-        """Delete symptom defination
+        """Delete symptom definition
         """
         api_url = '/suite-api/api/symptomdefinitions/'
         headers = {'Accept':'application/json'}
@@ -1156,7 +1182,7 @@ class MonPlugin():
         if 'metric_name' not in metric_info:
             self.logger.debug("Metric name not provided: {}".format(metric_info))
             return status
-        metric_key_params = self.get_default_Params(metric_info['metric_name'])
+        metric_key_params = self.get_default_Params(metric_info['metric_name'].lower())
         if not metric_key_params:
             self.logger.warning("Metric not supported: {}".format(metric_info['metric_name']))
             return status
@@ -1266,5 +1292,4 @@ class MonPlugin():
             complete_datetime = datetime.datetime.fromtimestamp(date_time/1000.0, tz=pytz.utc).isoformat('T')
             date_time_formatted = complete_datetime.split('.',1)[0]
         return date_time_formatted
-
 

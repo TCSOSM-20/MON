@@ -176,7 +176,7 @@ class CommonConsumer:
 
                 elif vim_type == "vmware":
                     log.info("This metric_request message is for the vROPs plugin.")
-                    self.vrops_rcvr.consume(message)
+                    self.vrops_rcvr.consume(message,vim_uuid)
 
                 else:
                     log.debug("vim_type is misconfigured or unsupported; %s",

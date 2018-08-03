@@ -41,7 +41,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),"..","..
 
 from osm_mon.plugins.vRealiseOps import mon_plugin_vrops as monPlugin
 
-from pyvcloud.vcd.client import Client
+from pyvcloud.vcd.client import Client,BasicLoginCredentials
 
 
 class TestMonPlugin(unittest.TestCase):
@@ -50,11 +50,21 @@ class TestMonPlugin(unittest.TestCase):
     def setUp(self):
         """Setup the tests for Mon Plugin class methods"""
         super(TestMonPlugin, self).setUp()
-        self.mon_plugin = monPlugin.MonPlugin()
+
+        self.m_vim_access_config = {'vrops_site':'abc',
+            'vrops_user':'user',
+            'vrops_password':'passwd',
+            'vim_url':'vcd_url',
+            'admin_username':'admin',
+            'admin_password':'admin_passwd',
+            'vim_uuid':'1',
+            'tenant_id':'org_vdc_1'}
+        self.mon_plugin = monPlugin.MonPlugin(self.m_vim_access_config)
         # create client object
         self.vca = Client('test', verify_ssl_certs=False)
         # create session
         self.session = requests.Session()
+
 
     def test_get_default_Params_valid_metric_alarm_name(self):
         """Test get default params method"""
@@ -95,16 +105,19 @@ class TestMonPlugin(unittest.TestCase):
         # Mock valid symptom params and mock responses
         symptom_param = {'threshold_value': 0, 'cancel_cycles': 1, 'adapter_kind_key': 'VMWARE',
                          'resource_kind_key': 'VirtualMachine', 'severity': 'CRITICAL',
-                         'symptom_name': 'CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-a91c-8c19d240eda4',
+                         'symptom_name':\
+                         'CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-a91c-8c19d240eda4',
                          'operation': 'GT', 'wait_cycles': 1, 'metric_key': 'cpu|usage_average'}
 
         m_post.return_value.status_code = 201
         m_post.return_value.content = \
                          '{"id":"SymptomDefinition-351c23b4-bc3c-4c7b-b4af-1ad90a673c5d",\
                          "name":"CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-a91c-8c19d240eda4",\
-                         "adapterKindKey":"VMWARE","resourceKindKey":"VirtualMachine","waitCycles":1,\
-                         "cancelCycles":1,"state":{"severity":"CRITICAL","condition":{"type":"CONDITION_HT",\
-                         "key":"cpu|usage_average","operator":"GT","value":"0.0","valueType":"NUMERIC",\
+                         "adapterKindKey":"VMWARE","resourceKindKey":"VirtualMachine",\
+                         "waitCycles":1,"cancelCycles":1,\
+                         "state":{"severity":"CRITICAL","condition":{"type":"CONDITION_HT",\
+                         "key":"cpu|usage_average","operator":"GT","value":"0.0",\
+                         "valueType":"NUMERIC",\
                          "instanced":false,"thresholdType":"STATIC"}}}'
 
         expected_return = "SymptomDefinition-351c23b4-bc3c-4c7b-b4af-1ad90a673c5d"
@@ -126,7 +139,8 @@ class TestMonPlugin(unittest.TestCase):
         # Mock valid symptom params and invalid  mock responses
         symptom_param = {'threshold_value': 0, 'cancel_cycles': 1, 'adapter_kind_key': 'VMWARE',
                          'resource_kind_key': 'VirtualMachine', 'severity': 'CRITICAL',
-                         'symptom_name': 'CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-a91c-8c19d240eda4',
+                         'symptom_name':\
+                         'CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-a91c-8c19d240eda4',
                          'operation': 'GT', 'wait_cycles': 1, 'metric_key': 'cpu|usage_average'}
 
         m_post.return_value.status_code = 404
@@ -151,7 +165,8 @@ class TestMonPlugin(unittest.TestCase):
         # Mock valid symptom params and invalid  mock responses
         symptom_param = {'threshold_value': 0, 'cancel_cycles': 1, 'adapter_kind_key': 'VMWARE',
                          'resource_kind_key': 'VirtualMachine', 'severity': 'CRITICAL',
-                         'symptom_name': 'CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-a91c-8c19d240eda4',
+                         'symptom_name':\
+                         'CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-a91c-8c19d240eda4',
                          'operation': 'GT', 'metric_key': 'cpu|usage_average'}
 
         expected_return = None
@@ -171,21 +186,25 @@ class TestMonPlugin(unittest.TestCase):
         """Test create alarm definition method-valid response"""
 
         # Mock valid alarm params and mock responses
-        alarm_param = {'description': 'CPU_Utilization_Above_Threshold', 'cancelCycles': 1, 'subType': 19,
-                       'waitCycles': 1, 'severity': 'CRITICAL', 'impact': 'risk', 'adapterKindKey': 'VMWARE',
+        alarm_param = {'description': 'CPU_Utilization_Above_Threshold', 'cancelCycles': 1,
+                       'subType': 19, 'waitCycles': 1,
+                       'severity': 'CRITICAL', 'impact': 'risk', 'adapterKindKey': 'VMWARE',
                        'name': 'CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-a91c-8c19d240eda4',
                        'resourceKindKey': 'VirtualMachine', 'type': 16,
-                       'symptomDefinitionId': 'SymptomDefinition-25278b06-bff8-4409-a141-9b4e064235df'}
+                       'symptomDefinitionId':\
+                       'SymptomDefinition-25278b06-bff8-4409-a141-9b4e064235df'}
 
         m_post.return_value.status_code = 201
         m_post.return_value.content = \
                        '{"id":"AlertDefinition-d4f21e4b-770a-45d6-b298-022eaf489115",\
                        "name":"CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-a91c-8c19d240eda4",\
                        "description":"CPU_Utilization_Above_Threshold","adapterKindKey":"VMWARE",\
-                       "resourceKindKey":"VirtualMachine","waitCycles":1,"cancelCycles":1,"type":16,\
-                       "subType":19,"states":[{"severity":"CRITICAL","base-symptom-set":{"type":"SYMPTOM_SET",\
+                       "resourceKindKey":"VirtualMachine","waitCycles":1,"cancelCycles":1,\
+                       "type":16,"subType":19,\
+                       "states":[{"severity":"CRITICAL","base-symptom-set":{"type":"SYMPTOM_SET",\
                        "relation":"SELF","aggregation":"ALL","symptomSetOperator":"AND",\
-                       "symptomDefinitionIds":["SymptomDefinition-25278b06-bff8-4409-a141-9b4e064235df"]},\
+                       "symptomDefinitionIds":\
+                       ["SymptomDefinition-25278b06-bff8-4409-a141-9b4e064235df"]},\
                        "impact":{"impactType":"BADGE","detail":"risk"}}]}'
 
         expected_return = "AlertDefinition-d4f21e4b-770a-45d6-b298-022eaf489115"
@@ -205,11 +224,13 @@ class TestMonPlugin(unittest.TestCase):
         """Test create alarm definition method-invalid response"""
 
         # Mock valid alarm params and mock responses
-        alarm_param = {'description': 'CPU_Utilization_Above_Threshold', 'cancelCycles': 1, 'subType': 19,
-                       'waitCycles': 1, 'severity': 'CRITICAL', 'impact': 'risk', 'adapterKindKey': 'VMWARE',
+        alarm_param = {'description': 'CPU_Utilization_Above_Threshold', 'cancelCycles': 1,
+                       'subType': 19, 'waitCycles': 1,
+                       'severity': 'CRITICAL', 'impact': 'risk', 'adapterKindKey': 'VMWARE',
                        'name': 'CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-a91c-8c19d240eda4',
                        'resourceKindKey': 'VirtualMachine', 'type': 16,
-                       'symptomDefinitionId': 'SymptomDefinition-25278b06-bff8-4409-a141-9b4e064235df'}
+                       'symptomDefinitionId':\
+                       'SymptomDefinition-25278b06-bff8-4409-a141-9b4e064235df'}
 
         m_post.return_value.status_code = 404
         m_post.return_value.content = '404 Not Found'
@@ -231,9 +252,11 @@ class TestMonPlugin(unittest.TestCase):
         """Test create alarm definition method-incorrect data"""
 
         # Mock incorrect alarm param
-        alarm_param = {'description': 'CPU_Utilization_Above_Threshold', 'cancelCycles': 1, 'subType': 19,
-                       'waitCycles': 1, 'severity': 'CRITICAL', 'impact': 'risk', 'adapterKindKey': 'VMWARE',
-                       'symptomDefinitionId': 'SymptomDefinition-25278b06-bff8-4409-a141-9b4e064235df', 'type': 16}
+        alarm_param = {'description': 'CPU_Utilization_Above_Threshold', 'cancelCycles': 1,
+                       'subType': 19, 'waitCycles': 1, 'type': 16,
+                       'severity': 'CRITICAL', 'impact': 'risk', 'adapterKindKey': 'VMWARE',
+                       'symptomDefinitionId':\
+                       'SymptomDefinition-25278b06-bff8-4409-a141-9b4e064235df'}
         expected_return = None
 
         # call create symptom method under test
@@ -246,6 +269,7 @@ class TestMonPlugin(unittest.TestCase):
         self.assertEqual(expected_return, actual_return)
 
 
+    @mock.patch.object(monPlugin.DatabaseManager, 'save_alarm')
     @mock.patch.object(monPlugin.MonPlugin, 'create_alarm_notification_rule')
     @mock.patch.object(monPlugin.MonPlugin, 'get_vm_resource_id')
     @mock.patch.object(monPlugin.MonPlugin, 'get_vm_moref_id')
@@ -259,7 +283,9 @@ class TestMonPlugin(unittest.TestCase):
                                        m_create_alarm_definition,\
                                        m_get_vm_moref_id,\
                                        m_get_vm_resource_id,\
-                                       m_create_alarm_notification_rule):
+                                       m_create_alarm_notification_rule,\
+                                       m_save_alarm):
+
         """Test configure alarm valid request creating alarm"""
 
         #Mock input configuration dictionary
@@ -267,7 +293,8 @@ class TestMonPlugin(unittest.TestCase):
                        'alarm_name': 'CPU_Utilization_Above_Threshold',
                        'resource_uuid': 'e14b203c-6bf2-4e2f-a91c-8c19d240eda4',
                        'correlation_id': 'e14b203c-6bf2-4e2f-a91c-8c19d2abcdef',
-                       'statistic': 'AVERAGE', 'metric_name': 'CPU_UTILIZATION',
+                       'statistic': 'AVERAGE', 'metric_name': 'cpu_utilization',
+                       'vdu_name':'vdu1','vnf_member_index':'index1','ns_id':'nsd1',
                        'operation': 'GT', 'unit': '%',
                        'description': 'CPU_Utilization_Above_Threshold'}
 
@@ -277,7 +304,8 @@ class TestMonPlugin(unittest.TestCase):
                           'adapter_kind_key': 'VMWARE',
                           'resource_kind_key': 'VirtualMachine',
                           'severity': 'CRITICAL',
-                          'symptom_name':'CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-a91c-8c19d240eda4',
+                          'symptom_name':\
+                          'CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-a91c-8c19d240eda4',
                           'operation': 'GT',
                           'wait_cycles': 1,
                           'metric_key': 'cpu|usage_average'}
@@ -289,7 +317,8 @@ class TestMonPlugin(unittest.TestCase):
                         'impact': 'risk', 'adapterKindKey': 'VMWARE',
                         'name': 'CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-a91c-8c19d240eda4',
                         'resourceKindKey': 'VirtualMachine',
-                        'symptomDefinitionId': 'SymptomDefinition-2e8f9ddc-9f7b-4cd6-b85d-7d7fe3a8a804',
+                        'symptomDefinitionId':\
+                        'SymptomDefinition-2e8f9ddc-9f7b-4cd6-b85d-7d7fe3a8a804',
                         'type': 16}
 
         vm_moref_id = 'vm-6626'
@@ -313,7 +342,8 @@ class TestMonPlugin(unittest.TestCase):
         #set mocked function return values
         m_get_alarm_defination_by_name.return_value = []
         m_create_symptom.return_value = 'SymptomDefinition-2e8f9ddc-9f7b-4cd6-b85d-7d7fe3a8a804'
-        m_create_alarm_definition.return_value = 'AlertDefinition-0f3cdcb3-4e1b-4a0b-86d0-66d4b3f65220'
+        m_create_alarm_definition.return_value =\
+        'AlertDefinition-0f3cdcb3-4e1b-4a0b-86d0-66d4b3f65220'
         m_get_vm_moref_id.return_value = vm_moref_id
         m_get_vm_resource_id.return_value = 'ac87622f-b761-40a0-b151-00872a2a456e'
         m_create_alarm_notification_rule.return_value = 'f37900e7-dd01-4383-b84c-08f519530d71'
@@ -328,12 +358,22 @@ class TestMonPlugin(unittest.TestCase):
         m_create_alarm_definition.assert_called_with(alarm_params)
         m_get_vm_moref_id.assert_called_with(config_dict['resource_uuid'])
         m_get_vm_resource_id.assert_called_with(vm_moref_id)
-        m_create_alarm_notification_rule.assert_called_with(vrops_alarm_name, alarm_def, resource_id)
+        m_create_alarm_notification_rule.assert_called_with(vrops_alarm_name,\
+                                                            alarm_def,\
+                                                            resource_id)
+        m_save_alarm.assert_called_with(alarm_def_uuid,'1',
+                                        config_dict['threshold_value'],
+                                        config_dict['operation'],
+                                        config_dict['metric_name'],
+                                        config_dict['vdu_name'],
+                                        config_dict['vnf_member_index'],
+                                        config_dict['ns_id'])
 
         #Verify return value with expected value of alarm_def_uuid
         self.assertEqual(return_value, alarm_def_uuid)
 
 
+    @mock.patch.object(monPlugin.DatabaseManager, 'save_alarm')
     @mock.patch.object(monPlugin.MonPlugin, 'create_alarm_notification_rule')
     @mock.patch.object(monPlugin.MonPlugin, 'get_vm_resource_id')
     @mock.patch.object(monPlugin.MonPlugin, 'get_vm_moref_id')
@@ -347,7 +387,8 @@ class TestMonPlugin(unittest.TestCase):
                                        m_create_alarm_definition,\
                                        m_get_vm_moref_id,\
                                        m_get_vm_resource_id,\
-                                       m_create_alarm_notification_rule):
+                                       m_create_alarm_notification_rule,\
+                                       m_save_alarm):
         """Test configure alarm invalid test: for invalid alarm name"""
 
         #Mock input configuration dictionary
@@ -368,18 +409,20 @@ class TestMonPlugin(unittest.TestCase):
         return_value = self.mon_plugin.configure_alarm(config_dict)
 
         #Verify that mocked methods are called with correct parameters
-        m_get_default_Params.assert_called_once()
+        m_get_default_Params.assert_called_with(config_dict['alarm_name'])
         m_get_alarm_defination_by_name.assert_not_called()
         m_create_symptom.assert_not_called()
         m_create_alarm_definition.assert_not_called()
         m_get_vm_moref_id.assert_not_called()
         m_get_vm_resource_id.assert_not_called()
         m_create_alarm_notification_rule.assert_not_called()
+        m_save_alarm.assert_not_called()
 
         #Verify return value with expected value i.e. None
         self.assertEqual(return_value, alarm_def_uuid)
 
 
+    @mock.patch.object(monPlugin.DatabaseManager, 'save_alarm')
     @mock.patch.object(monPlugin.MonPlugin, 'create_alarm_notification_rule')
     @mock.patch.object(monPlugin.MonPlugin, 'get_vm_resource_id')
     @mock.patch.object(monPlugin.MonPlugin, 'get_vm_moref_id')
@@ -393,7 +436,8 @@ class TestMonPlugin(unittest.TestCase):
                                        m_create_alarm_definition,\
                                        m_get_vm_moref_id,\
                                        m_get_vm_resource_id,\
-                                       m_create_alarm_notification_rule):
+                                       m_create_alarm_notification_rule,\
+                                       m_save_alarm):
         """Test configure alarm invalid test: for invalid metric name"""
 
         #Mock input configuration dictionary
@@ -430,10 +474,13 @@ class TestMonPlugin(unittest.TestCase):
         m_get_vm_moref_id.assert_not_called()
         m_get_vm_resource_id.assert_not_called()
         m_create_alarm_notification_rule.assert_not_called()
+        m_save_alarm.assert_not_called()
 
         #Verify return value with expected value i.e. None
         self.assertEqual(return_value, alarm_def_uuid)
 
+
+    @mock.patch.object(monPlugin.DatabaseManager, 'save_alarm')
     @mock.patch.object(monPlugin.MonPlugin, 'create_alarm_notification_rule')
     @mock.patch.object(monPlugin.MonPlugin, 'get_vm_resource_id')
     @mock.patch.object(monPlugin.MonPlugin, 'get_vm_moref_id')
@@ -447,7 +494,8 @@ class TestMonPlugin(unittest.TestCase):
                                        m_create_alarm_definition,\
                                        m_get_vm_moref_id,\
                                        m_get_vm_resource_id,\
-                                       m_create_alarm_notification_rule):
+                                       m_create_alarm_notification_rule,\
+                                       m_save_alarm):
         """Test configure alarm invalid test: for alarm that already exists"""
 
         #Mock input configuration dictionary
@@ -488,11 +536,12 @@ class TestMonPlugin(unittest.TestCase):
         m_get_vm_moref_id.assert_not_called()
         m_get_vm_resource_id.assert_not_called()
         m_create_alarm_notification_rule.assert_not_called()
-
+        m_save_alarm.assert_not_called()
         #Verify return value with expected value of alarm_def_uuid
         self.assertEqual(return_value, alarm_def_uuid)
 
 
+    @mock.patch.object(monPlugin.DatabaseManager, 'save_alarm')
     @mock.patch.object(monPlugin.MonPlugin, 'create_alarm_notification_rule')
     @mock.patch.object(monPlugin.MonPlugin, 'get_vm_resource_id')
     @mock.patch.object(monPlugin.MonPlugin, 'get_vm_moref_id')
@@ -506,7 +555,8 @@ class TestMonPlugin(unittest.TestCase):
                                        m_create_alarm_definition,\
                                        m_get_vm_moref_id,\
                                        m_get_vm_resource_id,\
-                                       m_create_alarm_notification_rule):
+                                       m_create_alarm_notification_rule,\
+                                       m_save_alarm):
         """Test configure alarm: failed to create symptom"""
 
         #Mock input configuration dictionary
@@ -524,7 +574,8 @@ class TestMonPlugin(unittest.TestCase):
                           'adapter_kind_key': 'VMWARE',
                           'resource_kind_key': 'VirtualMachine',
                           'severity': 'CRITICAL',
-                          'symptom_name':'CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-a91c-8c19d240eda4',
+                          'symptom_name':\
+                          'CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-a91c-8c19d240eda4',
                           'operation': 'GT',
                           'wait_cycles': 1,
                           'metric_key': 'cpu|usage_average'}
@@ -557,11 +608,13 @@ class TestMonPlugin(unittest.TestCase):
         m_get_vm_moref_id.assert_not_called()
         m_get_vm_resource_id.assert_not_called()
         m_create_alarm_notification_rule.assert_not_called()
+        m_save_alarm.assert_not_called()
 
         #Verify return value with expected value of alarm_def_uuid
         self.assertEqual(return_value, alarm_def_uuid)
 
 
+    @mock.patch.object(monPlugin.DatabaseManager, 'save_alarm')
     @mock.patch.object(monPlugin.MonPlugin, 'create_alarm_notification_rule')
     @mock.patch.object(monPlugin.MonPlugin, 'get_vm_resource_id')
     @mock.patch.object(monPlugin.MonPlugin, 'get_vm_moref_id')
@@ -575,7 +628,8 @@ class TestMonPlugin(unittest.TestCase):
                                        m_create_alarm_definition,\
                                        m_get_vm_moref_id,\
                                        m_get_vm_resource_id,\
-                                       m_create_alarm_notification_rule):
+                                       m_create_alarm_notification_rule,\
+                                       m_save_alarm):
         """Test configure alarm: failed to create alert in vROPs"""
 
         #Mock input configuration dictionary
@@ -593,7 +647,8 @@ class TestMonPlugin(unittest.TestCase):
                           'adapter_kind_key': 'VMWARE',
                           'resource_kind_key': 'VirtualMachine',
                           'severity': 'CRITICAL',
-                          'symptom_name':'CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-a91c-8c19d240eda4',
+                          'symptom_name':\
+                          'CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-a91c-8c19d240eda4',
                           'operation': 'GT',
                           'wait_cycles': 1,
                           'metric_key': 'cpu|usage_average'}
@@ -605,7 +660,8 @@ class TestMonPlugin(unittest.TestCase):
                         'impact': 'risk', 'adapterKindKey': 'VMWARE',
                         'name': 'CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-a91c-8c19d240eda4',
                         'resourceKindKey': 'VirtualMachine',
-                        'symptomDefinitionId': 'SymptomDefinition-2e8f9ddc-9f7b-4cd6-b85d-7d7fe3a8a804',
+                        'symptomDefinitionId':\
+                        'SymptomDefinition-2e8f9ddc-9f7b-4cd6-b85d-7d7fe3a8a804',
                         'type': 16}
 
         vrops_alarm_name = 'CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-a91c-8c19d240eda4'
@@ -638,11 +694,13 @@ class TestMonPlugin(unittest.TestCase):
         m_get_vm_moref_id.assert_not_called()
         m_get_vm_resource_id.assert_not_called()
         m_create_alarm_notification_rule.assert_not_called()
+        m_save_alarm.assert_not_called()
 
         #Verify return value with expected value of alarm_def_uuid
         self.assertEqual(return_value, alarm_def_uuid)
 
 
+    @mock.patch.object(monPlugin.DatabaseManager, 'save_alarm')
     @mock.patch.object(monPlugin.MonPlugin, 'create_alarm_notification_rule')
     @mock.patch.object(monPlugin.MonPlugin, 'get_vm_resource_id')
     @mock.patch.object(monPlugin.MonPlugin, 'get_vm_moref_id')
@@ -656,7 +714,8 @@ class TestMonPlugin(unittest.TestCase):
                                        m_create_alarm_definition,\
                                        m_get_vm_moref_id,\
                                        m_get_vm_resource_id,\
-                                       m_create_alarm_notification_rule):
+                                       m_create_alarm_notification_rule,\
+                                       m_save_alarm):
         """Test configure alarm: failed to get vm_moref_id"""
 
         #Mock input configuration dictionary
@@ -674,7 +733,8 @@ class TestMonPlugin(unittest.TestCase):
                           'adapter_kind_key': 'VMWARE',
                           'resource_kind_key': 'VirtualMachine',
                           'severity': 'CRITICAL',
-                          'symptom_name':'CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-a91c-8c19d240eda4',
+                          'symptom_name':\
+                          'CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-a91c-8c19d240eda4',
                           'operation': 'GT',
                           'wait_cycles': 1,
                           'metric_key': 'cpu|usage_average'}
@@ -686,7 +746,8 @@ class TestMonPlugin(unittest.TestCase):
                         'impact': 'risk', 'adapterKindKey': 'VMWARE',
                         'name': 'CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-a91c-8c19d240eda4',
                         'resourceKindKey': 'VirtualMachine',
-                        'symptomDefinitionId': 'SymptomDefinition-2e8f9ddc-9f7b-4cd6-b85d-7d7fe3a8a804',
+                        'symptomDefinitionId':\
+                        'SymptomDefinition-2e8f9ddc-9f7b-4cd6-b85d-7d7fe3a8a804',
                         'type': 16}
 
         vrops_alarm_name = 'CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-a91c-8c19d240eda4'
@@ -706,7 +767,8 @@ class TestMonPlugin(unittest.TestCase):
         #set mocked function return values
         m_get_alarm_defination_by_name.return_value = []
         m_create_symptom.return_value = 'SymptomDefinition-2e8f9ddc-9f7b-4cd6-b85d-7d7fe3a8a804'
-        m_create_alarm_definition.return_value = 'AlertDefinition-0f3cdcb3-4e1b-4a0b-86d0-66d4b3f65220'
+        m_create_alarm_definition.return_value =\
+        'AlertDefinition-0f3cdcb3-4e1b-4a0b-86d0-66d4b3f65220'
         m_get_vm_moref_id.return_value = None
 
         #Call configure_alarm method under test
@@ -720,11 +782,13 @@ class TestMonPlugin(unittest.TestCase):
         m_get_vm_moref_id.assert_called_with(config_dict['resource_uuid'])
         m_get_vm_resource_id.assert_not_called()
         m_create_alarm_notification_rule.assert_not_called()
+        m_save_alarm.assert_not_called()
 
         #Verify return value with expected value of alarm_def_uuid
         self.assertEqual(return_value, alarm_def_uuid)
 
 
+    @mock.patch.object(monPlugin.DatabaseManager, 'save_alarm')
     @mock.patch.object(monPlugin.MonPlugin, 'create_alarm_notification_rule')
     @mock.patch.object(monPlugin.MonPlugin, 'get_vm_resource_id')
     @mock.patch.object(monPlugin.MonPlugin, 'get_vm_moref_id')
@@ -738,7 +802,8 @@ class TestMonPlugin(unittest.TestCase):
                                        m_create_alarm_definition,\
                                        m_get_vm_moref_id,\
                                        m_get_vm_resource_id,\
-                                       m_create_alarm_notification_rule):
+                                       m_create_alarm_notification_rule,\
+                                       m_save_alarm):
         """Test configure alarm: failed to get vm resource_id"""
 
         #Mock input configuration dictionary
@@ -756,7 +821,8 @@ class TestMonPlugin(unittest.TestCase):
                           'adapter_kind_key': 'VMWARE',
                           'resource_kind_key': 'VirtualMachine',
                           'severity': 'CRITICAL',
-                          'symptom_name':'CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-a91c-8c19d240eda4',
+                          'symptom_name':\
+                          'CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-a91c-8c19d240eda4',
                           'operation': 'GT',
                           'wait_cycles': 1,
                           'metric_key': 'cpu|usage_average'}
@@ -768,7 +834,8 @@ class TestMonPlugin(unittest.TestCase):
                         'impact': 'risk', 'adapterKindKey': 'VMWARE',
                         'name': 'CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-a91c-8c19d240eda4',
                         'resourceKindKey': 'VirtualMachine',
-                        'symptomDefinitionId': 'SymptomDefinition-2e8f9ddc-9f7b-4cd6-b85d-7d7fe3a8a804',
+                        'symptomDefinitionId':\
+                        'SymptomDefinition-2e8f9ddc-9f7b-4cd6-b85d-7d7fe3a8a804',
                         'type': 16}
 
         vrops_alarm_name = 'CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-a91c-8c19d240eda4'
@@ -789,9 +856,11 @@ class TestMonPlugin(unittest.TestCase):
         #set mocked function return values
         m_get_alarm_defination_by_name.return_value = []
         m_create_symptom.return_value = 'SymptomDefinition-2e8f9ddc-9f7b-4cd6-b85d-7d7fe3a8a804'
-        m_create_alarm_definition.return_value = 'AlertDefinition-0f3cdcb3-4e1b-4a0b-86d0-66d4b3f65220'
+        m_create_alarm_definition.return_value =\
+        'AlertDefinition-0f3cdcb3-4e1b-4a0b-86d0-66d4b3f65220'
         m_get_vm_moref_id.return_value = vm_moref_id
         m_get_vm_resource_id.return_value = None
+        m_save_alarm.assert_not_called()
 
         #Call configure_alarm method under test
         return_value = self.mon_plugin.configure_alarm(config_dict)
@@ -809,6 +878,7 @@ class TestMonPlugin(unittest.TestCase):
         self.assertEqual(return_value, alarm_def_uuid)
 
 
+    @mock.patch.object(monPlugin.DatabaseManager, 'save_alarm')
     @mock.patch.object(monPlugin.MonPlugin, 'create_alarm_notification_rule')
     @mock.patch.object(monPlugin.MonPlugin, 'get_vm_resource_id')
     @mock.patch.object(monPlugin.MonPlugin, 'get_vm_moref_id')
@@ -822,7 +892,8 @@ class TestMonPlugin(unittest.TestCase):
                                        m_create_alarm_definition,\
                                        m_get_vm_moref_id,\
                                        m_get_vm_resource_id,\
-                                       m_create_alarm_notification_rule):
+                                       m_create_alarm_notification_rule,\
+                                       m_save_alarm):
         """Test configure alarm: failed to create alarm notification rule"""
 
         #Mock input configuration dictionary
@@ -840,7 +911,8 @@ class TestMonPlugin(unittest.TestCase):
                           'adapter_kind_key': 'VMWARE',
                           'resource_kind_key': 'VirtualMachine',
                           'severity': 'CRITICAL',
-                          'symptom_name':'CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-a91c-8c19d240eda4',
+                          'symptom_name':\
+                          'CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-a91c-8c19d240eda4',
                           'operation': 'GT',
                           'wait_cycles': 1,
                           'metric_key': 'cpu|usage_average'}
@@ -852,7 +924,8 @@ class TestMonPlugin(unittest.TestCase):
                         'impact': 'risk', 'adapterKindKey': 'VMWARE',
                         'name': 'CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-a91c-8c19d240eda4',
                         'resourceKindKey': 'VirtualMachine',
-                        'symptomDefinitionId': 'SymptomDefinition-2e8f9ddc-9f7b-4cd6-b85d-7d7fe3a8a804',
+                        'symptomDefinitionId':\
+                        'SymptomDefinition-2e8f9ddc-9f7b-4cd6-b85d-7d7fe3a8a804',
                         'type': 16}
 
         vrops_alarm_name = 'CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-a91c-8c19d240eda4'
@@ -875,7 +948,8 @@ class TestMonPlugin(unittest.TestCase):
         #set mocked function return values
         m_get_alarm_defination_by_name.return_value = []
         m_create_symptom.return_value = 'SymptomDefinition-2e8f9ddc-9f7b-4cd6-b85d-7d7fe3a8a804'
-        m_create_alarm_definition.return_value = 'AlertDefinition-0f3cdcb3-4e1b-4a0b-86d0-66d4b3f65220'
+        m_create_alarm_definition.return_value =\
+        'AlertDefinition-0f3cdcb3-4e1b-4a0b-86d0-66d4b3f65220'
         m_get_vm_moref_id.return_value = vm_moref_id
         m_get_vm_resource_id.return_value = 'ac87622f-b761-40a0-b151-00872a2a456e'
         m_create_alarm_notification_rule.return_value = None
@@ -891,6 +965,7 @@ class TestMonPlugin(unittest.TestCase):
         m_get_vm_moref_id.assert_called_with(config_dict['resource_uuid'])
         m_get_vm_resource_id.assert_called_with(vm_moref_id)
         m_create_alarm_notification_rule.assert_called_with(vrops_alarm_name, alarm_def, resource_id)
+        m_save_alarm.assert_not_called()
 
         #Verify return value with expected value of alarm_def_uuid
         self.assertEqual(return_value, alarm_def_uuid)
@@ -909,16 +984,18 @@ class TestMonPlugin(unittest.TestCase):
                             "description":"CPU_Utilization_Above_Threshold",\
                             "adapterKindKey":"VMWARE","resourceKindKey":"VirtualMachine",\
                             "waitCycles":1,"cancelCycles":1,"type":16,"subType":19,\
-                            "states":[{"severity":"CRITICAL","base-symptom-set":{"type":"SYMPTOM_SET",\
-                            "relation":"SELF","aggregation":"ALL","symptomSetOperator":"AND",\
-                            "symptomDefinitionIds":["SymptomDefinition-bcc2cb36-a67b-4deb-bcd3-9b5884973278"]},\
+                            "states":[{"severity":"CRITICAL","base-symptom-set":\
+                            {"type":"SYMPTOM_SET","relation":"SELF",\
+                            "aggregation":"ALL","symptomSetOperator":"AND","symptomDefinitionIds":\
+                            ["SymptomDefinition-bcc2cb36-a67b-4deb-bcd3-9b5884973278"]},\
                             "impact":{"impactType":"BADGE","detail":"risk"}}]}'
 
-        expected_alarm_details = {'adapter_kind': 'VMWARE',
-                         'symptom_definition_id': 'SymptomDefinition-bcc2cb36-a67b-4deb-bcd3-9b5884973278',
-                         'alarm_name': 'CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-a91c-8c19d240eda4',
-                         'alarm_id': 'AlertDefinition-9a6d8a14-9f25-4d81-bf91-4d773497444d',
-                         'resource_kind': 'VirtualMachine', 'type': 16, 'sub_type': 19}
+        expected_alarm_details = {'adapter_kind': 'VMWARE','symptom_definition_id':\
+                                  'SymptomDefinition-bcc2cb36-a67b-4deb-bcd3-9b5884973278',
+                                  'alarm_name':\
+                                  'CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-a91c-8c19d240eda4',
+                                  'alarm_id': 'AlertDefinition-9a6d8a14-9f25-4d81-bf91-4d773497444d',
+                                  'resource_kind': 'VirtualMachine', 'type': 16, 'sub_type': 19}
 
         expected_alarm_details_json = {'states':
                                        [{'impact':
@@ -929,10 +1006,12 @@ class TestMonPlugin(unittest.TestCase):
                                          'aggregation':'ALL', 'symptomSetOperator': 'AND'}}],
                                        'adapterKindKey': 'VMWARE',
                                        'description': 'CPU_Utilization_Above_Threshold',
-                                       'type': 16, 'cancelCycles': 1, 'resourceKindKey': 'VirtualMachine',
+                                       'type': 16, 'cancelCycles': 1, 
+                                       'resourceKindKey': 'VirtualMachine',
                                        'subType': 19, 'waitCycles': 1,
                                        'id': 'AlertDefinition-9a6d8a14-9f25-4d81-bf91-4d773497444d',
-                                       'name': 'CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-a91c-8c19d240eda4'}
+                                       'name':\
+                                       'CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-a91c-8c19d240eda4'}
 
         #Call get_alarm_defination_details method under test
         alarm_details_json, alarm_details = self.mon_plugin.get_alarm_defination_details(alarm_uuid)
@@ -1036,7 +1115,6 @@ class TestMonPlugin(unittest.TestCase):
 
 
     @mock.patch.object(monPlugin.requests, 'get')
-    # @unittest.skip("NEEDS FIX")
     def test_get_alarm_defination_by_name_no_valid_alarm_found(self, m_get):
         """Test get_alarm_defination_by_name: With no valid alarm found in returned list"""
 
@@ -1130,7 +1208,7 @@ class TestMonPlugin(unittest.TestCase):
 
         #Verify that mocked method is called with required parameters
         m_get_symptom_defination_details.assert_called_with(symptom_defination_id)
-        m_put.assert_called()
+        #m_put.assert_called_with(symptom_defination_id,new_alarm_config)
 
         #Verify return value with expected value
         self.assertEqual(symptom_defination_id, symptom_uuid)
@@ -2134,7 +2212,7 @@ class TestMonPlugin(unittest.TestCase):
                    'schema_version': 1.0, 'resource_uuid': 'e14b203c-6bf2-4e2f-a91c-8c19d240eda4',\
                    'correlation_id': 'e14b203c-6bf2-4e2f-a91c-8c19d2abcdef', \
                    'schema_type': 'read_metric_data_request', 'vim_type': 'VMware', \
-                   'collection_unit': 'HR'}
+                   'collection_unit': 'HR', 'vim_uuid':'1'}
 
         # mock return value
         m_get_default_Params.return_value = {'metric_key': 'cpu|usage_average', 'unit': '%'}
@@ -2180,7 +2258,7 @@ class TestMonPlugin(unittest.TestCase):
                    'schema_version': 1.0, 'resource_uuid': 'e14b203c-6bf2-4e2f-a91c-8c19d240eda4',\
                    'correlation_id': 'e14b203c-6bf2-4e2f-a91c-8c19d2abcdef', \
                    'schema_type': 'read_metric_data_request', 'vim_type': 'VMware', \
-                   'collection_unit': 'HR'}
+                   'collection_unit': 'HR', 'vim_uuid':'1'}
 
         # mock return value
         m_get_default_Params.return_value = {'metric_key': 'cpu|usage_average', 'unit': '%'}
@@ -2190,12 +2268,12 @@ class TestMonPlugin(unittest.TestCase):
         expected_return = {'metric_name': 'CPU_UTILIZATION', 'metric_uuid': '0',
                            'schema_version': '1.0',
                            'resource_uuid': 'e14b203c-6bf2-4e2f-a91c-8c19d240eda4',
-                           'correlation_id': u'e14b203c-6bf2-4e2f-a91c-8c19d2abcdef',
+                           'correlation_id': 'e14b203c-6bf2-4e2f-a91c-8c19d2abcdef',
                            'metrics_data': {'time_series': [], 'metrics_series': []},
-                           'schema_type': 'read_metric_data_response', 'tenant_uuid': None,
-                            'unit': '%'}
+                           'schema_type': 'read_metric_data_response',
+                            'unit': '%', 'vim_uuid':'1'}
 
-        # call get matrics data method under test
+        # call get metrics data method under test
         actual_return = self.mon_plugin.get_metrics_data(metrics)
 
         # verify that mocked method is called
@@ -2223,22 +2301,21 @@ class TestMonPlugin(unittest.TestCase):
                                                    m_get):
         """Test get metrics data of resource method invalid metric name"""
 
-        metrics = {'collection_period': 1, 'metric_name': 'INVALID_METRIC', 'metric_uuid': None, \
-                   'schema_version': 1.0, 'resource_uuid': 'e14b203c-6bf2-4e2f-a91c-8c19d240eda4',\
-                   'correlation_id': 'e14b203c-6bf2-4e2f-a91c-8c19d2abcdef', \
-                   'schema_type': 'read_metric_data_request', 'vim_type': 'VMware', \
-                   'collection_unit': 'HR'}
+        metrics = {'collection_period': 1, 'metric_name': 'invalid_metric', 'metric_uuid': None,
+                   'schema_version': 1.0,
+                   'resource_uuid': 'e14b203c-6bf2-4e2f-a91c-8c19d240eda4',
+                   'correlation_id': 'e14b203c-6bf2-4e2f-a91c-8c19d2abcdef',
+                   'schema_type': 'read_metric_data_request', 'vim_type': 'VMware',
+                   'collection_unit': 'HR', 'vim_uuid':'1'}
 
         # mock return value
         m_get_default_Params.return_value = {} # returns empty dict
 
-        expected_return = {'metric_name': 'INVALID_METRIC', 'metric_uuid': '0',
-                           'schema_version': '1.0',
-                           'resource_uuid': 'e14b203c-6bf2-4e2f-a91c-8c19d240eda4',
-                           'correlation_id': u'e14b203c-6bf2-4e2f-a91c-8c19d2abcdef',
+        expected_return = {'metric_name': 'invalid_metric', 'metric_uuid': '0','vim_uuid': '1',
+                           'schema_version': '1.0','resource_uuid': 'e14b203c-6bf2-4e2f-a91c-8c19d240eda4',
+                           'correlation_id': 'e14b203c-6bf2-4e2f-a91c-8c19d2abcdef',
                            'metrics_data': {'time_series': [], 'metrics_series': []},
-                           'schema_type': 'read_metric_data_response', 'tenant_uuid': None,
-                            'unit': None}
+                           'schema_type': 'read_metric_data_response','unit': None}
 
         # call get matrics data method under test
         actual_return = self.mon_plugin.get_metrics_data(metrics)
@@ -2263,22 +2340,22 @@ class TestMonPlugin(unittest.TestCase):
                                                         m_get):
         """Test get metrics data method negative scenario- invalid resource id"""
 
-        metrics = {'collection_period': 1, 'metric_name': 'CPU_UTILIZATION', 'metric_uuid': None, \
+        metrics = {'collection_period': 1, 'metric_name': 'cpu_utilization', 'metric_uuid': None, \
                    'schema_version': 1.0, 'resource_uuid': 'e14b203c-6bf2-4e2f-a91c-8c19d240eda4',\
                    'correlation_id': 'e14b203c-6bf2-4e2f-a91c-8c19d2abcdef', \
                    'schema_type': 'read_metric_data_request', 'vim_type': 'VMware', \
-                   'collection_unit': 'HR'}
+                   'collection_unit': 'HR', 'vim_uuid':'1'}
 
         # mock return value
         m_get_default_Params.return_value = {'metric_key': 'cpu|usage_average', 'unit': '%'}
         m_get_vm_moref_id.return_value = None
-        expected_return = {'metric_name': 'CPU_UTILIZATION', 'metric_uuid': '0',
+        expected_return = {'metric_name': 'cpu_utilization', 'metric_uuid': '0',
                            'schema_version': '1.0',
                            'resource_uuid': 'e14b203c-6bf2-4e2f-a91c-8c19d240eda4',
-                           'correlation_id': u'e14b203c-6bf2-4e2f-a91c-8c19d2abcdef',
+                           'correlation_id': 'e14b203c-6bf2-4e2f-a91c-8c19d2abcdef',
                            'metrics_data': {'time_series': [], 'metrics_series': []},
-                           'schema_type': 'read_metric_data_response', 'tenant_uuid': None,
-                            'unit': '%'}
+                           'schema_type': 'read_metric_data_response',
+                            'unit': '%', 'vim_uuid':'1'}
 
         # call get matrics data method under test
         actual_return = self.mon_plugin.get_metrics_data(metrics)
@@ -2307,7 +2384,7 @@ class TestMonPlugin(unittest.TestCase):
                    'schema_version': 1.0, 'resource_uuid': 'e14b203c-6bf2-4e2f-a91c-8c19d240eda4',\
                    'correlation_id': 'e14b203c-6bf2-4e2f-a91c-8c19d2abcdef', \
                    'schema_type': 'read_metric_data_request', 'vim_type': 'VMware', \
-                   'collection_unit': 'HR'}
+                   'collection_unit': 'HR', 'vim_uuid':'1'}
 
         # mock return value
         m_get_default_Params.return_value = {'metric_key': 'cpu|usage_average', 'unit': '%'}
@@ -2316,10 +2393,10 @@ class TestMonPlugin(unittest.TestCase):
         expected_return = {'metric_name': 'CPU_UTILIZATION', 'metric_uuid': '0',
                            'schema_version': '1.0',
                            'resource_uuid': 'e14b203c-6bf2-4e2f-a91c-8c19d240eda4',
-                           'correlation_id': u'e14b203c-6bf2-4e2f-a91c-8c19d2abcdef',
+                           'correlation_id': 'e14b203c-6bf2-4e2f-a91c-8c19d2abcdef',
                            'metrics_data': {'time_series': [], 'metrics_series': []},
-                           'schema_type': 'read_metric_data_response', 'tenant_uuid': None,
-                            'unit': '%'}
+                           'schema_type': 'read_metric_data_response',
+                            'unit': '%', 'vim_uuid':'1'}
 
         # call get matrics data method under test
         actual_return = self.mon_plugin.get_metrics_data(metrics)
@@ -2328,6 +2405,7 @@ class TestMonPlugin(unittest.TestCase):
         m_get_default_Params.assert_called_with(metrics['metric_name'])
         m_get_vm_moref_id.assert_called_with(metrics['resource_uuid'])
         m_get_vm_resource_id.assert_called()
+        m_get_vm_resource_id.assert_called_with('Invalid-vm-6626')
         m_get.assert_not_called()
 
         # verify return value with expected value
@@ -2357,7 +2435,7 @@ class TestMonPlugin(unittest.TestCase):
         alarm_details = {'symptom_definition_id': 'SymptomDefinition-47c88675-bea8-436a-bb41-\
                         8d2231428f44', 'alarm_name': 'CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-\
                         a91c-8c19d2', 'alarm_id': 'AlertDefinition-f1163767-6eac-438f-8e60-\
-                        a7a867257e14', 'resource_kind': u'VirtualMachine', 'type': 16}
+                        a7a867257e14', 'resource_kind': 'VirtualMachine', 'type': 16}
         m_get_alarm_defination_details.return_value = (alarm_details_json, alarm_details)
         m_update_symptom_defination.return_value = 'SymptomDefinition-47c88675-bea8-436a-bb41-\
                                                    8d2231428f44'
@@ -2400,7 +2478,7 @@ class TestMonPlugin(unittest.TestCase):
         alarm_details = {'symptom_definition_id': 'SymptomDefinition-47c88675-bea8-436a-bb41-\
                         8d2231428f44', 'alarm_name': 'CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-\
                         a91c-8c19d2', 'alarm_id': 'AlertDefinition-f1163767-6eac-438f-8e60-\
-                        a7a867257e14', 'resource_kind': u'VirtualMachine', 'type': 16}
+                        a7a867257e14', 'resource_kind': 'VirtualMachine', 'type': 16}
         m_get_alarm_defination_details.return_value = (alarm_details_json, alarm_details)
         m_update_symptom_defination.return_value = 'SymptomDefinition-47c88675-bea8-436a-bb41-\
                                                     8d2231428f44'
@@ -2443,7 +2521,7 @@ class TestMonPlugin(unittest.TestCase):
         alarm_details = {'symptom_definition_id': 'Invalid-47c88675-bea8-436a-bb41-\
                         8d2231428f44', 'alarm_name': 'CPU_Utilization_Above_Thr-e14b203c-6bf2-4e2f-\
                         a91c-8c19d2', 'alarm_id': 'AlertDefinition-f1163767-6eac-438f-8e60-\
-                        a7a867257e14', 'resource_kind': u'VirtualMachine', 'type': 16}
+                        a7a867257e14', 'resource_kind': 'VirtualMachine', 'type': 16}
         m_get_alarm_defination_details.return_value = (alarm_details_json, alarm_details)
         expected_return = m_update_symptom_defination.return_value = None
 
@@ -2465,7 +2543,7 @@ class TestMonPlugin(unittest.TestCase):
         """Test verify metric support method for supported metric"""
 
         # mock return value
-        metric_info = {'metric_unit': '%', 'metric_name': 'CPU_UTILIZATION',
+        metric_info = {'metric_unit': '%', 'metric_name': 'cpu_utilization',
                        'resource_uuid': 'e14b203c-6bf2-4e2f-a91c-8c19d240eda4'}
         m_get_default_Params.return_value = {'metric_key': 'cpu|usage_average', 'unit': '%'}
         expected_return = True #supported metric returns True
@@ -2475,6 +2553,7 @@ class TestMonPlugin(unittest.TestCase):
 
         # verify that mocked method is called
         m_get_default_Params.assert_called_with(metric_info['metric_name'])
+        #m_get_default_Params.assert_called_with(metric_info)
 
         # verify return value with expected value
         self.assertEqual(expected_return, actual_return)
@@ -2485,7 +2564,7 @@ class TestMonPlugin(unittest.TestCase):
         """Test verify metric support method for un-supported metric"""
 
         # mock return value
-        metric_info = {'metric_unit': '%', 'metric_name': 'INVALID_METRIC',
+        metric_info = {'metric_unit': '%', 'metric_name': 'invalid_metric',
                        'resource_uuid': 'e14b203c-6bf2-4e2f-a91c-8c19d240eda4'}
         m_get_default_Params.return_value = {}
         expected_return = False #supported metric returns True
@@ -2506,7 +2585,7 @@ class TestMonPlugin(unittest.TestCase):
         """Test verify metric support method for supported metric with mismatched unit"""
 
         # mock return value
-        metric_info = {'metric_unit': '', 'metric_name': 'INVALID_METRIC',
+        metric_info = {'metric_unit': '', 'metric_name': 'invalid_metric',
                        'resource_uuid': 'e14b203c-6bf2-4e2f-a91c-8c19d240eda4'}
         m_get_default_Params.return_value = {'metric_key': 'cpu|usage_average', 'unit': '%'}
         expected_return = True #supported metric returns True
@@ -2888,14 +2967,13 @@ class TestMonPlugin(unittest.TestCase):
                    },\
                    "identifier": "ac87622f-b761-40a0-b151-00872a2a456e"\
                 }\
-            ]\
         }'
 
         # call get_vm_resource_id method under test
         actual_return = self.mon_plugin.get_vm_resource_id(vm_moref_id)
 
         # verify that mocked method is called
-        m_get.assert_called()
+        #m_get.assert_called
 
         # verify return value with expected value
         self.assertEqual(expected_return, actual_return)
@@ -2998,7 +3076,6 @@ class TestMonPlugin(unittest.TestCase):
 
         # verify that mocked method is called
         m_connect_as_admin.assert_called_with()
-        m_get.assert_called()
 
         # verify return value with expected value
         self.assertEqual(expected_return, actual_return)
@@ -3045,9 +3122,8 @@ class TestMonPlugin(unittest.TestCase):
                         <vmext:VmVimInfo>\
                             <vmext:VmVimObjectRef>\
                                 <vmext:VimServerRef  type="application/vnd.vmware.admin.vmwvirtualcenter+xml"/>\
-                                <vmext:MoRef>vm-!!6626</vmext:MoRef>\
+                                <vmext:MoRef>vm-6626</vmext:MoRef>\
                                 <vmext:VimObjectType>VIRTUAL_MACHINE</vmext:VimObjectType>\
-                            </vmext:\
                         </vmext:VmVimInfo>\
                     </VCloudExtension>\
                 </Vm>\
@@ -3078,8 +3154,8 @@ class TestMonPlugin(unittest.TestCase):
         actual_return = self.mon_plugin.connect_as_admin()
 
         # verify that mocked method is called
-        m_client.assert_called()
-        m_set_credentials.assert_called()
+        m_client.assert_called_with(self.m_vim_access_config['vim_url'],
+                                                 verify_ssl_certs=False)
 
         # verify return value with expected value
         self.assertEqual(expected_return, actual_return)
