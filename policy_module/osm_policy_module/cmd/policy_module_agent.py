@@ -55,6 +55,13 @@ def main():
         root_logger = logging.getLogger()
         root_logger.addHandler(logstash.TCPLogstashHandler(logstash_host, logstash_port, version=1))
         root_logger.info("Logstash handler configured.")
+    kafka_logger = logging.getLogger('kafka')
+    kafka_logger.setLevel(logging.WARN)
+    kafka_formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    kafka_handler = logging.StreamHandler(sys.stdout)
+    kafka_handler.setFormatter(kafka_formatter)
+    kafka_logger.addHandler(kafka_handler)
     log = logging.getLogger(__name__)
     log.info("Config: %s", cfg)
     log.info("Syncing database...")
