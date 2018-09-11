@@ -108,7 +108,7 @@ class Alarming(object):
                                                   alarm_details['operation'].lower(),
                                                   alarm_details['metric_name'].lower(),
                                                   alarm_details['vdu_name'].lower(),
-                                                  alarm_details['vnf_member_index'].lower(),
+                                                  alarm_details['vnf_member_index'],
                                                   alarm_details['ns_id'].lower()
                                                   )
                 status = True
