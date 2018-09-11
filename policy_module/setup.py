@@ -26,7 +26,7 @@ import setuptools
 
 def parse_requirements(requirements):
     with open(requirements) as f:
-        return [l.strip('\n') for l in f if l.strip('\n') and not l.startswith('#')]
+        return [l.strip('\n') for l in f if l.strip('\n') and not l.startswith('#') and '://' not in l]
 
 
 _author = "Benjamín Díaz"
@@ -52,10 +52,21 @@ setuptools.setup(
     license=_license,
     packages=setuptools.find_packages(),
     include_package_data=True,
-    install_requires=parse_requirements('requirements.txt'),
+    install_requires=[
+        'kafka==1.3.*',
+        'peewee==3.1.*',
+        'jsonschema==2.6.*',
+        'six==1.11.*',
+        'pyyaml==3.*',
+        'python-logstash==0.4.*',
+        'osm-common==4.*'
+    ],
     entry_points={
         "console_scripts": [
             "osm-policy-agent = osm_policy_module.cmd.policy_module_agent:main",
         ]
-    }
+    },
+    dependency_links=[
+        'git+https://osm.etsi.org/gerrit/osm/common.git@v4.0.1#egg=osm-common'
+    ]
 )

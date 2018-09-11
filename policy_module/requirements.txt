@@ -4,3 +4,4 @@ jsonschema==2.6.*
 six==1.11.*
 pyyaml==3.*
 python-logstash==0.4.*
+git+https://osm.etsi.org/gerrit/osm/common.git@v4.0.1#egg=osm-common

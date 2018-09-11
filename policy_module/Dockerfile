@@ -25,7 +25,7 @@ FROM ubuntu:16.04
 LABEL authors="Benjamín Díaz"
 
 RUN apt-get --yes update \
- && apt-get --yes install python3 python3-pip libmysqlclient-dev \
+ && apt-get --yes install python3 python3-pip libmysqlclient-dev git \
  && pip3 install pip==9.0.3
 
 COPY requirements.txt /policy_module/requirements.txt
