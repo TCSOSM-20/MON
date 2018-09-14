@@ -19,13 +19,3 @@
 # For those usages not covered by the Apache License, Version 2.0 please
 # contact: helena.mcgough@intel.com or adrian.hoban@intel.com
 ##
-"""OpenStack plugin tests."""
-
-import logging
-
-# Initialise a logger for tests
-logging.basicConfig(filename='OpenStack_tests.log',
-                    format='%(asctime)s %(message)s',
-                    datefmt='%m/%d/%Y %I:%M:%S %p', filemode='a',
-                    level=logging.INFO)
-log = logging.getLogger(__name__)
