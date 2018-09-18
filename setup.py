@@ -19,8 +19,6 @@
 # For those usages not covered by the Apache License, Version 2.0 please
 # contact: prithiv.mohan@intel.com or adrian.hoban@intel.com
 
-__author__ = "Prithiv Mohan"
-__date__ = "14/Sep/2017"
 from setuptools import setup
 
 
@@ -30,31 +28,34 @@ def parse_requirements(requirements):
 
 
 _name = 'osm_mon'
-_version = '1.0'
-_description = 'OSM Monitoring Module'
-_author = 'Prithiv Mohan'
-_author_email = 'prithiv.mohan@intel.com'
-_maintainer = 'Adrian Hoban'
-_maintainer_email = 'adrian.hoban@intel.com'
+_version_command = ('git describe --match v* --tags --long --dirty', 'pep440-git')
+_description = 'OSM Policy Module'
+_author = "Benjamín Díaz"
+_author_email = 'bdiaz@whitestack.com'
+_maintainer = 'Gianpietro Lavado'
+_maintainer_email = 'glavado@whitestack.com'
 _license = 'Apache 2.0'
 _url = 'https://osm.etsi.org/gitweb/?p=osm/MON.git;a=tree'
-setup(name="osm_mon",
-      version=_version,
-      description=_description,
-      long_description=open('README.rst').read(),
-      author=_author,
-      author_email=_author_email,
-      maintainer=_maintainer,
-      maintainer_email=_maintainer_email,
-      url=_url,
-      license=_license,
-      packages=[_name],
-      package_dir={_name: _name},
-      scripts=['osm_mon/plugins/vRealiseOps/vROPs_Webservice/vrops_webservice',
-               'osm_mon/core/message_bus/common_consumer.py'],
-      install_requires=parse_requirements('requirements.txt'),
-      include_package_data=True,
-      dependency_links=[
-          'git+https://osm.etsi.org/gerrit/osm/common.git@857731b#egg=osm-common'
-      ]
-      )
+
+setup(
+    name=_name,
+    version_command=_version_command,
+    description=_description,
+    long_description=open('README.rst').read(),
+    author=_author,
+    author_email=_author_email,
+    maintainer=_maintainer,
+    maintainer_email=_maintainer_email,
+    url=_url,
+    license=_license,
+    packages=[_name],
+    package_dir={_name: _name},
+    scripts=['osm_mon/plugins/vRealiseOps/vROPs_Webservice/vrops_webservice',
+             'osm_mon/core/message_bus/common_consumer.py'],
+    install_requires=parse_requirements('requirements.txt'),
+    include_package_data=True,
+    dependency_links=[
+        'git+https://osm.etsi.org/gerrit/osm/common.git#egg=osm-common'
+    ],
+    setup_requires=['setuptools-version-command']
+)
