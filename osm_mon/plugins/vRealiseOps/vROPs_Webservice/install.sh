@@ -52,14 +52,14 @@ function install_packages(){
 
 apt-get update  # To get the latest package lists
 
-[ "$_DISTRO" == "Ubuntu" ] && install_packages "python-yaml python-bottle python-jsonschema python-requests libxml2-dev libxslt-dev python-dev python-pip openssl"
-[ "$_DISTRO" == "CentOS" -o "$_DISTRO" == "Red" ] && install_packages "python-jsonschema python-requests libxslt-devel libxml2-devel python-devel python-pip openssl"
+[ "$_DISTRO" == "Ubuntu" ] && install_packages "python3-yaml python3-bottle python3-jsonschema python3-requests libxml2-dev libxslt-dev python3-dev python3-pip openssl"
+[ "$_DISTRO" == "CentOS" -o "$_DISTRO" == "Red" ] && install_packages "python3-jsonschema python3-requests libxslt-devel libxml2-devel python3-devel python3-pip openssl"
 #The only way to install python-bottle on Centos7 is with easy_install or pip
 [ "$_DISTRO" == "CentOS" -o "$_DISTRO" == "Red" ] && easy_install -U bottle
 
 #required for vmware connector TODO move that to separete opt in install script
-pip install pip==9.0.3
-pip install cherrypy
+pip3 install pip==9.0.3
+pip3 install cherrypy
 
 echo '
  #################################################################
@@ -76,7 +76,7 @@ echo '
  #####             Start Web Service                      #####
  #################################################################'
 
-nohup python "${WebServiceFile}" &
+nohup python3 "${WebServiceFile}" &
 
 echo '
  #################################################################
