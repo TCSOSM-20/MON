@@ -23,7 +23,4 @@
 #__date__   = "14/Sep/2017"
 
 #!/bin/bash
-rm -rf deb_dist
-rm -rf dist
-rm -rf osm_mon.egg-info
-tox -e build
+make

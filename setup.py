@@ -29,7 +29,7 @@ def parse_requirements(requirements):
 
 _name = 'osm_mon'
 _version_command = ('git describe --match v* --tags --long --dirty', 'pep440-git')
-_description = 'OSM Policy Module'
+_description = 'OSM Monitoring Module'
 _author = "Benjamín Díaz"
 _author_email = 'bdiaz@whitestack.com'
 _maintainer = 'Gianpietro Lavado'
@@ -52,7 +52,24 @@ setup(
     package_dir={_name: _name},
     scripts=['osm_mon/plugins/vRealiseOps/vROPs_Webservice/vrops_webservice',
              'osm_mon/core/message_bus/common_consumer.py'],
-    install_requires=parse_requirements('requirements.txt'),
+    install_requires=[
+        "kafka==1.3.*",
+        "requests==2.18.*",
+        "cherrypy==14.0.*",
+        "jsmin==2.2.*",
+        "jsonschema==2.6.*",
+        "python-keystoneclient==3.15.*",
+        "boto==2.48",
+        "python-cloudwatchlogs-logging==0.0.3",
+        "py-cloudwatch==0.0.1",
+        "pyvcloud==19.1.1",
+        "pyopenssl==17.5.*",
+        "six==1.11.*",
+        "bottle==0.12.*",
+        "peewee==3.1.*",
+        "pyyaml==3.*",
+        "osm-common"
+    ],
     include_package_data=True,
     dependency_links=[
         'git+https://osm.etsi.org/gerrit/osm/common.git#egg=osm-common'
