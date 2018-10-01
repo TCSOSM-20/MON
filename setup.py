@@ -28,7 +28,7 @@ def parse_requirements(requirements):
 
 
 _name = 'osm_mon'
-_version_command = ('git describe --match v* --tags --long --dirty', 'pep440-git')
+_version_command = ('git describe --match v* --tags --long --dirty', 'pep440-git-full')
 _description = 'OSM Monitoring Module'
 _author = "Benjamín Díaz"
 _author_email = 'bdiaz@whitestack.com'
