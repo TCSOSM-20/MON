@@ -65,7 +65,7 @@ class TestAlarming(unittest.TestCase):
                   "metric_name": "my_metric",
                   "resource_uuid": "my_r_id"}
         with self.assertRaises(KeyError):
-            self.alarming.configure_alarm(alarm_endpoint, auth_token, values, {})
+            self.alarming.configure_alarm(alarm_endpoint, auth_token, values, {}, True)
         perf_req.assert_not_called()
         perf_req.reset_mock()
 
@@ -74,7 +74,7 @@ class TestAlarming(unittest.TestCase):
                   "resource_uuid": "my_r_id"}
 
         with self.assertRaises(KeyError):
-            self.alarming.configure_alarm(alarm_endpoint, auth_token, values, {})
+            self.alarming.configure_alarm(alarm_endpoint, auth_token, values, {}, True)
         perf_req.assert_not_called()
 
     @mock.patch.object(Common, "perform_request")
@@ -89,7 +89,7 @@ class TestAlarming(unittest.TestCase):
 
         perf_req.return_value = type('obj', (object,), {'text': '{"alarm_id":"1"}'})
 
-        self.alarming.configure_alarm(alarm_endpoint, auth_token, values, {})
+        self.alarming.configure_alarm(alarm_endpoint, auth_token, values, {}, True)
         payload = {"name": "disk_write_ops",
                    "gnocchi_resources_threshold_rule": {"resource_type": "generic", "comparison_operator": "gt",
                                                         "granularity": "300", "metric": "disk.write.requests",
@@ -99,15 +99,15 @@ class TestAlarming(unittest.TestCase):
                    "severity": "critical"}
         perf_req.assert_called_with(
             "alarm_endpoint/v2/alarms/", auth_token,
-            req_type="post", payload=json.dumps(payload, sort_keys=True))
+            req_type="post", payload=json.dumps(payload, sort_keys=True), verify_ssl=True)
 
     @mock.patch.object(Common, "perform_request")
     def test_delete_alarm_req(self, perf_req):
         """Test delete alarm request."""
-        self.alarming.delete_alarm(alarm_endpoint, auth_token, "my_alarm_id")
+        self.alarming.delete_alarm(alarm_endpoint, auth_token, "my_alarm_id", True)
 
         perf_req.assert_called_with(
-            "alarm_endpoint/v2/alarms/my_alarm_id", auth_token, req_type="delete")
+            "alarm_endpoint/v2/alarms/my_alarm_id", auth_token, req_type="delete", verify_ssl=True)
 
     @mock.patch.object(Common, "perform_request")
     def test_invalid_list_alarm_req(self, perf_req):
@@ -115,7 +115,7 @@ class TestAlarming(unittest.TestCase):
         # Request will not be performed without a resource_id
         list_details = {"mock_details": "invalid_details"}
         with self.assertRaises(KeyError):
-            self.alarming.list_alarms(alarm_endpoint, auth_token, list_details)
+            self.alarming.list_alarms(alarm_endpoint, auth_token, list_details, True)
         perf_req.assert_not_called()
 
     @mock.patch.object(Common, "perform_request")
@@ -130,33 +130,33 @@ class TestAlarming(unittest.TestCase):
         perf_req.return_value = type('obj', (object,),
                                      {'text': json.dumps(mock_perf_req_return_value)})
 
-        alarm_list = self.alarming.list_alarms(alarm_endpoint, auth_token, list_details)
+        alarm_list = self.alarming.list_alarms(alarm_endpoint, auth_token, list_details, True)
 
         self.assertDictEqual(alarm_list[0], mock_perf_req_return_value[0])
 
         perf_req.assert_called_with(
-            "alarm_endpoint/v2/alarms/", auth_token, req_type="get")
+            "alarm_endpoint/v2/alarms/", auth_token, req_type="get", verify_ssl=True)
         perf_req.reset_mock()
 
         # Check list with alarm_name defined
         list_details = {"resource_uuid": "mock_r_id",
                         "alarm_name": "mock_alarm",
                         "severity": "critical"}
-        alarm_list = self.alarming.list_alarms(alarm_endpoint, auth_token, list_details)
+        alarm_list = self.alarming.list_alarms(alarm_endpoint, auth_token, list_details, True)
 
         self.assertDictEqual(alarm_list[0], mock_perf_req_return_value[0])
 
         perf_req.assert_called_with(
-            "alarm_endpoint/v2/alarms/", auth_token, req_type="get")
+            "alarm_endpoint/v2/alarms/", auth_token, req_type="get", verify_ssl=True)
 
     @mock.patch.object(Common, "perform_request")
     def test_ack_alarm_req(self, perf_req):
         """Test update alarm state for acknowledge alarm request."""
-        self.alarming.update_alarm_state(alarm_endpoint, auth_token, "my_alarm_id")
+        self.alarming.update_alarm_state(alarm_endpoint, auth_token, "my_alarm_id", True)
 
         perf_req.assert_called_with(
             "alarm_endpoint/v2/alarms/my_alarm_id/state", auth_token, req_type="put",
-            payload=json.dumps("ok"))
+            payload=json.dumps("ok"), verify_ssl=True)
 
     @mock.patch.object(Common, "perform_request")
     def test_update_alarm_invalid(self, perf_req):
@@ -166,7 +166,7 @@ class TestAlarming(unittest.TestCase):
         perf_req.return_value = type('obj', (object,), {'invalid_prop': 'Invalid response'})
 
         with self.assertRaises(Exception):
-            self.alarming.update_alarm(alarm_endpoint, auth_token, values, {})
+            self.alarming.update_alarm(alarm_endpoint, auth_token, values, {}, True)
         perf_req.assert_called_with(mock.ANY, auth_token, req_type="get")
 
     @mock.patch.object(Common, "perform_request")
@@ -181,7 +181,7 @@ class TestAlarming(unittest.TestCase):
         values = {"alarm_uuid": "my_alarm_id"}
 
         with self.assertRaises(Exception):
-            self.alarming.update_alarm(alarm_endpoint, auth_token, values, {})
+            self.alarming.update_alarm(alarm_endpoint, auth_token, values, {}, True)
         perf_req.assert_called_with(mock.ANY, auth_token, req_type="get")
         self.assertEqual(perf_req.call_count, 1)
 
@@ -198,7 +198,7 @@ class TestAlarming(unittest.TestCase):
         perf_req.return_value = resp
         values = {"alarm_uuid": "my_alarm_id"}
 
-        self.alarming.update_alarm(alarm_endpoint, auth_token, values, {})
+        self.alarming.update_alarm(alarm_endpoint, auth_token, values, {}, True)
 
         check_pay.assert_called_with(values, "disk_write_ops", "my_resource_id",
                                      "my_alarm", alarm_state="alarm")
@@ -207,7 +207,7 @@ class TestAlarming(unittest.TestCase):
         # Second call is the update request
         perf_req.assert_called_with(
             'alarm_endpoint/v2/alarms/my_alarm_id', auth_token,
-            req_type="put", payload=check_pay.return_value)
+            req_type="put", payload=check_pay.return_value, verify_ssl=True)
 
     @mock.patch.object(Config, "instance")
     def test_check_valid_payload(self, cfg):
@@ -288,7 +288,7 @@ class TestAlarming(unittest.TestCase):
         mock_perf_req_return_value = {"metrics": {"cpu_util": 123}}
         perf_req.return_value = type('obj', (object,), {'text': json.dumps(mock_perf_req_return_value)})
 
-        self.alarming.check_for_metric(auth_token, metric_endpoint, "cpu_utilization", "r_id")
+        self.alarming.check_for_metric(auth_token, metric_endpoint, "cpu_utilization", "r_id", True)
 
         perf_req.assert_called_with(
-            "metric_endpoint/v1/resource/generic/r_id", auth_token, req_type="get")
+            "metric_endpoint/v1/resource/generic/r_id", auth_token, req_type="get", verify_ssl=True)

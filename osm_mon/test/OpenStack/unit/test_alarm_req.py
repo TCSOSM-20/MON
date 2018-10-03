@@ -73,8 +73,8 @@ class TestAlarmKeys(unittest.TestCase):
 
         self.alarming.alarming(message, 'test_id')
 
-        get_token.assert_called_with('test_id')
-        get_endpoint.assert_any_call('alarming', 'test_id')
+        get_token.assert_called_with('test_id', verify_ssl=True)
+        get_endpoint.assert_any_call('alarming', 'test_id', verify_ssl=True)
 
     @mock.patch.object(Common, 'get_endpoint', mock.Mock())
     @mock.patch.object(Common, 'get_auth_token', mock.Mock())
@@ -95,7 +95,7 @@ class TestAlarmKeys(unittest.TestCase):
 
         # Call the alarming functionality and check delete request
         self.alarming.alarming(message, 'test_id')
-        del_alarm.assert_called_with(mock.ANY, mock.ANY, 'my_alarm_id')
+        del_alarm.assert_called_with(mock.ANY, mock.ANY, 'my_alarm_id', True)
 
     @mock.patch.object(Common, 'get_endpoint', mock.Mock())
     @mock.patch.object(Common, 'get_auth_token', mock.Mock())
@@ -114,7 +114,7 @@ class TestAlarmKeys(unittest.TestCase):
 
         # Call the alarming functionality and check list functionality
         self.alarming.alarming(message, 'test_id')
-        list_alarm.assert_called_with(mock.ANY, mock.ANY, {'correlation_id': 1})
+        list_alarm.assert_called_with(mock.ANY, mock.ANY, {'correlation_id': 1}, True)
 
     @mock.patch.object(Common, 'get_auth_token', mock.Mock())
     @mock.patch.object(Common, 'get_endpoint', mock.Mock())
@@ -132,7 +132,7 @@ class TestAlarmKeys(unittest.TestCase):
 
         # Call alarming functionality and check acknowledge functionality
         self.alarming.alarming(message, 'test_id')
-        ack_alarm.assert_called_with(mock.ANY, mock.ANY, 'my_alarm_id')
+        ack_alarm.assert_called_with(mock.ANY, mock.ANY, 'my_alarm_id', True)
 
     @mock.patch.object(Common, 'get_auth_token', mock.Mock())
     @mock.patch.object(Common, 'get_endpoint', mock.Mock())
@@ -163,4 +163,4 @@ class TestAlarmKeys(unittest.TestCase):
                                                              'metric_name': 'cpu_utilization',
                                                              'vdu_name': 'vdu',
                                                              'vnf_member_index': '1', 'ns_id': '1',
-                                                             'resource_uuid': '123'}, {})
+                                                             'resource_uuid': '123'}, {}, True)

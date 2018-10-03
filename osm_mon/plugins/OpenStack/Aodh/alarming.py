@@ -80,10 +80,12 @@ class Alarming(object):
 
         log.info("OpenStack alarm action required.")
 
-        auth_token = Common.get_auth_token(vim_uuid)
+        verify_ssl = self._auth_manager.is_verify_ssl(vim_uuid)
 
-        alarm_endpoint = Common.get_endpoint("alarming", vim_uuid)
-        metric_endpoint = Common.get_endpoint("metric", vim_uuid)
+        auth_token = Common.get_auth_token(vim_uuid, verify_ssl=verify_ssl)
+
+        alarm_endpoint = Common.get_endpoint("alarming", vim_uuid, verify_ssl=verify_ssl)
+        metric_endpoint = Common.get_endpoint("metric", vim_uuid, verify_ssl=verify_ssl)
 
         vim_account = self._auth_manager.get_credentials(vim_uuid)
         vim_config = json.loads(vim_account.config)
@@ -96,10 +98,10 @@ class Alarming(object):
                 metric_name = alarm_details['metric_name'].lower()
                 resource_id = alarm_details['resource_uuid']
 
-                self.check_for_metric(auth_token, metric_endpoint, metric_name, resource_id)
+                self.check_for_metric(auth_token, metric_endpoint, metric_name, resource_id, verify_ssl)
 
                 alarm_id = self.configure_alarm(
-                    alarm_endpoint, auth_token, alarm_details, vim_config)
+                    alarm_endpoint, auth_token, alarm_details, vim_config, verify_ssl)
 
                 log.info("Alarm successfully created")
                 self._database_manager.save_alarm(alarm_id,
@@ -126,7 +128,7 @@ class Alarming(object):
             alarm_list = None
             try:
                 alarm_list = self.list_alarms(
-                    alarm_endpoint, auth_token, list_details)
+                    alarm_endpoint, auth_token, list_details, verify_ssl)
             except Exception as e:
                 log.exception("Error listing alarms")
                 raise e
@@ -141,7 +143,7 @@ class Alarming(object):
             status = False
             try:
                 self.delete_alarm(
-                    alarm_endpoint, auth_token, alarm_id)
+                    alarm_endpoint, auth_token, alarm_id, verify_ssl)
                 status = True
             except Exception as e:
                 log.exception("Error deleting alarm")
@@ -157,7 +159,7 @@ class Alarming(object):
                 alarm_id = values['ack_details']['alarm_uuid']
 
                 self.update_alarm_state(
-                    alarm_endpoint, auth_token, alarm_id)
+                    alarm_endpoint, auth_token, alarm_id, verify_ssl)
 
                 log.info("Acknowledged the alarm and cleared it.")
             except Exception as e:
@@ -171,7 +173,7 @@ class Alarming(object):
             status = False
             try:
                 alarm_id = self.update_alarm(
-                    alarm_endpoint, auth_token, alarm_details, vim_config)
+                    alarm_endpoint, auth_token, alarm_details, vim_config, verify_ssl)
                 status = True
             except Exception as e:
                 log.exception("Error updating alarm")
@@ -185,7 +187,7 @@ class Alarming(object):
         else:
             log.debug("Unknown key, no action will be performed")
 
-    def configure_alarm(self, alarm_endpoint, auth_token, values, vim_config):
+    def configure_alarm(self, alarm_endpoint, auth_token, values, vim_config, verify_ssl):
         """Create requested alarm in Aodh."""
         url = "{}/v2/alarms/".format(alarm_endpoint)
 
@@ -202,19 +204,19 @@ class Alarming(object):
         payload = self.check_payload(values, metric_name, resource_id,
                                      alarm_name)
         new_alarm = Common.perform_request(
-            url, auth_token, req_type="post", payload=payload)
+            url, auth_token, req_type="post", payload=payload, verify_ssl=verify_ssl)
         return json.loads(new_alarm.text)['alarm_id']
 
-    def delete_alarm(self, endpoint, auth_token, alarm_id):
+    def delete_alarm(self, endpoint, auth_token, alarm_id, verify_ssl):
         """Delete alarm function."""
         url = "{}/v2/alarms/%s".format(endpoint) % alarm_id
 
         result = Common.perform_request(
-            url, auth_token, req_type="delete")
+            url, auth_token, req_type="delete", verify_ssl=verify_ssl)
         if str(result.status_code) == "404":
             raise ValueError("Alarm {} doesn't exist".format(alarm_id))
 
-    def list_alarms(self, endpoint, auth_token, list_details):
+    def list_alarms(self, endpoint, auth_token, list_details, verify_ssl):
         """Generate the requested list of alarms."""
         url = "{}/v2/alarms/".format(endpoint)
         a_list, name_list, sev_list, res_list = [], [], [], []
@@ -233,7 +235,7 @@ class Alarming(object):
         # Perform the request to get the desired list
         try:
             result = Common.perform_request(
-                url, auth_token, req_type="get")
+                url, auth_token, req_type="get", verify_ssl=verify_ssl)
 
             if result is not None:
                 # Get list based on resource id
@@ -281,15 +283,15 @@ class Alarming(object):
             log.exception("Failed to generate alarm list: ")
             raise e
 
-    def update_alarm_state(self, endpoint, auth_token, alarm_id):
+    def update_alarm_state(self, endpoint, auth_token, alarm_id, verify_ssl):
         """Set the state of an alarm to ok when ack message is received."""
         url = "{}/v2/alarms/%s/state".format(endpoint) % alarm_id
         payload = json.dumps("ok")
 
         Common.perform_request(
-            url, auth_token, req_type="put", payload=payload)
+            url, auth_token, req_type="put", payload=payload, verify_ssl=verify_ssl)
 
-    def update_alarm(self, endpoint, auth_token, values, vim_config):
+    def update_alarm(self, endpoint, auth_token, values, vim_config, verify_ssl):
         """Get alarm name for an alarm configuration update."""
         # Get already existing alarm details
         url = "{}/v2/alarms/%s".format(endpoint) % values['alarm_uuid']
@@ -311,7 +313,7 @@ class Alarming(object):
 
         # Updates the alarm configurations with the valid payload
         update_alarm = Common.perform_request(
-            url, auth_token, req_type="put", payload=payload)
+            url, auth_token, req_type="put", payload=payload, verify_ssl=verify_ssl)
 
         return json.loads(update_alarm.text)['alarm_id']
 
@@ -366,7 +368,7 @@ class Alarming(object):
             url, auth_token, req_type="get")
         return json.loads(alarm_state.text)
 
-    def check_for_metric(self, auth_token, metric_endpoint, metric_name, resource_id):
+    def check_for_metric(self, auth_token, metric_endpoint, metric_name, resource_id, verify_ssl):
         """
         Checks if resource has a specific metric. If not, throws exception.
         :param auth_token: OpenStack auth token
@@ -379,7 +381,7 @@ class Alarming(object):
         try:
             url = "{}/v1/resource/generic/{}".format(metric_endpoint, resource_id)
             result = Common.perform_request(
-                url, auth_token, req_type="get")
+                url, auth_token, req_type="get", verify_ssl=verify_ssl)
             resource = json.loads(result.text)
             metrics_dict = resource['metrics']
             return metrics_dict[METRIC_MAPPINGS[metric_name]]
