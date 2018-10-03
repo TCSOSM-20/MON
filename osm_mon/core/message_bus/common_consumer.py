@@ -94,7 +94,7 @@ class CommonConsumer:
     def get_vdur(self, nsr_id, member_index, vdu_name):
         vnfr = self.get_vnfr(nsr_id, member_index)
         for vdur in vnfr['vdur']:
-            if vdur['vdu-id-ref'] == vdu_name:
+            if vdur['name'] == vdu_name:
                 return vdur
         raise ValueError('vdur not found for nsr-id %s, member_index %s and vdu_name %s', nsr_id, member_index,
                          vdu_name)
