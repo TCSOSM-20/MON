@@ -23,6 +23,7 @@
 
 import json
 import logging
+from json import JSONDecodeError
 
 import six
 import yaml
@@ -75,7 +76,7 @@ class Alarming(object):
         """
         try:
             values = json.loads(message.value)
-        except ValueError:
+        except JSONDecodeError:
             values = yaml.safe_load(message.value)
 
         log.info("OpenStack alarm action required.")
@@ -199,6 +200,7 @@ class Alarming(object):
         if metric_name not in METRIC_MAPPINGS.keys():
             raise KeyError("Metric {} is not supported.".format(metric_name))
 
+        #FIXME
         if 'granularity' in vim_config and 'granularity' not in values:
             values['granularity'] = vim_config['granularity']
         payload = self.check_payload(values, metric_name, resource_id,

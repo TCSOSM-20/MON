@@ -108,7 +108,7 @@ class OpenStack_Response(object):
                               "correlation_id": kwargs['cor_id'],
                               "metric_create_response": {
                                   "metric_uuid": kwargs['metric_id'],
-                                  "resource_uuid": kwargs['r_id'],
+                                  "resource_uuid": kwargs['resource_id'],
                                   "status": kwargs['status']}}
         return json.dumps(create_metric_resp)
 
@@ -116,10 +116,11 @@ class OpenStack_Response(object):
         """Generate a response for a read metric data request."""
         read_metric_data_resp = {"schema_version": schema_version,
                                  "schema_type": "read_metric_data_response",
-                                 "metric_name": kwargs['m_name'],
-                                 "metric_uuid": kwargs['m_id'],
-                                 "resource_uuid": kwargs['r_id'],
+                                 "metric_name": kwargs['metric_name'],
+                                 "metric_uuid": kwargs['metric_id'],
+                                 "resource_uuid": kwargs['resource_id'],
                                  "correlation_id": kwargs['cor_id'],
+                                 "status": kwargs['status'],
                                  "metrics_data": {
                                      "time_series": kwargs['times'],
                                      "metrics_series": kwargs['metrics']}}
@@ -129,9 +130,9 @@ class OpenStack_Response(object):
         """Generate a response for a delete metric request."""
         delete_metric_resp = {"schema_version": schema_version,
                               "schema_type": "delete_metric_response",
-                              "metric_name": kwargs['m_name'],
-                              "metric_uuid": kwargs['m_id'],
-                              "resource_uuid": kwargs['r_id'],
+                              "metric_name": kwargs['metric_name'],
+                              "metric_uuid": kwargs['metric_id'],
+                              "resource_uuid": kwargs['resource_id'],
                               "correlation_id": kwargs['cor_id'],
                               "status": kwargs['status']}
         return json.dumps(delete_metric_resp)
@@ -142,9 +143,9 @@ class OpenStack_Response(object):
                               "schema_type": "update_metric_response",
                               "correlation_id": kwargs['cor_id'],
                               "metric_update_response": {
-                                  "metric_uuid": kwargs['m_id'],
+                                  "metric_uuid": kwargs['metric_id'],
                                   "status": kwargs['status'],
-                                  "resource_uuid": kwargs['r_id']}}
+                                  "resource_uuid": kwargs['resource_id']}}
         return json.dumps(update_metric_resp)
 
     def list_metric_response(self, **kwargs):
@@ -152,7 +153,8 @@ class OpenStack_Response(object):
         list_metric_resp = {"schema_version": schema_version,
                             "schema_type": "list_metric_response",
                             "correlation_id": kwargs['cor_id'],
-                            "metrics_list": kwargs['m_list']}
+                            "status": kwargs['status'],
+                            "metrics_list": kwargs['metric_list']}
         return json.dumps(list_metric_resp)
 
     def notify_alarm(self, **kwargs):
@@ -160,7 +162,7 @@ class OpenStack_Response(object):
         notify_alarm_resp = {"schema_version": schema_version,
                              "schema_type": "notify_alarm",
                              "notify_details": {
-                                 "alarm_uuid": kwargs['a_id'],
+                                 "alarm_uuid": kwargs['alarm_id'],
                                  "vdu_name": kwargs['vdu_name'],
                                  "vnf_member_index": kwargs['vnf_member_index'],
                                  "ns_id": kwargs['ns_id'],

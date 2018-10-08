@@ -83,29 +83,26 @@ class TestMetricCalls(unittest.TestCase):
         # Test invalid configuration for creating a metric
         values = {"metric_details": "invalid_metric"}
 
-        m_id, r_id, status = self.metrics.configure_metric(
-            endpoint, auth_token, values, verify_ssl=False)
+        with self.assertRaises(ValueError):
+            self.metrics.configure_metric(endpoint, auth_token, values, verify_ssl=False)
 
         perf_req.assert_not_called()
-        self.assertEqual(status, False)
 
         # Test with an invalid metric name, will not perform request
         values = {"resource_uuid": "r_id"}
 
-        m_id, r_id, status = self.metrics.configure_metric(
-            endpoint, auth_token, values, verify_ssl=False)
+        with self.assertRaises(ValueError):
+            self.metrics.configure_metric(endpoint, auth_token, values, verify_ssl=False)
 
         perf_req.assert_not_called()
-        self.assertEqual(status, False)
 
         # If metric exists, it won't be recreated
         get_metric.return_value = "metric_id"
 
-        m_id, r_id, status = self.metrics.configure_metric(
-            endpoint, auth_token, values, verify_ssl=False)
+        with self.assertRaises(ValueError):
+            self.metrics.configure_metric(endpoint, auth_token, values, verify_ssl=False)
 
         perf_req.assert_not_called()
-        self.assertEqual(status, False)
 
     @mock.patch.object(metric_req.Metrics, "get_metric_id")
     @mock.patch.object(Common, "perform_request")
@@ -136,6 +133,10 @@ class TestMetricCalls(unittest.TestCase):
     @mock.patch.object(Common, "perform_request")
     def test_delete_metric_req(self, perf_req):
         """Test the delete metric function."""
+        mock_response = Response()
+        mock_response.status_code = 200
+        perf_req.return_value = mock_response
+
         self.metrics.delete_metric(endpoint, auth_token, "metric_id", verify_ssl=False)
 
         perf_req.assert_called_with(
@@ -146,9 +147,8 @@ class TestMetricCalls(unittest.TestCase):
         """Test invalid response for delete request."""
         perf_req.return_value = type('obj', (object,), {"status_code": "404"})
 
-        status = self.metrics.delete_metric(endpoint, auth_token, "metric_id", verify_ssl=False)
-
-        self.assertEqual(status, False)
+        with self.assertRaises(ValueError):
+            self.metrics.delete_metric(endpoint, auth_token, "metric_id", verify_ssl=False)
 
     @mock.patch.object(metric_req.Metrics, "response_list")
     @mock.patch.object(Common, "perform_request")
@@ -206,7 +206,9 @@ class TestMetricCalls(unittest.TestCase):
     @mock.patch.object(Common, "perform_request")
     def test_get_metric_id(self, perf_req):
         """Test get_metric_id function."""
-        perf_req.return_value = type('obj', (object,), {'text': '{"alarm_id":"1"}'})
+        mock_response = Response()
+        mock_response.text = json.dumps({'metrics': {'my_metric': 'id'}})
+        perf_req.return_value = mock_response
         self.metrics.get_metric_id(endpoint, auth_token, "my_metric", "r_id", verify_ssl=False)
 
         perf_req.assert_called_with(
@@ -230,15 +232,11 @@ class TestMetricCalls(unittest.TestCase):
 
     @mock.patch.object(Common, "perform_request")
     def test_invalid_read_data_req(self, perf_req):
-        """Test the read metric data function, for an invalid call."""
-        # Teo empty lists wil be returned because the values are invalid
+        """Test the read metric data function for an invalid call."""
         values = {}
 
-        times, data = self.metrics.read_metric_data(
-            endpoint, auth_token, values, verify_ssl=False)
-
-        self.assertEqual(times, [])
-        self.assertEqual(data, [])
+        with self.assertRaises(KeyError):
+            self.metrics.read_metric_data(endpoint, auth_token, values, verify_ssl=False)
 
     def test_complete_response_list(self):
         """Test the response list function for formatting metric lists."""

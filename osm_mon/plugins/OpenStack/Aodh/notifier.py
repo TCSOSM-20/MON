@@ -107,7 +107,7 @@ class NotifierHandler(BaseHTTPRequestHandler):
         # Generate and send response
         resp_message = response.generate_response(
             'notify_alarm',
-            a_id=alarm_id,
+            alarm_id=alarm_id,
             vdu_name=alarm.vdu_name,
             vnf_member_index=alarm.vnf_member_index,
             ns_id=alarm.ns_id,

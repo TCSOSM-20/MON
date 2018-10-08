@@ -94,13 +94,13 @@ class MetricIntegrationTest(unittest.TestCase):
         for message in self.req_consumer:
             if message.key == "create_metric_request":
                 # A valid metric is created
-                config_metric.return_value = "metric_id", "resource_id", True
+                config_metric.return_value = "metric_id", "resource_id"
                 self.metric_req.metric_calls(message, 'test_id')
 
                 # A response message is generated and sent by MON's producer
                 resp.assert_called_with(
                     'create_metric_response', status=True, cor_id=123,
-                    metric_id="metric_id", r_id="resource_id")
+                    metric_id="metric_id", resource_id="resource_id")
 
                 return
         self.fail("No message received in consumer")
@@ -133,8 +133,8 @@ class MetricIntegrationTest(unittest.TestCase):
 
                 # A response message is generated and sent by MON's producer
                 resp.assert_called_with(
-                    'delete_metric_response', m_id='1',
-                    m_name="cpu_utilization", status=True, r_id="resource_id",
+                    'delete_metric_response', metric_id='1',
+                    metric_name="cpu_utilization", status=True, resource_id="resource_id",
                     cor_id=123)
 
                 return
@@ -169,9 +169,9 @@ class MetricIntegrationTest(unittest.TestCase):
 
                 # A response message is generated and sent by MON's producer
                 resp.assert_called_with(
-                    'read_metric_data_response', m_id='1',
-                    m_name="cpu_utilization", r_id="resource_id", cor_id=123, times=[],
-                    metrics=[])
+                    'read_metric_data_response', metric_id='1',
+                    metric_name="cpu_utilization", resource_id="resource_id", cor_id=123, times=[],
+                    metrics=[], status=True)
 
                 return
         self.fail("No message received in consumer")
@@ -204,7 +204,7 @@ class MetricIntegrationTest(unittest.TestCase):
 
                 # A response message is generated and sent by MON's producer
                 resp.assert_called_with(
-                    'list_metric_response', m_list=[], cor_id=123)
+                    'list_metric_response', metric_list=[], cor_id=123, status=True)
 
                 return
         self.fail("No message received in consumer")
@@ -216,7 +216,7 @@ class MetricIntegrationTest(unittest.TestCase):
     def test_update_metrics_req(self, resp, get_id, get_creds, perf_req):
         """Test Gnocchi update metric request message from KafkaProducer."""
         # Set-up message, producer and consumer for tests
-        payload = {"metric_create_request": {"metric_name": "my_metric",
+        payload = {"metric_update_request": {"metric_name": "my_metric",
                                              "correlation_id": 123,
                                              "resource_uuid": "resource_id", }}
 
@@ -238,7 +238,7 @@ class MetricIntegrationTest(unittest.TestCase):
                 # No metric update has taken place
                 resp.assert_called_with(
                     'update_metric_response', status=False, cor_id=123,
-                    r_id="resource_id", m_id="metric_id")
+                    resource_id="resource_id", metric_id="metric_id")
 
                 return
         self.fail("No message received in consumer")

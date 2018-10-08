@@ -115,8 +115,9 @@ class MockNotifierHandler(BaseHTTPRequestHandler):
                 # Try generate and send response
                 try:
                     resp_message = self._response.generate_response(
-                        'notify_alarm', a_id=alarm_id,
-                        r_id=resource_id,
+                        'notify_alarm',
+                        alarm_id=alarm_id,
+                        resource_id=resource_id,
                         sev=values['severity'], date=a_date,
                         state=values['current'], vim_type="OpenStack")
                     self._producer.publish_alarm_response(
@@ -183,7 +184,7 @@ class AlarmNotificationTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         # A response message is generated with the following details
         resp.assert_called_with(
-            "notify_alarm", a_id="my_alarm_id", r_id="my_resource_id",
+            "notify_alarm", alarm_id="my_alarm_id", resource_id="my_resource_id",
             sev="critical", date='dd-mm-yyyy 00:00', state="current_state",
             vim_type="OpenStack")
 
