@@ -217,7 +217,7 @@ class AlarmIntegrationTest(unittest.TestCase):
         for message in self.req_consumer:
             if message.key == "acknowledge_alarm":
                 self.alarms.alarming(message, 'test_id')
-                ack_alarm.assert_called_with(mock.ANY, mock.ANY, 'alarm_id')
+                ack_alarm.assert_called_with(mock.ANY, mock.ANY, 'alarm_id', True)
                 return
 
         self.fail("No message received in consumer")

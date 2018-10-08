@@ -3,6 +3,7 @@ import unittest
 import mock
 from kafka import KafkaProducer
 from kafka.errors import KafkaError
+from osm_common import dbmongo
 
 from osm_mon.core.database import VimCredentials
 from osm_mon.core.message_bus.common_consumer import *
@@ -51,7 +52,8 @@ class CommonConsumerTest(unittest.TestCase):
                                         'internal-connection-point': [],
                                         'vdu-id-ref': 'ubuntuvnf_vnfd-VM',
                                         'id': 'ffd73f33-c8bb-4541-a977-44dcc3cbe28d',
-                                        'vim-id': '27042672-5190-4209-b844-95bbaeea7ea7'
+                                        'vim-id': '27042672-5190-4209-b844-95bbaeea7ea7',
+                                        'name': 'ubuntuvnf_vnfd-VM'
                                     }
                                 ],
                                 'vnfd-ref': 'ubuntuvnf_vnfd',
@@ -60,12 +62,13 @@ class CommonConsumerTest(unittest.TestCase):
                                 'vnfd-id': 'a314c865-aee7-4d9b-9c9d-079d7f857f01',
                                 'id': 'a314c865-aee7-4d9b-9c9d-079d7f857f01'}
         common_consumer = CommonConsumer()
-        vdur = common_consumer.get_vdur('5ec3f571-d540-4cb0-9992-971d1b08312e', '1', 'ubuntuvnf_vnfd-VM')
+        vdur = common_consumer.common_db.get_vdur('5ec3f571-d540-4cb0-9992-971d1b08312e', '1', 'ubuntuvnf_vnfd-VM')
         expected_vdur = {
             'internal-connection-point': [],
             'vdu-id-ref': 'ubuntuvnf_vnfd-VM',
             'id': 'ffd73f33-c8bb-4541-a977-44dcc3cbe28d',
-            'vim-id': '27042672-5190-4209-b844-95bbaeea7ea7'
+            'vim-id': '27042672-5190-4209-b844-95bbaeea7ea7',
+            'name': 'ubuntuvnf_vnfd-VM'
         }
 
         self.assertDictEqual(vdur, expected_vdur)
