@@ -32,8 +32,9 @@
   },
   "required": [ "schema_version",
                 "schema_type",
-                "vim_type",
-                "vim_uuid",
+                "ns_id",
+                "vdu_name",
+                "vnf_member_index",
                 "correlation_id"
               ]
 }

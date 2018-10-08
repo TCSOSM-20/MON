@@ -42,8 +42,6 @@
                 "schema_type",
                 "alarm_uuid",
                 "resource_uuid",
-                "vim_type",
-                "vim_uuid",
                 "severity",
                 "status",
                 "start_date" ]

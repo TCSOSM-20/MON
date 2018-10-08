@@ -26,8 +26,7 @@
   "metric_uuid": { "type": "string" },
   "correlation_id": { "type": "integer" },
   "resource_uuid": { "type": "string" },
-  "tenant_uuid": { "type": "string" },
-  "vim_uuid": { "type": "string" },
+  "status": { "type": "boolean" },
   "metrics_data":
   {
     "time_series": [{
@@ -35,8 +34,7 @@
                       "properties":
                       { "time_stamp":
                         { "type": "integer" }}}
-    ]
-  },
+    ],
     "metrics_series": [{
                       "type": "array",
                       "properties":
@@ -50,14 +48,15 @@
                       }
                     }
                   ],
+      },
   "unit": { "type": "string" },
   "required": [ "schema_version",
                 "schema_type",
                 "metric_name",
                 "metric_uuid",
                 "resource_uuid",
-                "vim_uuid",
                 "correlation_id",
                 "time_series",
-                "metrics_series" ]
+                "metrics_series",
+                "status" ]
 }

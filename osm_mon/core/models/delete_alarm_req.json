@@ -27,12 +27,14 @@
     "correlation_id": { "type": "integer" },
     "alarm_uuid": { "type": "string" },
     "ns_id": { "type": "string"},
+    "vdu_name": { "type": "string"},
     "vnf_member_index": { "type": "integer"}
   },
   "required": [ "schema_version",
                 "schema_type",
                 "alarm_uuid",
                 "ns_id",
+                "vdu_name",
                 "vnf_member_index",
                 "correlation_id"
               ]

@@ -30,9 +30,8 @@
   "required": [ "schema_version",
                 "schema_type",
                 "metric_name",
-                "metric_uuid",
-                "resource_uuid",
-                "correlation_id",
-                "vim_type",
-                "vim_uuid" ]
+                "ns_id",
+                "vdu_name",
+                "vnf_member_index",
+                "correlation_id" ]
 }

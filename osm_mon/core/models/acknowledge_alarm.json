@@ -36,5 +36,6 @@
                 "schema_type",
                 "alarm_uuid",
                 "ns_id",
-                "vnf_member_index" ]
+                "vnf_member_index",
+                "vdu_name"]
 }

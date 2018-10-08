@@ -25,13 +25,12 @@
   "metric_create_response":
   {
     "correlation_id": { "type": "integer" },
+    "metric_uuid": { "type": "string" },
     "status": { "type": "boolean" }
   },
   "required": [ "schema_type",
                 "schema_version",
                 "correlation_id",
-                "vim_uuid",
                 "metric_uuid",
-                "resource_uuid",
                 "status" ]
 }

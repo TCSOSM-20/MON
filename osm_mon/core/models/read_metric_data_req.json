@@ -34,9 +34,9 @@
                "metric_name",
                "metric_uuid",
                "correlation_id",
-               "vim_type",
-               "vim_uuid",
                "collection_period",
                "collection_unit",
-               "resource_uuid"]
+               "ns_id",
+               "vdu_name",
+               "vnf_member_index"]
 }

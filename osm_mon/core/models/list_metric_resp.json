@@ -22,10 +22,8 @@
 {
   "schema_version": { "type": "string" },
   "schema_type": { "type": "string" },
-  "tenant_uuid": { "type": "string" },
   "correlation_id": { "type": "integer" },
-  "vim_type": { "type": "string" },
-  "vim_uuid": { "type": "string" },
+  "status": { "type": "boolean" },
   "metrics_list":
     [{
       "type": "array",
@@ -39,8 +37,6 @@
     "required": [ "schema_version",
                   "schema_type",
                   "correlation_id",
-                  "vim_type",
-                  "vim_uuid",
                   "metric_name",
                   "metric_uuid",
                   "metric_unit",

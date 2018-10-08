@@ -25,7 +25,6 @@
   "alarm_update_request":
 {
     "correlation_id": { "type": "integer" },
-    "vim_uuid": { "type": "string" },
     "alarm_uuid": { "type": "string" },
     "metric_name": { "type": "string" },
     "ns_id": { "type": "string"},
@@ -39,9 +38,10 @@
   },
   "required": [ "schema_version",
                 "schema_type",
-                "vim_type",
-                "vim_uuid",
                 "correlation_id",
-  	        "alarm_uuid",
-  	        "metric_uuid" ]
+  	            "alarm_uuid",
+  	            "metric_uuid",
+                "ns_id",
+                "vdu_name",
+                "vnf_member_index"]
 }

@@ -22,7 +22,6 @@
 {
   "schema_version": { "type": "string" },
   "schema_type": { "type": "string" },
-  "vim_uuid": { "type": "string" },
   "alarm_create_response":
   {
     "correlation_id": { "type": "integer" },
@@ -31,7 +30,6 @@
   },
   "required": [ "schema_version",
   	            "schema_type",
-                    "vim_uuid",
   	            "correlation_id",
   	            "alarm_uuid",
   	            "status" ]
