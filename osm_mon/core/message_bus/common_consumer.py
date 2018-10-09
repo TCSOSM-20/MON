@@ -40,10 +40,12 @@ from osm_mon.plugins.OpenStack.Aodh import alarming
 from osm_mon.plugins.OpenStack.Gnocchi import metrics
 from osm_mon.plugins.vRealiseOps import plugin_receiver
 
+cfg = Config.instance()
+
 logging.basicConfig(stream=sys.stdout,
-                    format='%(asctime)s %(message)s',
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     datefmt='%m/%d/%Y %I:%M:%S %p',
-                    level=logging.INFO)
+                    level=logging.getLevelName(cfg.OSMMON_LOG_LEVEL))
 log = logging.getLogger(__name__)
 
 
