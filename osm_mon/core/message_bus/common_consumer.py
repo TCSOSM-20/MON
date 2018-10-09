@@ -100,8 +100,8 @@ class CommonConsumer:
                          vdu_name)
 
     def get_vnfr(self, nsr_id, member_index):
-        vnfr = self.common_db.get_one(table="vnfrs",
-                                      filter={"nsr-id-ref": nsr_id, "member-vnf-index-ref": str(member_index)})
+        vnfr = self.common_db.get_one("vnfrs",
+                                      {"nsr-id-ref": nsr_id, "member-vnf-index-ref": str(member_index)})
         return vnfr
 
     def run(self):
