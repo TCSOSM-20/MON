@@ -106,7 +106,9 @@ class CommonConsumer:
         common_consumer = KafkaConsumer(bootstrap_servers=cfg.BROKER_URI,
                                         key_deserializer=bytes.decode,
                                         value_deserializer=bytes.decode,
-                                        group_id="mon-consumer")
+                                        group_id="mon-consumer",
+                                        session_timeout_ms=60000,
+                                        heartbeat_interval_ms=20000)
 
         topics = ['metric_request', 'alarm_request', 'vim_account']
         common_consumer.subscribe(topics)
