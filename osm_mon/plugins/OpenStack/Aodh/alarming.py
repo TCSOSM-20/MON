@@ -357,7 +357,8 @@ class Alarming(object):
                               'severity': SEVERITIES[severity],
                               'type': 'gnocchi_resources_threshold',
                               'gnocchi_resources_threshold_rule': rule,
-                              'alarm_actions': [cfg.OS_NOTIFIER_URI], }, sort_keys=True)
+                              'alarm_actions': [cfg.OS_NOTIFIER_URI],
+                              'repeat_actions': True}, sort_keys=True)
         return payload
 
     def get_alarm_state(self, endpoint, auth_token, alarm_id):

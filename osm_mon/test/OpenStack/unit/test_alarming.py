@@ -95,7 +95,7 @@ class TestAlarming(unittest.TestCase):
                                                         "granularity": "300", "metric": "disk.write.requests",
                                                         "aggregation_method": "mean", "threshold": 60,
                                                         "resource_id": "my_r_id"},
-                   "alarm_actions": ["http://localhost:8662"], "state": "ok", "type": "gnocchi_resources_threshold",
+                   "alarm_actions": ["http://localhost:8662"], "repeat_actions": True, "state": "ok", "type": "gnocchi_resources_threshold",
                    "severity": "critical"}
         perf_req.assert_called_with(
             "alarm_endpoint/v2/alarms/", auth_token,
@@ -235,7 +235,8 @@ class TestAlarming(unittest.TestCase):
                                   "severity": "low",
                                   "state": "ok",
                                   "type": "gnocchi_resources_threshold",
-                                  "alarm_actions": ["http://localhost:8662"]})
+                                  "alarm_actions": ["http://localhost:8662"],
+                                  "repeat_actions": True})
 
     @mock.patch.object(Config, "instance")
     @mock.patch.object(Common, "perform_request")
@@ -264,7 +265,8 @@ class TestAlarming(unittest.TestCase):
                                   "severity": "low",
                                   "state": "alarm",
                                   "type": "gnocchi_resources_threshold",
-                                  "alarm_actions": ["http://localhost:8662"]})
+                                  "alarm_actions": ["http://localhost:8662"],
+                                  "repeat_actions": True})
 
     def test_check_invalid_payload(self):
         """Test the check payload function for an invalid payload."""
