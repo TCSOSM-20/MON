@@ -33,4 +33,5 @@ six==1.11.*
 bottle==0.12.*
 peewee==3.1.*
 pyyaml==3.*
+prometheus_client==0.4.*
 git+https://osm.etsi.org/gerrit/osm/common.git#egg=osm-common

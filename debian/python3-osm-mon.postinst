@@ -16,4 +16,5 @@ pip3 install six==1.11.*
 pip3 install bottle==0.12.*
 pip3 install peewee==3.1.*
 pip3 install pyyaml==3.*
+pip3 install prometheus_client==0.4.*
 echo "Installation of python dependencies finished"

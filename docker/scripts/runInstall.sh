@@ -22,5 +22,6 @@
 ##
 /bin/bash /mon/osm_mon/plugins/vRealiseOps/vROPs_Webservice/install.sh
 python3 /mon/osm_mon/plugins/OpenStack/Aodh/notifier.py &
-python3 /mon/osm_mon/core/message_bus/common_consumer.py
+python3 /mon/osm_mon/core/message_bus/common_consumer.py &
+osm-mon-exporter
 

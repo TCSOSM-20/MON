@@ -71,6 +71,11 @@ setup(
         "osm-common"
     ],
     include_package_data=True,
+    entry_points={
+        "console_scripts": [
+            "osm-mon-exporter = osm_mon.cmd.exporter:main",
+        ]
+    },
     dependency_links=[
         'git+https://osm.etsi.org/gerrit/osm/common.git#egg=osm-common'
     ],
