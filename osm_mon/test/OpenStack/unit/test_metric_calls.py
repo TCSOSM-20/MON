@@ -22,16 +22,13 @@
 """Tests for all metric request message keys."""
 
 import json
-
 import logging
-
 import unittest
 
 import mock
 
 from osm_mon.core.auth import AuthManager
-from osm_mon.plugins.OpenStack.Gnocchi import metrics as metric_req
-
+from osm_mon.plugins.OpenStack.Gnocchi import metric_handler as metric_req
 from osm_mon.plugins.OpenStack.common import Common
 
 log = logging.getLogger(__name__)
@@ -72,10 +69,10 @@ class TestMetricCalls(unittest.TestCase):
     def setUp(self):
         """Setup the tests for metric request keys."""
         super(TestMetricCalls, self).setUp()
-        self.metrics = metric_req.Metrics()
+        self.metrics = metric_req.OpenstackMetricHandler()
         self.metrics._common = Common()
 
-    @mock.patch.object(metric_req.Metrics, "get_metric_id")
+    @mock.patch.object(metric_req.OpenstackMetricHandler, "get_metric_id")
     @mock.patch.object(Common, "perform_request")
     def test_invalid_config_metric_req(
             self, perf_req, get_metric):
@@ -104,7 +101,7 @@ class TestMetricCalls(unittest.TestCase):
 
         perf_req.assert_not_called()
 
-    @mock.patch.object(metric_req.Metrics, "get_metric_id")
+    @mock.patch.object(metric_req.OpenstackMetricHandler, "get_metric_id")
     @mock.patch.object(Common, "perform_request")
     @mock.patch.object(AuthManager, "get_credentials")
     def test_valid_config_metric_req(
@@ -150,7 +147,7 @@ class TestMetricCalls(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.metrics.delete_metric(endpoint, auth_token, "metric_id", verify_ssl=False)
 
-    @mock.patch.object(metric_req.Metrics, "response_list")
+    @mock.patch.object(metric_req.OpenstackMetricHandler, "response_list")
     @mock.patch.object(Common, "perform_request")
     def test_complete_list_metric_req(self, perf_req, resp_list):
         """Test the complete list metric function."""
@@ -163,7 +160,7 @@ class TestMetricCalls(unittest.TestCase):
             "<ANY>/v1/metric?sort=name:asc", auth_token, req_type="get", verify_ssl=False)
         resp_list.assert_called_with([{u'id': u'test_id'}])
 
-    @mock.patch.object(metric_req.Metrics, "response_list")
+    @mock.patch.object(metric_req.OpenstackMetricHandler, "response_list")
     @mock.patch.object(Common, "perform_request")
     def test_resource_list_metric_req(self, perf_req, resp_list):
         """Test the resource list metric function."""
@@ -175,7 +172,7 @@ class TestMetricCalls(unittest.TestCase):
         perf_req.assert_any_call(
             "<ANY>/v1/metric/test_id", auth_token, req_type="get", verify_ssl=False)
 
-    @mock.patch.object(metric_req.Metrics, "response_list")
+    @mock.patch.object(metric_req.OpenstackMetricHandler, "response_list")
     @mock.patch.object(Common, "perform_request")
     def test_name_list_metric_req(self, perf_req, resp_list):
         """Test the metric_name list metric function."""
@@ -189,7 +186,7 @@ class TestMetricCalls(unittest.TestCase):
         resp_list.assert_called_with(
             [{u'id': u'test_id'}], metric_name="disk_write_bytes")
 
-    @mock.patch.object(metric_req.Metrics, "response_list")
+    @mock.patch.object(metric_req.OpenstackMetricHandler, "response_list")
     @mock.patch.object(Common, "perform_request")
     def test_combined_list_metric_req(self, perf_req, resp_list):
         """Test the combined resource and metric list metric function."""
@@ -214,7 +211,7 @@ class TestMetricCalls(unittest.TestCase):
         perf_req.assert_called_with(
             "<ANY>/v1/resource/generic/r_id", auth_token, req_type="get", verify_ssl=False)
 
-    @mock.patch.object(metric_req.Metrics, "get_metric_id")
+    @mock.patch.object(metric_req.OpenstackMetricHandler, "get_metric_id")
     @mock.patch.object(Common, "perform_request")
     def test_valid_read_data_req(self, perf_req, get_metric):
         """Test the read metric data function, for a valid call."""

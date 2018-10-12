@@ -19,30 +19,29 @@
 # contact with: usman.javaid@xflowresearch.com
 ##
 
-'''
+"""
 Access credentials class implements all the methods to store the access credentials for AWS
-'''
+"""
 
 __author__ = "Usman Javaid"
-__date__   = "20-December-2017"
+__date__ = "20-December-2017"
 
-import os
-import sys
 import json
 import logging
+import os
 
 log = logging.getLogger(__name__)
+
 
 class AccessCredentials():
 
     def logtest(self):
         log.info("Access credentials sourced for CloudWatch MON plugin")
 
-
-    def access_credential_calls(self,message):  
-        try:   
+    def access_credential_calls(self, message):
+        try:
             message = json.loads(message.value)['access_config']
-            
+
             AWS_KEY = message['user']
             AWS_SECRET = message['password']
             AWS_REGION = message['vim_tenant_name']
@@ -51,17 +50,15 @@ class AccessCredentials():
             os.environ['AWS_SECRET_ACCESS_KEY'] = AWS_SECRET
             os.environ['AWS_EC2_REGION'] = AWS_REGION
 
+            # aws_credentials.txt file to save the access credentials
+            cloudwatch_credentials = open("../../plugins/CloudWatch/cloudwatch_credentials.txt", "w+")
+            cloudwatch_credentials.write("AWS_ACCESS_KEY_ID=" + AWS_KEY +
+                                         "\nAWS_SECRET_ACCESS_KEY=" + AWS_SECRET +
+                                         "\nAWS_EC2_REGION=" + AWS_REGION)
 
-            #aws_credentials.txt file to save the access credentials 
-            cloudwatch_credentials = open("../../plugins/CloudWatch/cloudwatch_credentials.txt","w+")
-            cloudwatch_credentials.write("AWS_ACCESS_KEY_ID="+AWS_KEY+
-                                         "\nAWS_SECRET_ACCESS_KEY="+AWS_SECRET+
-                                         "\nAWS_EC2_REGION="+AWS_REGION)
-            
-            #Closing the file
+            # Closing the file
             cloudwatch_credentials.close()
             log.info("Access credentials sourced for CloudWatch MON plugin")
 
         except Exception as e:
-                log.error("Access credentials not provided correctly: %s", str(e))
-
+            log.error("Access credentials not provided correctly: %s", str(e))

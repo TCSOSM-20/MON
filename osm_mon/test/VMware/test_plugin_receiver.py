@@ -23,24 +23,20 @@
 
 """ Mock tests for VMware vROPs plugin recevier """
 
-import sys
-#sys.path.append("/root/MON/")
-
 import json
-
 import logging
-
+import os
+import sys
 import unittest
+from io import UnsupportedOperation
 
 import mock
 
-import requests
-
-import os
+# sys.path.append("/root/MON/")
 
 log = logging.getLogger(__name__)
 
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),"..","..",".."))
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
 
 from osm_mon.plugins.vRealiseOps import plugin_receiver as monPluginRec
 from osm_mon.core.database import VimCredentials
@@ -68,321 +64,228 @@ class TestPluginReceiver(unittest.TestCase):
 
     @mock.patch.object(monPluginRec.PluginReceiver, 'publish_create_alarm_status')
     @mock.patch.object(monPluginRec.PluginReceiver, 'create_alarm')
-    def test_consume_create_alarm_request_key(self, m_create_alarm,\
-                                              m_publish_create_alarm_status):
+    def test_consume_create_alarm_request_key(self, m_create_alarm, m_publish_create_alarm_status):
         """Test functionality of consume for create_alarm_request key"""
 
         vim_uuid = "f85fc39e-723d-4172-979b-de28b36465bb"
-        # Mock a message
-        msg = Message()
-        msg.topic = "alarm_request"
-        msg.key = "create_alarm_request"
 
-        msg.value = json.dumps({"vim_uuid":vim_uuid,"alarm_create_request":"alarm_details"})
+        value = {"vim_uuid": vim_uuid, "alarm_create_request": "alarm_details"}
         m_create_alarm.return_value = "test_alarm_id"
 
-        config_alarm_info = json.loads(msg.value)
-
         # Call the consume method of plugin_receiver
-        self.plugin_receiver.consume(msg,vim_uuid)
+        self.plugin_receiver.handle_alarm_requests('create_alarm_request', value, vim_uuid)
 
         # verify if create_alarm and publish methods called with correct params
-        m_create_alarm.assert_called_with(config_alarm_info)
-        m_publish_create_alarm_status.assert_called_with("test_alarm_id", config_alarm_info)
-
+        m_create_alarm.assert_called_with(value)
+        m_publish_create_alarm_status.assert_called_with("test_alarm_id", value)
 
     @mock.patch.object(monPluginRec.PluginReceiver, 'publish_update_alarm_status')
     @mock.patch.object(monPluginRec.PluginReceiver, 'update_alarm')
-    def test_consume_update_alarm_request_key(self, m_update_alarm,\
+    def test_consume_update_alarm_request_key(self, m_update_alarm,
                                               m_publish_update_alarm_status):
         """Test functionality of consume for update_alarm_request key"""
 
         vim_uuid = "f85fc39e-723d-4172-979b-de28b36465bb"
-        # Mock a message
-        msg = Message()
-        msg.topic = "alarm_request"
-        msg.key = "update_alarm_request"
 
-        msg.value = json.dumps({"vim_uuid":vim_uuid,"alarm_update_request":"alarm_details"})
+        value = {"vim_uuid": vim_uuid, "alarm_update_request": "alarm_details"}
 
         # set return value to mocked method
         m_update_alarm.return_value = "test_alarm_id"
 
-        update_alarm_info = json.loads(msg.value)
-
         # Call the consume method of plugin_receiver
-        self.plugin_receiver.consume(msg,vim_uuid)
+        self.plugin_receiver.handle_alarm_requests('update_alarm_request', value, vim_uuid)
 
         # verify update_alarm and publish method called with correct params
-        m_update_alarm.assert_called_with(update_alarm_info)
-        m_publish_update_alarm_status.assert_called_with("test_alarm_id", update_alarm_info)
-
+        m_update_alarm.assert_called_with(value)
+        m_publish_update_alarm_status.assert_called_with("test_alarm_id", value)
 
     @mock.patch.object(monPluginRec.PluginReceiver, 'publish_delete_alarm_status')
     @mock.patch.object(monPluginRec.PluginReceiver, 'delete_alarm')
-    def test_consume_delete_alarm_request_key(self, m_delete_alarm,\
+    def test_consume_delete_alarm_request_key(self, m_delete_alarm,
                                               m_publish_delete_alarm_status):
         """Test functionality of consume for delete_alarm_request key"""
 
         vim_uuid = "f85fc39e-723d-4172-979b-de28b36465bb"
-        # Mock a message
-        msg = Message()
-        msg.topic = "alarm_request"
-        msg.key = "delete_alarm_request"
 
-        msg.value = json.dumps({"vim_uuid":vim_uuid,"alarm_delete_request":"alarm_details"})
+        value = {"vim_uuid": vim_uuid, "alarm_delete_request": "alarm_details"}
         m_delete_alarm.return_value = "test_alarm_id"
 
-        delete_alarm_info = json.loads(msg.value)
-
         # Call the consume method of plugin_receiver and check delete_alarm request
-        self.plugin_receiver.consume(msg,vim_uuid)
-        m_delete_alarm.assert_called_with(delete_alarm_info)
+        self.plugin_receiver.handle_alarm_requests('delete_alarm_request', value, vim_uuid)
+        m_delete_alarm.assert_called_with(value)
 
         # Check if publish method called with correct parameters
-        m_publish_delete_alarm_status.assert_called_with("test_alarm_id", delete_alarm_info)
-
+        m_publish_delete_alarm_status.assert_called_with("test_alarm_id", value)
 
     @mock.patch.object(monPluginRec.PluginReceiver, 'publish_list_alarm_response')
     @mock.patch.object(monPluginRec.PluginReceiver, 'list_alarms')
-    def test_consume_list_alarm_request_key(self, m_list_alarms,\
+    def test_consume_list_alarm_request_key(self, m_list_alarms,
                                             m_publish_list_alarm_response):
         """ Test functionality of list alarm request key"""
 
         vim_uuid = "f85fc39e-723d-4172-979b-de28b36465bb"
-        # Mock a message
-        msg = Message()
-        msg.topic = "alarm_request"
-        msg.key = "list_alarm_request"
-        test_alarm_list = [{"alarm_uuid":"alarm1_details"},{"alarm_uuid":"alarm2_details"}]
+        value = {"vim_uuid": vim_uuid, "alarm_list_request": "alarm_details"}
 
-        msg.value = json.dumps({"vim_uuid":vim_uuid,"alarm_list_request":"alarm_details"})
+        test_alarm_list = [{"alarm_uuid": "alarm1_details"}, {"alarm_uuid": "alarm2_details"}]
+
         m_list_alarms.return_value = test_alarm_list
 
-        list_alarms_info = json.loads(msg.value)
-
         # Call the consume method of plugin_receiver and check delete_alarm request
-        self.plugin_receiver.consume(msg,vim_uuid)
-        m_list_alarms.assert_called_with(list_alarms_info)
+        self.plugin_receiver.handle_alarm_requests('list_alarm_request', value, vim_uuid)
+        m_list_alarms.assert_called_with(value)
 
         # Check if publish method called with correct parameters
-        m_publish_list_alarm_response.assert_called_with(test_alarm_list, list_alarms_info)
-
-
-    @mock.patch.object(monPluginRec.PluginReceiver, 'publish_access_update_response')
-    @mock.patch.object(monPluginRec.PluginReceiver, 'update_access_credentials')
-    def test_consume_vim_access_request_key(self, m_update_access_credentials,\
-                                            m_publish_access_update_response):
-        """Test functionality of consume for vim_access_credentials request key"""
-
-        vim_uuid = "f85fc39e-723d-4172-979b-de28b36465bb"
-        # Mock a message
-        msg = Message()
-        msg.topic = "access_credentials"
-        msg.key = "vim_access_credentials"
-
-        msg.value = json.dumps({"vim_uuid":vim_uuid,"access_config":"access_details"})
-        # set return value to mocked method
-        m_update_access_credentials.return_value = True
-
-        access_info = json.loads(msg.value)
-
-        # Call the consume method of plugin_receiver
-        self.plugin_receiver.consume(msg,vim_uuid)
-
-        # check if mocked method called with required parameters
-        m_update_access_credentials.assert_called_with("access_details")
-
-        # Check if publish method called with correct parameters
-        m_publish_access_update_response.assert_called_with(True, access_info)
-
+        m_publish_list_alarm_response.assert_called_with(test_alarm_list, value)
 
     @mock.patch.object(monPluginRec.PluginReceiver, 'publish_create_alarm_status')
     @mock.patch.object(monPluginRec.PluginReceiver, 'create_alarm')
-    def test_consume_invalid_alarm_request_key(self, m_create_alarm,\
+    def test_consume_invalid_alarm_request_key(self, m_create_alarm,
                                                m_publish_create_alarm_status):
         """Test functionality of consume for vim_access_credentials invalid request key"""
 
         vim_uuid = "f85fc39e-723d-4172-979b-de28b36465bb"
-        # Mock a message with invalid alarm request key
-        msg = Message()
-        msg.topic = "alarm_request"
-        msg.key = "invalid_alarm_request" # invalid key
 
         # Call the consume method of plugin_receiver
-        self.plugin_receiver.consume(msg,vim_uuid)
+        with self.assertRaises(UnsupportedOperation):
+            self.plugin_receiver.handle_alarm_requests('invalid_key', {}, vim_uuid)
 
         # verify that create_alarm and publish_create_alarm_status methods not called
         m_create_alarm.assert_not_called()
         m_publish_create_alarm_status.assert_not_called()
 
-
     @mock.patch.object(monPluginRec.PluginReceiver, 'publish_metrics_data_status')
     @mock.patch.object(monPluginRec.MonPlugin, 'get_metrics_data')
-    def test_consume_invalid_metric_request_key(self, m_get_metrics_data,\
+    def test_consume_invalid_metric_request_key(self, m_get_metrics_data,
                                                 m_publish_metric_data_status):
         """Test functionality of invalid metric key request"""
 
         vim_uuid = "f85fc39e-723d-4172-979b-de28b36465bb"
-        # Mock a message with invalid metric request key
-        msg = Message()
-        msg.topic = "metric_request"
-        msg.key = "invalid_metric_data_request" #invalid key
 
         # Call the consume method of plugin_receiver
-        self.plugin_receiver.consume(msg,vim_uuid)
+        with self.assertRaises(UnsupportedOperation):
+            self.plugin_receiver.handle_metric_requests('invalid_key', {}, vim_uuid)
 
-        # verify that get martics data and publish methods not called
+        # verify that get metrics data and publish methods not called
         m_get_metrics_data.assert_not_called()
         m_publish_metric_data_status.assert_not_called()
 
-
     @mock.patch.object(monPluginRec.PluginReceiver, 'publish_metrics_data_status')
     @mock.patch.object(monPluginRec.MonPlugin, 'get_metrics_data')
-    @mock.patch.object(monPluginRec.PluginReceiver,'get_vim_access_config')
-    def test_consume_read_metric_data_request_key(self, m_get_vim_access_config,\
-                                                  m_get_metrics_data,\
+    @mock.patch.object(monPluginRec.PluginReceiver, 'get_vim_access_config')
+    def test_consume_read_metric_data_request_key(self, m_get_vim_access_config,
+                                                  m_get_metrics_data,
                                                   m_publish_metric_data_status):
         """Test functionality of consume for read_metric_data_request key"""
 
         vim_uuid = "f85fc39e-723d-4172-979b-de28b36465bb"
-        # Mock a message
-        msg = Message()
-        msg.topic = "metric_request"
-        msg.key = "read_metric_data_request"
 
-        msg.value = json.dumps({"vim_uuid":vim_uuid,"metric_name":"metric_details"})
-        m_get_metrics_data.return_value = {"metrics_data":"metrics_details"}
+        value = {"vim_uuid": vim_uuid, "metric_name": "metric_details"}
+        m_get_metrics_data.return_value = {"metrics_data": "metrics_details"}
 
-        m_get_vim_access_config.return_value = {'vrops_site':'abc',
-            'vrops_user':'user',
-            'vrops_password':'passwd',
-            'vim_url':'vcd_url',
-            'admin_username':'admin',
-            'admin_password':'admin_passwd',
-            'vim_uuid':'1',
-            'tenant_id':'org_vdc_1'}
-
-        metric_request_info = json.loads(msg.value)
+        m_get_vim_access_config.return_value = {'vrops_site': 'abc',
+                                                'vrops_user': 'user',
+                                                'vrops_password': 'passwd',
+                                                'vim_url': 'vcd_url',
+                                                'admin_username': 'admin',
+                                                'admin_password': 'admin_passwd',
+                                                'vim_uuid': '1',
+                                                'tenant_id': 'org_vdc_1'}
 
         # Call the consume method of plugin_receiver
-        self.plugin_receiver.consume(msg,vim_uuid)
-        m_get_metrics_data.assert_called_with(metric_request_info)
+        self.plugin_receiver.handle_metric_requests('read_metric_data_request', value, vim_uuid)
+        m_get_metrics_data.assert_called_with(value)
 
         # Check if publish method called with correct parameters
-        m_publish_metric_data_status.assert_called_with({"metrics_data":"metrics_details"})
-
+        m_publish_metric_data_status.assert_called_with({"metrics_data": "metrics_details"})
 
     @mock.patch.object(monPluginRec.PluginReceiver, 'publish_create_metric_response')
     @mock.patch.object(monPluginRec.PluginReceiver, 'verify_metric')
-    def test_consume_create_metric_request_key(self, m_verify_metric,\
+    def test_consume_create_metric_request_key(self, m_verify_metric,
                                                m_publish_create_metric_response):
         """Test functionality of consume for create_metric_request key"""
 
         vim_uuid = "f85fc39e-723d-4172-979b-de28b36465bb"
-        # Mock a message
-        msg = Message()
-        msg.topic = "metric_request"
-        msg.key = "create_metric_request"
-
-        msg.value = json.dumps({"vim_uuid":vim_uuid,"metric_create":"metric_details"})
+        value = {"vim_uuid": vim_uuid, "metric_create": "metric_details"}
 
         # set the return value
         m_verify_metric.return_value = True
 
-        metric_info = json.loads(msg.value)
-
         # Call the consume method of plugin_receiver
-        self.plugin_receiver.consume(msg,vim_uuid)
-        m_verify_metric.assert_called_with(metric_info)
+        self.plugin_receiver.handle_metric_requests('create_metric_request', value, vim_uuid)
+        m_verify_metric.assert_called_with(value)
 
         # Check if publish method called with correct parameters
-        m_publish_create_metric_response.assert_called_with(metric_info, True)
-
+        m_publish_create_metric_response.assert_called_with(value, True)
 
     @mock.patch.object(monPluginRec.PluginReceiver, 'publish_update_metric_response')
     @mock.patch.object(monPluginRec.PluginReceiver, 'verify_metric')
-    def test_consume_update_metric_request_key(self, m_verify_metric,\
+    def test_consume_update_metric_request_key(self, m_verify_metric,
                                                m_publish_update_metric_response):
         """Test functionality of update metric request key"""
 
-        vim_uuid = "f85fc39e-723d-4172-979b-de28b36465bb" 
-        # Mock a message
-        msg = Message()
-        msg.topic = "metric_request"
-        msg.key = "update_metric_request"
+        vim_uuid = "f85fc39e-723d-4172-979b-de28b36465bb"
 
-        msg.value = json.dumps({"vim_uuid":vim_uuid,"metric_create":"metric_details"})
+        value = {"vim_uuid": vim_uuid, "metric_create": "metric_details"}
 
         # set the return value
         m_verify_metric.return_value = True
 
-        metric_info = json.loads(msg.value)
-
         # Call the consume method of plugin_receiver
-        self.plugin_receiver.consume(msg,vim_uuid)
+        self.plugin_receiver.handle_metric_requests('update_metric_request', value, vim_uuid)
 
         # verify mocked methods called with correct parameters
-        m_verify_metric.assert_called_with(metric_info)
-        m_publish_update_metric_response.assert_called_with(metric_info, True)
-
+        m_verify_metric.assert_called_with(value)
+        m_publish_update_metric_response.assert_called_with(value, True)
 
     @mock.patch.object(monPluginRec.PluginReceiver, 'publish_delete_metric_response')
     def test_consume_delete_metric_request_key(self, m_publish_delete_metric_response):
         """Test functionality of consume for delete_metric_request key"""
 
         # Note: vROPS doesn't support deleting metric data
-        vim_uuid = "f85fc39e-723d-4172-979b-de28b36465bb"  
-        # Mock a message
-        msg = Message()
-        msg.topic = "metric_request"
-        msg.key = "delete_metric_request"
+        vim_uuid = "f85fc39e-723d-4172-979b-de28b36465bb"
 
-        msg.value = json.dumps({"vim_uuid":vim_uuid,"metric_name":"metric_details"})
-
-        metric_info = json.loads(msg.value)
+        value = {"vim_uuid": vim_uuid, "metric_name": "metric_details"}
 
         # Call the consume method of plugin_receiver
-        self.plugin_receiver.consume(msg,vim_uuid)
+        self.plugin_receiver.handle_metric_requests('delete_metric_request', value, vim_uuid)
 
         # Check if publish method called with correct parameters
-        m_publish_delete_metric_response.assert_called_with(metric_info)
-
+        m_publish_delete_metric_response.assert_called_with(value)
 
     @mock.patch.object(monPluginRec.MonPlugin, 'configure_alarm')
     @mock.patch.object(monPluginRec.MonPlugin, 'configure_rest_plugin')
     @mock.patch.object(monPluginRec.PluginReceiver, 'get_vim_access_config')
-    def test_create_alarm_successful(self, m_get_vim_access_config,\
-                                     m_configure_rest_plugin,\
+    def test_create_alarm_successful(self, m_get_vim_access_config,
+                                     m_configure_rest_plugin,
                                      m_configure_alarm):
         """ Test functionality of create alarm method-positive case"""
 
         # Mock config_alarm_info
-        config_alarm_info = {"schema_version":1.0,
-                             "schema_type":"create_alarm_request",
-                             "vim_type":"VMware",
-                             "vim_uuid":"1",
-                             "alarm_create_request":{"correlation_id": 1,
-                             "alarm_name": "CPU_Utilize_Threshold",
-                             "metric_name": "CPU_UTILIZATION",
-                             "tenant_uuid": "tenant_uuid",
-                             "resource_uuid": "resource_uuid",
-                             "description": "test_create_alarm",
-                             "severity": "CRITICAL",
-                             "operation": "GT",
-                             "threshold_value": 10,
-                             "unit": "%",
-                             "statistic": "AVERAGE"}}
+        config_alarm_info = {"schema_version": 1.0,
+                             "schema_type": "create_alarm_request",
+                             "vim_type": "VMware",
+                             "vim_uuid": "1",
+                             "alarm_create_request": {"correlation_id": 1,
+                                                      "alarm_name": "CPU_Utilize_Threshold",
+                                                      "metric_name": "CPU_UTILIZATION",
+                                                      "tenant_uuid": "tenant_uuid",
+                                                      "resource_uuid": "resource_uuid",
+                                                      "description": "test_create_alarm",
+                                                      "severity": "CRITICAL",
+                                                      "operation": "GT",
+                                                      "threshold_value": 10,
+                                                      "unit": "%",
+                                                      "statistic": "AVERAGE"}}
 
         # set return value to plugin uuid
-        m_get_vim_access_config.return_value = {'vrops_site':'abc',
-            'vrops_user':'user',
-            'vrops_password':'passwd',
-            'vim_url':'vcd_url',
-            'admin_username':'admin',
-            'admin_password':'admin_passwd',
-            'vim_uuid':'1',
-            'tenant_id':'org_vdc_1'}
+        m_get_vim_access_config.return_value = {'vrops_site': 'abc',
+                                                'vrops_user': 'user',
+                                                'vrops_password': 'passwd',
+                                                'vim_url': 'vcd_url',
+                                                'admin_username': 'admin',
+                                                'admin_password': 'admin_passwd',
+                                                'vim_uuid': '1',
+                                                'tenant_id': 'org_vdc_1'}
 
         m_configure_rest_plugin.retrun_value = "plugin_uuid"
         m_configure_alarm.return_value = "alarm_uuid"
@@ -395,41 +298,40 @@ class TestPluginReceiver(unittest.TestCase):
         m_configure_rest_plugin.assert_called_with()
         m_configure_alarm.assert_called_with(config_alarm_info["alarm_create_request"])
 
-
     @mock.patch.object(monPluginRec.MonPlugin, 'configure_alarm')
     @mock.patch.object(monPluginRec.MonPlugin, 'configure_rest_plugin')
     @mock.patch.object(monPluginRec.PluginReceiver, 'get_vim_access_config')
-    def test_create_alarm_failed(self, m_get_vim_access_config,\
-                                m_configure_rest_plugin,\
-                                m_configure_alarm):
+    def test_create_alarm_failed(self, m_get_vim_access_config,
+                                 m_configure_rest_plugin,
+                                 m_configure_alarm):
         """ Test functionality of create alarm method negative case"""
 
         # Mock config_alarm_info
-        config_alarm_info = {"schema_version":1.0,
-                             "schema_type":"create_alarm_request",
-                             "vim_type":"VMware",
-                             "vim_uuid":"1",
-                             "alarm_create_request":{"correlation_id": 1,
-                             "alarm_name": "CPU_Utilize_Threshold",
-                             "metric_name": "CPU_UTILIZATION",
-                             "tenant_uuid": "tenant_uuid",
-                             "resource_uuid": "resource_uuid",
-                             "description": "test_create_alarm",
-                             "severity": "CRITICAL",
-                             "operation": "GT",
-                             "threshold_value": 10,
-                             "unit": "%",
-                             "statistic": "AVERAGE"}}
+        config_alarm_info = {"schema_version": 1.0,
+                             "schema_type": "create_alarm_request",
+                             "vim_type": "VMware",
+                             "vim_uuid": "1",
+                             "alarm_create_request": {"correlation_id": 1,
+                                                      "alarm_name": "CPU_Utilize_Threshold",
+                                                      "metric_name": "CPU_UTILIZATION",
+                                                      "tenant_uuid": "tenant_uuid",
+                                                      "resource_uuid": "resource_uuid",
+                                                      "description": "test_create_alarm",
+                                                      "severity": "CRITICAL",
+                                                      "operation": "GT",
+                                                      "threshold_value": 10,
+                                                      "unit": "%",
+                                                      "statistic": "AVERAGE"}}
 
         # set return value to plugin uuid and alarm_uuid to None
-        m_get_vim_access_config.return_value = {'vrops_site':'abc',
-            'vrops_user':'user',
-            'vrops_password':'passwd',
-            'vim_url':'vcd_url',
-            'admin_username':'admin',
-            'admin_password':'admin_passwd',
-            'vim_uuid':'1',
-            'tenant_id':'org_vdc_1'}
+        m_get_vim_access_config.return_value = {'vrops_site': 'abc',
+                                                'vrops_user': 'user',
+                                                'vrops_password': 'passwd',
+                                                'vim_url': 'vcd_url',
+                                                'admin_username': 'admin',
+                                                'admin_password': 'admin_passwd',
+                                                'vim_uuid': '1',
+                                                'tenant_id': 'org_vdc_1'}
         m_configure_rest_plugin.retrun_value = "plugin_uuid"
         m_configure_alarm.return_value = None
 
@@ -444,27 +346,26 @@ class TestPluginReceiver(unittest.TestCase):
         # verify create alarm method returns None when failed
         self.assertEqual(alarm_uuid, None)
 
-
     @mock.patch.object(monPluginRec.MonPlugin, 'update_alarm_configuration')
     @mock.patch.object(monPluginRec.PluginReceiver, 'get_vim_access_config')
     def test_update_alarm_successful(self, m_get_vim_access_config, m_update_alarm_configuration):
         """ Test functionality of update alarm method-positive case"""
 
         # Mock update_alarm_info
-        update_alarm_info = {"schema_version":1.0,"schema_type":"update_alarm_request",
-                             "vim_type":"VMware","vim_uuid":"1",
-                             "alarm_update_request":{'alarm_uuid': 'abc', 'correlation_id': 14203}}
+        update_alarm_info = {"schema_version": 1.0, "schema_type": "update_alarm_request",
+                             "vim_type": "VMware", "vim_uuid": "1",
+                             "alarm_update_request": {'alarm_uuid': 'abc', 'correlation_id': 14203}}
 
         # set return value to mocked method
         m_update_alarm_configuration.return_value = "alarm_uuid"
-        m_get_vim_access_config.return_value = {'vrops_site':'abc',
-                                                'vrops_user':'user',
-                                                'vrops_password':'passwd',
-                                                'vim_url':'vcd_url',
-                                                'admin_username':'admin',
-                                                'admin_password':'admin_passwd',
-                                                'vim_uuid':'1',
-                                                'tenant_id':'org_vdc_1'}
+        m_get_vim_access_config.return_value = {'vrops_site': 'abc',
+                                                'vrops_user': 'user',
+                                                'vrops_password': 'passwd',
+                                                'vim_url': 'vcd_url',
+                                                'admin_username': 'admin',
+                                                'admin_password': 'admin_passwd',
+                                                'vim_uuid': '1',
+                                                'tenant_id': 'org_vdc_1'}
 
         # check update alarm gets called and returned correct value
         ret_value = self.plugin_receiver.update_alarm(update_alarm_info)
@@ -476,27 +377,26 @@ class TestPluginReceiver(unittest.TestCase):
         # check return value and passed values are correct
         self.assertEqual(ret_value, "alarm_uuid")
 
-
     @mock.patch.object(monPluginRec.MonPlugin, 'update_alarm_configuration')
     @mock.patch.object(monPluginRec.PluginReceiver, 'get_vim_access_config')
     def test_update_alarm_failed(self, m_get_vim_access_config, m_update_alarm_configuration):
         """ Test functionality of update alarm method negative case"""
 
         # Mock update_alarm_info
-        update_alarm_info = {"schema_version":1.0,"schema_type":"update_alarm_request",
-                             "vim_type":"VMware","vim_uuid":"1",
-                             "alarm_update_request":{'alarm_uuid': 'abc', 'correlation_id': 14203}}
+        update_alarm_info = {"schema_version": 1.0, "schema_type": "update_alarm_request",
+                             "vim_type": "VMware", "vim_uuid": "1",
+                             "alarm_update_request": {'alarm_uuid': 'abc', 'correlation_id': 14203}}
 
         # set return value to mocked method
         m_update_alarm_configuration.return_value = None
-        m_get_vim_access_config.return_value = {'vrops_site':'abc',
-                                                'vrops_user':'user',
-                                                'vrops_password':'passwd',
-                                                'vim_url':'vcd_url',
-                                                'admin_username':'admin',
-                                                'admin_password':'admin_passwd',
-                                                'vim_uuid':'1',
-                                                'tenant_id':'org_vdc_1'}
+        m_get_vim_access_config.return_value = {'vrops_site': 'abc',
+                                                'vrops_user': 'user',
+                                                'vrops_password': 'passwd',
+                                                'vim_url': 'vcd_url',
+                                                'admin_username': 'admin',
+                                                'admin_password': 'admin_passwd',
+                                                'vim_uuid': '1',
+                                                'tenant_id': 'org_vdc_1'}
 
         # check update alarm gets called and returned correct value
         ret_value = self.plugin_receiver.update_alarm(update_alarm_info)
@@ -508,27 +408,26 @@ class TestPluginReceiver(unittest.TestCase):
         # check return value and passed values are correct
         self.assertEqual(ret_value, None)
 
-
     @mock.patch.object(monPluginRec.MonPlugin, 'delete_alarm_configuration')
     @mock.patch.object(monPluginRec.PluginReceiver, 'get_vim_access_config')
     def test_delete_alarm_successful(self, m_get_vim_access_config, m_delete_alarm_configuration):
         """ Test functionality of delete alarm method-positive case"""
 
         # Mock delete_alarm_info
-        delete_alarm_info = {"schema_version":1.0,"schema_type":"delete_alarm_request",
-                             "vim_type":"VMware","vim_uuid":"1",
-                             "alarm_delete_request":{'alarm_uuid': 'abc', 'correlation_id': 14203}}
+        delete_alarm_info = {"schema_version": 1.0, "schema_type": "delete_alarm_request",
+                             "vim_type": "VMware", "vim_uuid": "1",
+                             "alarm_delete_request": {'alarm_uuid': 'abc', 'correlation_id': 14203}}
 
         # set return value to mocked method
         m_delete_alarm_configuration.return_value = "alarm_uuid"
-        m_get_vim_access_config.return_value = {'vrops_site':'abc',
-                                                'vrops_user':'user',
-                                                'vrops_password':'passwd',
-                                                'vim_url':'vcd_url',
-                                                'admin_username':'admin',
-                                                'admin_password':'admin_passwd',
-                                                'vim_uuid':'1',
-                                                'tenant_id':'org_vdc_1'}
+        m_get_vim_access_config.return_value = {'vrops_site': 'abc',
+                                                'vrops_user': 'user',
+                                                'vrops_password': 'passwd',
+                                                'vim_url': 'vcd_url',
+                                                'admin_username': 'admin',
+                                                'admin_password': 'admin_passwd',
+                                                'vim_uuid': '1',
+                                                'tenant_id': 'org_vdc_1'}
 
         # check delete alarm gets called and returned correct value
         ret_value = self.plugin_receiver.delete_alarm(delete_alarm_info)
@@ -540,27 +439,26 @@ class TestPluginReceiver(unittest.TestCase):
         # check return value and passed values are correct
         self.assertEqual(ret_value, "alarm_uuid")
 
-
     @mock.patch.object(monPluginRec.MonPlugin, 'delete_alarm_configuration')
     @mock.patch.object(monPluginRec.PluginReceiver, 'get_vim_access_config')
     def test_delete_alarm_failed(self, m_get_vim_access_config, m_delete_alarm_configuration):
         """ Test functionality of delete alarm method-negative case"""
 
         # Mock update_alarm_info
-        delete_alarm_info = {"schema_version":1.0,"schema_type":"delete_alarm_request",
-                             "vim_type":"VMware","vim_uuid":"1",
-                             "alarm_delete_request":{'alarm_uuid': 'abc', 'correlation_id': 14203}}
+        delete_alarm_info = {"schema_version": 1.0, "schema_type": "delete_alarm_request",
+                             "vim_type": "VMware", "vim_uuid": "1",
+                             "alarm_delete_request": {'alarm_uuid': 'abc', 'correlation_id': 14203}}
 
         # set return value to mocked method
         m_delete_alarm_configuration.return_value = None
-        m_get_vim_access_config.return_value = {'vrops_site':'abc',
-                                                'vrops_user':'user',
-                                                'vrops_password':'passwd',
-                                                'vim_url':'vcd_url',
-                                                'admin_username':'admin',
-                                                'admin_password':'admin_passwd',
-                                                'vim_uuid':'1',
-                                                'tenant_id':'org_vdc_1'}
+        m_get_vim_access_config.return_value = {'vrops_site': 'abc',
+                                                'vrops_user': 'user',
+                                                'vrops_password': 'passwd',
+                                                'vim_url': 'vcd_url',
+                                                'admin_username': 'admin',
+                                                'admin_password': 'admin_passwd',
+                                                'vim_uuid': '1',
+                                                'tenant_id': 'org_vdc_1'}
 
         # check delete alarm gets called and returned correct value
         ret_value = self.plugin_receiver.delete_alarm(delete_alarm_info)
@@ -572,13 +470,11 @@ class TestPluginReceiver(unittest.TestCase):
         # check return value to check failed status
         self.assertEqual(ret_value, None)
 
-
-    @mock.patch.object(monPluginRec.KafkaProducer, 'publish')
-    def test_publish_create_alarm_status(self, m_publish):
+    def test_publish_create_alarm_status(self):
         """ Test functionality of publish create alarm status method"""
 
         # Mock config_alarm_info
-        config_alarm_info = {'vim_type': 'VMware', "vim_uuid":"1",
+        config_alarm_info = {'vim_type': 'VMware', "vim_uuid": "1",
                              'alarm_create_request': {
                                  'threshold_value': 0,
                                  'severity': 'CRITICAL',
@@ -587,7 +483,7 @@ class TestPluginReceiver(unittest.TestCase):
                                  'correlation_id': 1234,
                                  'statistic': 'AVERAGE',
                                  'metric_name': 'CPU_UTILIZATION'}
-                            }
+                             }
 
         alarm_uuid = "xyz"
 
@@ -595,24 +491,20 @@ class TestPluginReceiver(unittest.TestCase):
         self.plugin_receiver.publish_create_alarm_status(alarm_uuid, config_alarm_info)
 
         # verify mocked method called with correct params
-        m_publish.assert_called_with(key='create_alarm_response',\
-                                     value=mock.ANY,\
-                                     topic='alarm_response')
+        # TODO(diazb): Validate payload generation (self.assertEquals(response, expected_message))
 
-
-    @mock.patch.object(monPluginRec.KafkaProducer, 'publish')
-    def test_publish_update_alarm_status(self, m_publish):
+    def test_publish_update_alarm_status(self):
         """ Test functionality of publish update alarm status method"""
 
         # Mock update_alarm_info
-        update_alarm_info = {'vim_type' : 'VMware',
-                             'vim_uuid':'1',
+        update_alarm_info = {'vim_type': 'VMware',
+                             'vim_uuid': '1',
                              'schema_type': 'update_alarm_request',
-                             'alarm_update_request':{'alarm_uuid': '6486e69',
-                                                     'correlation_id': 14203,
-                                                     'operation': 'GT'
-                                                     }
-                            }
+                             'alarm_update_request': {'alarm_uuid': '6486e69',
+                                                      'correlation_id': 14203,
+                                                      'operation': 'GT'
+                                                      }
+                             }
 
         alarm_uuid = "xyz"
 
@@ -620,24 +512,20 @@ class TestPluginReceiver(unittest.TestCase):
         self.plugin_receiver.publish_update_alarm_status(alarm_uuid, update_alarm_info)
 
         # verify mocked method called with correct params
-        m_publish.assert_called_with(key='update_alarm_response',\
-                                     value=mock.ANY,\
-                                     topic='alarm_response')
+        # TODO(diazb): Validate payload generation (self.assertEquals(response, expected_message))
 
-
-    @mock.patch.object(monPluginRec.KafkaProducer, 'publish')
-    def test_publish_delete_alarm_status(self, m_publish):
+    def test_publish_delete_alarm_status(self):
         """ Test functionality of publish delete alarm status method"""
 
         # Mock delete_alarm_info
-        delete_alarm_info = {'vim_type' : 'VMware',
-                             "vim_uuid":"1",
+        delete_alarm_info = {'vim_type': 'VMware',
+                             "vim_uuid": "1",
                              'schema_type': 'delete_alarm_request',
-                             'alarm_delete_request':{'alarm_uuid': '6486e69',
-                                                     'correlation_id': 14203,
-                                                     'operation': 'GT'
-                                                     }
-                            }
+                             'alarm_delete_request': {'alarm_uuid': '6486e69',
+                                                      'correlation_id': 14203,
+                                                      'operation': 'GT'
+                                                      }
+                             }
 
         alarm_uuid = "xyz"
 
@@ -645,56 +533,49 @@ class TestPluginReceiver(unittest.TestCase):
         self.plugin_receiver.publish_delete_alarm_status(alarm_uuid, delete_alarm_info)
 
         # verify mocked method called with correct params
-        m_publish.assert_called_with(key='delete_alarm_response',\
-                                     value=mock.ANY,\
-                                     topic='alarm_response')
+        # TODO(diazb): Validate payload generation (self.assertEquals(response, expected_message))
 
-
-    @mock.patch.object(monPluginRec.KafkaProducer, 'publish')
-    def test_publish_metrics_data_status(self, m_publish):
+    def test_publish_metrics_data_status(self):
         """ Test functionality of publish metrics data status method"""
 
         # Mock metrics data
         metrics_data = {
-                        'vim_uuid':'1',
-                        'metric_name': 'CPU_UTILIZATION', 'metric_uuid': '0',
-                        'resource_uuid': 'e14b20', 'correlation_id': 14203,
-                        'metrics_data': {'time_series': [15162011, 15162044],
-                        'metrics_series': [0.1166666671, 0.1266666650]},
-                        'tenant_uuid': 123, 'unit': '%'
-                       }
+            'vim_uuid': '1',
+            'metric_name': 'CPU_UTILIZATION', 'metric_uuid': '0',
+            'resource_uuid': 'e14b20', 'correlation_id': 14203,
+            'metrics_data': {'time_series': [15162011, 15162044],
+                             'metrics_series': [0.1166666671, 0.1266666650]},
+            'tenant_uuid': 123, 'unit': '%'
+        }
 
         # call publish metrics data status method under test
         self.plugin_receiver.publish_metrics_data_status(metrics_data)
 
         # verify mocked method called with correct params
-        m_publish.assert_called_with(key='read_metric_data_response',\
-                                     value=mock.ANY,\
-                                     topic='metric_response')
-
+        # TODO(diazb): Validate payload generation (self.assertEquals(response, expected_message))
 
     @mock.patch.object(monPluginRec.MonPlugin, 'verify_metric_support')
     @mock.patch.object(monPluginRec.PluginReceiver, 'get_vim_access_config')
-    def test_verify_metric_supported_metric(self, m_get_vim_access_config,\
+    def test_verify_metric_supported_metric(self, m_get_vim_access_config,
                                             m_verify_metric_support):
         """ Test functionality of verify metric method"""
 
         # mock metric_info
-        metric_info = {'vim_uuid':'1',\
-                       'metric_create_request':{'metric_unit': '%',\
-                                        'metric_name': 'CPU_UTILIZATION',\
-                                        'resource_uuid': 'e14b203'}}
+        metric_info = {'vim_uuid': '1',
+                       'metric_create_request': {'metric_unit': '%',
+                                                 'metric_name': 'CPU_UTILIZATION',
+                                                 'resource_uuid': 'e14b203'}}
 
         # set mocked function return value to true
         m_verify_metric_support.return_value = True
-        m_get_vim_access_config.return_value = {'vrops_site':'abc',
-                                                'vrops_user':'user',
-                                                'vrops_password':'passwd',
-                                                'vim_url':'vcd_url',
-                                                'admin_username':'admin',
-                                                'admin_password':'admin_passwd',
-                                                'vim_uuid':'1',
-                                                'tenant_id':'org_vdc_1'}
+        m_get_vim_access_config.return_value = {'vrops_site': 'abc',
+                                                'vrops_user': 'user',
+                                                'vrops_password': 'passwd',
+                                                'vim_url': 'vcd_url',
+                                                'admin_username': 'admin',
+                                                'admin_password': 'admin_passwd',
+                                                'vim_uuid': '1',
+                                                'tenant_id': 'org_vdc_1'}
 
         # call verify_metric method under test
         ret_value = self.plugin_receiver.verify_metric(metric_info)
@@ -706,29 +587,28 @@ class TestPluginReceiver(unittest.TestCase):
         # verify the return value
         self.assertEqual(ret_value, True)
 
-
     @mock.patch.object(monPluginRec.MonPlugin, 'verify_metric_support')
     @mock.patch.object(monPluginRec.PluginReceiver, 'get_vim_access_config')
-    def test_verify_metric_unsupported_metric(self, m_get_vim_access_config,\
+    def test_verify_metric_unsupported_metric(self, m_get_vim_access_config,
                                               m_verify_metric_support):
         """ Test functionality of verify metric method-negative case"""
 
         # mock metric_info with unsupported metrics name
-        metric_info = {'vim_uuid':'1',\
-                       'metric_create_request':{'metric_unit': '%',\
-                                        'metric_name': 'Invalid',\
-                                        'resource_uuid': 'e14b203'}}
+        metric_info = {'vim_uuid': '1',
+                       'metric_create_request': {'metric_unit': '%',
+                                                 'metric_name': 'Invalid',
+                                                 'resource_uuid': 'e14b203'}}
 
         # set mocked function return value to true
         m_verify_metric_support.return_value = False
-        m_get_vim_access_config.return_value = {'vrops_site':'abc',
-                                                'vrops_user':'user',
-                                                'vrops_password':'passwd',
-                                                'vim_url':'vcd_url',
-                                                'admin_username':'admin',
-                                                'admin_password':'admin_passwd',
-                                                'vim_uuid':'1',
-                                                'tenant_id':'org_vdc_1'}
+        m_get_vim_access_config.return_value = {'vrops_site': 'abc',
+                                                'vrops_user': 'user',
+                                                'vrops_password': 'passwd',
+                                                'vim_url': 'vcd_url',
+                                                'admin_username': 'admin',
+                                                'admin_password': 'admin_passwd',
+                                                'vim_uuid': '1',
+                                                'tenant_id': 'org_vdc_1'}
 
         # call verify_metric method under test
         ret_value = self.plugin_receiver.verify_metric(metric_info)
@@ -740,23 +620,21 @@ class TestPluginReceiver(unittest.TestCase):
         # verify the return value
         self.assertEqual(ret_value, False)
 
-
-    @mock.patch.object(monPluginRec.KafkaProducer, 'publish')
-    def test_publish_create_metric_response(self, m_publish):
+    def test_publish_create_metric_response(self):
         """ Test functionality of publish create metric response method"""
 
         # Mock metric_info
         metric_info = {
-                       'vim_uuid':'1',
-                       'vim_type' : 'VMware',
-                       'correlation_id': 14203,
-                       'schema_type': 'create_metric_request',
-                       'metric_create_request':{
-                                        'resource_uuid': '6486e69',
-                                        'metric_name': 'CPU_UTILIZATION',
-                                        'metric_unit': '%'
-                                        }
-                       }
+            'vim_uuid': '1',
+            'vim_type': 'VMware',
+            'correlation_id': 14203,
+            'schema_type': 'create_metric_request',
+            'metric_create_request': {
+                'resource_uuid': '6486e69',
+                'metric_name': 'CPU_UTILIZATION',
+                'metric_unit': '%'
+            }
+        }
 
         metric_status = True
 
@@ -764,27 +642,23 @@ class TestPluginReceiver(unittest.TestCase):
         self.plugin_receiver.publish_create_metric_response(metric_info, metric_status)
 
         # verify mocked method called with correct params
-        m_publish.assert_called_with(key='create_metric_response',\
-                                     value=mock.ANY,\
-                                     topic='metric_response')
+        # TODO(diazb): Validate payload generation (self.assertEquals(response, expected_message))
 
-
-    @mock.patch.object(monPluginRec.KafkaProducer, 'publish')
-    def test_publish_update_metric_response(self, m_publish):
+    def test_publish_update_metric_response(self):
         """ Test functionality of publish update metric response method"""
 
         # Mock metric_info
         metric_info = {
-                       'vim_uuid':'1',
-                       'vim_type' : 'VMware',
-                       'correlation_id': 14203,
-                       'schema_type': 'update_metric_request',
-                       'metric_create':{
-                                        'resource_uuid': '6486e69',
-                                        'metric_name': 'CPU_UTILIZATION',
-                                        'metric_unit': '%'
-                                        }
-                       }
+            'vim_uuid': '1',
+            'vim_type': 'VMware',
+            'correlation_id': 14203,
+            'schema_type': 'update_metric_request',
+            'metric_create': {
+                'resource_uuid': '6486e69',
+                'metric_name': 'CPU_UTILIZATION',
+                'metric_unit': '%'
+            }
+        }
 
         metric_status = True
 
@@ -792,32 +666,23 @@ class TestPluginReceiver(unittest.TestCase):
         self.plugin_receiver.publish_update_metric_response(metric_info, metric_status)
 
         # verify mocked method called with correct params
-        m_publish.assert_called_with(key='update_metric_response',\
-                                     value=mock.ANY,\
-                                     topic='metric_response')
+        # TODO(diazb): Validate payload generation (self.assertEquals(response, expected_message))
 
-
-    @mock.patch.object(monPluginRec.KafkaProducer, 'publish')
-    def test_publish_delete_metric_response(self, m_publish):
+    def test_publish_delete_metric_response(self):
         """ Test functionality of publish delete metric response method"""
 
         # Mock metric_info
-        metric_info = {'vim_uuid':'1', 'vim_type' : 'VMware','correlation_id': 14203,
+        metric_info = {'vim_uuid': '1', 'vim_type': 'VMware', 'correlation_id': 14203,
                        'metric_uuid': 'e14b203c', 'resource_uuid': '6486e69',
                        'metric_name': 'CPU_UTILIZATION',
                        'schema_type': 'delete_metric_request'}
-
-        metric_status = True
 
         # call publish delete metric method under test-vROPS doesn't support
         # delete metric,just returns response with success
         self.plugin_receiver.publish_delete_metric_response(metric_info)
 
         # verify mocked method called with correct params
-        m_publish.assert_called_with(key='delete_metric_response',\
-                                     value=mock.ANY,\
-                                     topic='metric_response')
-
+        # TODO(diazb): Validate payload generation (self.assertEquals(response, expected_message))
 
     @mock.patch.object(monPluginRec.MonPlugin, 'get_triggered_alarms_list')
     @mock.patch.object(monPluginRec.PluginReceiver, 'get_vim_access_config')
@@ -826,18 +691,18 @@ class TestPluginReceiver(unittest.TestCase):
 
         # Mock list alarm input
         list_alarm_input = {
-                            'vim_uuid':'1',
-                            'vim_type' : 'VMware',
-                            'alarm_list_request':{
-                                'severity': 'CRITICAL',
-                                'correlation_id': 14203,
-                                'alarm_name': 'CPU_Utilization_Above_Threshold',
-                                'resource_uuid': 'd14b203c'}}
+            'vim_uuid': '1',
+            'vim_type': 'VMware',
+            'alarm_list_request': {
+                'severity': 'CRITICAL',
+                'correlation_id': 14203,
+                'alarm_name': 'CPU_Utilization_Above_Threshold',
+                'resource_uuid': 'd14b203c'}}
 
         # set return value to mocked method
         m_return = [{'status': 'ACTIVE', 'update_date': '2018-01-12T08:34:05',
                      'severity': 'CRITICAL', 'resource_uuid': 'e14b203c',
-                     'cancel_date': '0000-00-00T00:00:00','alarm_instance_uuid': 'd9e3bc84',
+                     'cancel_date': '0000-00-00T00:00:00', 'alarm_instance_uuid': 'd9e3bc84',
                      'alarm_uuid': '5714977d', 'vim_type': 'VMware',
                      'start_date': '2018-01-12T08:34:05'},
                     {'status': 'CANCELED', 'update_date': '2017-12-20T09:37:57',
@@ -847,15 +712,14 @@ class TestPluginReceiver(unittest.TestCase):
                      'start_date': '2017-12-20T09:37:57'}]
         m_get_triggered_alarms_list.return_value = m_return
 
-        m_get_vim_access_config.return_value = {'vrops_site':'abc',
-                                                'vrops_user':'user',
-                                                'vrops_password':'passwd',
-                                                'vim_url':'vcd_url',
-                                                'admin_username':'admin',
-                                                'admin_password':'admin_passwd',
-                                                'vim_uuid':'1',
-                                                'tenant_id':'org_vdc_1'}
-
+        m_get_vim_access_config.return_value = {'vrops_site': 'abc',
+                                                'vrops_user': 'user',
+                                                'vrops_password': 'passwd',
+                                                'vim_url': 'vcd_url',
+                                                'admin_username': 'admin',
+                                                'admin_password': 'admin_passwd',
+                                                'vim_uuid': '1',
+                                                'tenant_id': 'org_vdc_1'}
 
         # call list alarms method under test
         return_value = self.plugin_receiver.list_alarms(list_alarm_input)
@@ -867,24 +731,22 @@ class TestPluginReceiver(unittest.TestCase):
         # verify list alarm method returns correct list
         self.assertEqual(return_value, m_return)
 
-
-    @mock.patch.object(monPluginRec.KafkaProducer, 'publish')
-    def test_publish_list_alarm_response(self, m_publish):
+    def test_publish_list_alarm_response(self):
         """ Test functionality of publish list alarm response method"""
 
         # Mock list alarm input
         msg_key = 'list_alarm_response'
         topic = 'alarm_response'
-        list_alarm_input = {'vim_uuid':'1',
-                            'vim_type' : 'VMware',
-                            'alarm_list_request':{
+        list_alarm_input = {'vim_uuid': '1',
+                            'vim_type': 'VMware',
+                            'alarm_list_request': {
                                 'severity': 'CRITICAL',
                                 'correlation_id': 14203,
                                 'alarm_name': 'CPU_Utilization_Above_Threshold',
                                 'resource_uuid': 'd14b203c'}}
 
         triggered_alarm_list = [{'status': 'ACTIVE', 'update_date': '2018-01-12T08:34:05',
-                                 'severity': 'CRITICAL','resource_uuid': 'e14b203c',
+                                 'severity': 'CRITICAL', 'resource_uuid': 'e14b203c',
                                  'cancel_date': '0000-00-00T00:00:00',
                                  'start_date': '2018-01-12T08:34:05',
                                  'alarm_instance_uuid': 'd9e3bc84',
@@ -893,22 +755,18 @@ class TestPluginReceiver(unittest.TestCase):
                                  }]
 
         # call publish list alarm response method under test
-        self.plugin_receiver.publish_list_alarm_response(triggered_alarm_list, list_alarm_input)
+        response = self.plugin_receiver.publish_list_alarm_response(triggered_alarm_list, list_alarm_input)
 
         # verify mocked method called with correct params
-        m_publish.assert_called_with(key=msg_key,value=mock.ANY, topic=topic)
+        # TODO(diazb): Validate payload generation (self.assertEquals(response, expected_message))
 
-
-    @mock.patch.object(monPluginRec.KafkaProducer, 'publish')
-    def test_publish_access_update_response(self, m_publish):
+    def test_publish_access_update_response(self):
         """ Test functionality of publish access update response method"""
 
         # Mock required inputs
         access_update_status = True
-        msg_key = 'vim_access_credentials_response'
-        topic = 'access_credentials'
         access_info_req = {'vim_type': 'VMware',
-                           'vim_uuid':'1',
+                           'vim_uuid': '1',
                            'access_config': {'vrops_password': 'vmware',
                                              'vcloud-site': 'https://192.169.241.105',
                                              'vrops_user': 'Admin', 'correlation_id': 14203,
@@ -916,23 +774,22 @@ class TestPluginReceiver(unittest.TestCase):
                            }
 
         # call publish access update response method under test
-        self.plugin_receiver.publish_access_update_response(access_update_status, access_info_req)
+        response = self.plugin_receiver.publish_access_update_response(access_update_status, access_info_req)
 
         # verify mocked method called with correct params
-        m_publish.assert_called_with(key=msg_key ,value=mock.ANY, topic=topic)
-
+        # TODO(diazb): Validate payload generation (self.assertEquals(response, expected_message))
 
     @mock.patch.object(monPluginRec.PluginReceiver, 'write_access_config')
     def test_update_access_credentials_successful(self, m_write_access_config):
         """ Test functionality of update access credentials-positive case"""
 
         # Mock access_info
-        access_info = {'vrops_site':'https://192.169.241.13','vrops_user':'admin',
-                       'vrops_password':'vmware','vcloud-site':'https://192.169.241.15',
-                       'admin_username':'admin','admin_password':'vmware',
-                       'vcenter_ip':'192.169.241.13','vcenter_port':'443',
-                       'vcenter_user':'admin','vcenter_password':'vmware',
-                       'vim_tenant_name':'Org2','orgname':'Org2','tenant_id':'Org2'}
+        access_info = {'vrops_site': 'https://192.169.241.13', 'vrops_user': 'admin',
+                       'vrops_password': 'vmware', 'vcloud-site': 'https://192.169.241.15',
+                       'admin_username': 'admin', 'admin_password': 'vmware',
+                       'vcenter_ip': '192.169.241.13', 'vcenter_port': '443',
+                       'vcenter_user': 'admin', 'vcenter_password': 'vmware',
+                       'vim_tenant_name': 'Org2', 'orgname': 'Org2', 'tenant_id': 'Org2'}
 
         # Mock return values
         expected_status = m_write_access_config.return_value = True
@@ -946,17 +803,16 @@ class TestPluginReceiver(unittest.TestCase):
         # verify update access credentials returns correct status
         self.assertEqual(expected_status, actual_status)
 
-
     @mock.patch.object(monPluginRec.PluginReceiver, 'write_access_config')
     def test_update_access_credentials_less_config_params(self, m_write_access_config):
         """ Test functionality of update access credentials-negative case"""
 
         # Mock access_info
-        access_info = {'vrops_site':'https://192.169.241.13','vrops_user':'admin',
-                       'vrops_password':'vmware','vcloud-site':'https://192.169.241.15',
-                       'admin_username':'admin','admin_password':'vmware',
-                       'vcenter_ip':'192.169.241.13','vcenter_port':'443','vcenter_user':'admin',
-                       'vim_tenant_name':'Org2','orgname':'Org2','tenant_id':'Org2'}
+        access_info = {'vrops_site': 'https://192.169.241.13', 'vrops_user': 'admin',
+                       'vrops_password': 'vmware', 'vcloud-site': 'https://192.169.241.15',
+                       'admin_username': 'admin', 'admin_password': 'vmware',
+                       'vcenter_ip': '192.169.241.13', 'vcenter_port': '443', 'vcenter_user': 'admin',
+                       'vim_tenant_name': 'Org2', 'orgname': 'Org2', 'tenant_id': 'Org2'}
 
         # Mock return values
         expected_status = m_write_access_config.return_value = False
@@ -970,18 +826,17 @@ class TestPluginReceiver(unittest.TestCase):
         # verify update access credentials returns correct status
         self.assertEqual(expected_status, actual_status)
 
-
     @mock.patch.object(monPluginRec.PluginReceiver, 'write_access_config')
     def test_update_access_credentials_failed(self, m_write_access_config):
         """ Test functionality of update access credentials-failed case """
 
         # Mock access_info
-        access_info = {'vrops_site':'https://192.169.241.13','vrops_user':'admin',
-                       'vrops_password':'vmware','vcloud-site':'https://192.169.241.15',
-                       'admin_username':'admin','admin_password':'vmware',
-                       'vcenter_ip':'192.169.241.13','vcenter_port':'443',
-                       'vcenter_user':'admin','vcenter_password':'vmware',
-                       'vim_tenant_name':'Org2','orgname':'Org2','tenant_id':'Org2'}
+        access_info = {'vrops_site': 'https://192.169.241.13', 'vrops_user': 'admin',
+                       'vrops_password': 'vmware', 'vcloud-site': 'https://192.169.241.15',
+                       'admin_username': 'admin', 'admin_password': 'vmware',
+                       'vcenter_ip': '192.169.241.13', 'vcenter_port': '443',
+                       'vcenter_user': 'admin', 'vcenter_password': 'vmware',
+                       'vim_tenant_name': 'Org2', 'orgname': 'Org2', 'tenant_id': 'Org2'}
 
         # Mock return values
         expected_status = m_write_access_config.return_value = False
@@ -995,17 +850,16 @@ class TestPluginReceiver(unittest.TestCase):
         # verify update access credentials returns correct status
         self.assertEqual(expected_status, actual_status)
 
-
     def test_write_access_config_successful(self):
         """ Test functionality of write access config method-positive case"""
 
         # Mock access_info
-        access_info = {'vrops_sit':'https://192.169.241.13','vrops_user':'admin',
-                       'vrops_password':'vmware','vcloud-site':'https://192.169.241.15',
-                       'admin_username':'admin','admin_password':'vmware',
-                       'vcenter_ip':'192.169.241.13','vcenter_port':'443',
-                       'vcenter_user':'admin','vcenter_password':'vmware',
-                       'vim_tenant_name':'Org2','orgname':'Org2','tenant_id':'Org2'}
+        access_info = {'vrops_sit': 'https://192.169.241.13', 'vrops_user': 'admin',
+                       'vrops_password': 'vmware', 'vcloud-site': 'https://192.169.241.15',
+                       'admin_username': 'admin', 'admin_password': 'vmware',
+                       'vcenter_ip': '192.169.241.13', 'vcenter_port': '443',
+                       'vcenter_user': 'admin', 'vcenter_password': 'vmware',
+                       'vim_tenant_name': 'Org2', 'orgname': 'Org2', 'tenant_id': 'Org2'}
 
         # call write access config method under test
         actual_status = self.plugin_receiver.write_access_config(access_info)
@@ -1013,19 +867,17 @@ class TestPluginReceiver(unittest.TestCase):
         # verify write access config returns correct status
         self.assertEqual(True, actual_status)
 
-
     def test_write_access_config_failed(self):
         """ Test functionality of write access config method-negative case"""
 
         # Mock access_info
-        access_info = [] # provided incorrect info to generate error
+        access_info = []  # provided incorrect info to generate error
 
         # call write access config method under test
         actual_status = self.plugin_receiver.write_access_config(access_info)
 
         # verify write access config returns correct status
         self.assertEqual(False, actual_status)
-
 
     @mock.patch.object(monPluginRec.AuthManager, 'get_credentials')
     def test_get_vim_access_config(self, m_get_credentials):
@@ -1051,27 +903,25 @@ class TestPluginReceiver(unittest.TestCase):
                         "vcenter_password": "vcenter_pwd", "vcenter_port": "443"}'
         m_get_credentials.return_value = vim_details
         expected_config = {'vrops_password': 'vrops_pwd', 'vcenter_password': 'vcenter_pwd',
-                         'name': 'vrops_vcd82', 'org_user': 'admin',
-                         'org_password': 'passwd', 'nsx_user': 'admin', 'vim_tenant_name': 'MANO-VDC',
-                         'admin_username': 'administrator', 'vcenter_port': '443',
-                         'vim_url': 'https://10.10.1.1', 'orgname': 'MANO-Org',
-                         'admin_password':'vcd_pwd', 'vrops_user':'admin', 'vcenter_ip':'10.10.1.4',
-                         'vrops_site': 'https://10.10.1.2', 'nsx_manager': 'https://10.10.1.3',
-                         'nsx_password': 'nsx_pwd', 'vim_type': 'VMware', 'vim_uuid': '1',
-                         'vcenter_user': 'admin@vsphere.local'}
+                           'name': 'vrops_vcd82', 'org_user': 'admin',
+                           'org_password': 'passwd', 'nsx_user': 'admin', 'vim_tenant_name': 'MANO-VDC',
+                           'admin_username': 'administrator', 'vcenter_port': '443',
+                           'vim_url': 'https://10.10.1.1', 'orgname': 'MANO-Org',
+                           'admin_password': 'vcd_pwd', 'vrops_user': 'admin', 'vcenter_ip': '10.10.1.4',
+                           'vrops_site': 'https://10.10.1.2', 'nsx_manager': 'https://10.10.1.3',
+                           'nsx_password': 'nsx_pwd', 'vim_type': 'VMware', 'vim_uuid': '1',
+                           'vcenter_user': 'admin@vsphere.local'}
 
         # call get_vim_access_config method under test
         actual_config = self.plugin_receiver.get_vim_access_config('1')
 
-        #verify that mocked method is called
+        # verify that mocked method is called
         m_get_credentials.assert_called_with(vim_uuid)
 
-        #Verify return value with expected value
+        # Verify return value with expected value
         self.assertEqual(expected_config, actual_config)
 
-
 # For testing purpose
-#if __name__ == '__main__':
+# if __name__ == '__main__':
 
 #    unittest.main()
-

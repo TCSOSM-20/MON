@@ -32,6 +32,7 @@ from six.moves.BaseHTTPServer import BaseHTTPRequestHandler
 from six.moves.BaseHTTPServer import HTTPServer
 
 # Initialise a logger for alarm notifier
+from osm_mon.core.message_bus.producer import Producer
 from osm_mon.core.settings import Config
 
 cfg = Config.instance()
@@ -52,9 +53,8 @@ kafka_logger.addHandler(kafka_handler)
 sys.path.append(os.path.abspath(os.path.join(os.path.realpath(__file__), '..', '..', '..', '..', '..')))
 
 from osm_mon.core.database import DatabaseManager
-from osm_mon.core.message_bus.producer import KafkaProducer
 
-from osm_mon.plugins.OpenStack.response import OpenStack_Response
+from osm_mon.plugins.OpenStack.response import OpenStackResponseBuilder
 
 
 class NotifierHandler(BaseHTTPRequestHandler):
@@ -94,8 +94,7 @@ class NotifierHandler(BaseHTTPRequestHandler):
         """Sends alarm notification message to bus."""
 
         # Initialise configuration and authentication for response message
-        response = OpenStack_Response()
-        producer = KafkaProducer('alarm_response')
+        response = OpenStackResponseBuilder()
 
         database_manager = DatabaseManager()
 
@@ -117,9 +116,13 @@ class NotifierHandler(BaseHTTPRequestHandler):
             sev=values['severity'],
             date=a_date,
             state=values['current'])
-        producer.publish_alarm_response(
-            'notify_alarm', resp_message)
+        self._publish_response('notify_alarm', json.dumps(resp_message))
         log.info("Sent alarm notification: %s", resp_message)
+
+    def _publish_response(self, key: str, msg: str):
+        producer = Producer()
+        producer.send(topic='alarm_response', key=key, value=msg)
+        producer.flush()
 
 
 def run(server_class=HTTPServer, handler_class=NotifierHandler, port=8662):

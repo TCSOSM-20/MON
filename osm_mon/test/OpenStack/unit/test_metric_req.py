@@ -28,8 +28,8 @@ import unittest
 import mock
 
 from osm_mon.core.auth import AuthManager
-from osm_mon.core.message_bus.producer import KafkaProducer
-from osm_mon.plugins.OpenStack.Gnocchi import metrics as metric_req
+from osm_mon.plugins.OpenStack.Gnocchi import metric_handler as metric_req
+from osm_mon.plugins.OpenStack.Gnocchi.metric_handler import OpenstackMetricHandler
 from osm_mon.plugins.OpenStack.common import Common
 
 log = logging.getLogger(__name__)
@@ -54,26 +54,22 @@ class Message(object):
         self.value = json.dumps({"mock_message": "message_details"})
 
 
-@mock.patch.object(KafkaProducer, 'publish', mock.Mock())
 class TestMetricReq(unittest.TestCase):
     """Integration test for metric request keys."""
 
     def setUp(self):
         """Setup the tests for metric request keys."""
         super(TestMetricReq, self).setUp()
-        self.metrics = metric_req.Metrics()
+        self.metrics = metric_req.OpenstackMetricHandler()
 
     @mock.patch.object(Common, "get_auth_token", mock.Mock())
     @mock.patch.object(Common, "get_endpoint", mock.Mock())
-    @mock.patch.object(metric_req.Metrics, "delete_metric")
-    @mock.patch.object(metric_req.Metrics, "get_metric_id")
+    @mock.patch.object(metric_req.OpenstackMetricHandler, "delete_metric")
+    @mock.patch.object(metric_req.OpenstackMetricHandler, "get_metric_id")
     @mock.patch.object(AuthManager, "get_credentials")
     def test_delete_metric_key(self, get_creds, get_metric_id, del_metric):
         """Test the functionality for a delete metric request."""
-        # Mock a message value and key
-        message = Message()
-        message.key = "delete_metric_request"
-        message.value = json.dumps({"metric_name": "disk_write_ops", "resource_uuid": "my_r_id", "correlation_id": 1})
+        value = {"metric_name": "disk_write_ops", "resource_uuid": "my_r_id", "correlation_id": 1}
 
         get_creds.return_value = type('obj', (object,), {
             'config': '{"insecure":true}'
@@ -82,19 +78,16 @@ class TestMetricReq(unittest.TestCase):
 
         # Call the metric functionality and check delete request
         get_metric_id.return_value = "my_metric_id"
-        self.metrics.metric_calls(message, 'test_id')
+        self.metrics.handle_request('delete_metric_request', value, 'test_id')
         del_metric.assert_called_with(mock.ANY, mock.ANY, "my_metric_id", False)
 
     @mock.patch.object(Common, "get_auth_token", mock.Mock())
     @mock.patch.object(Common, 'get_endpoint', mock.Mock())
-    @mock.patch.object(metric_req.Metrics, "list_metrics")
+    @mock.patch.object(metric_req.OpenstackMetricHandler, "list_metrics")
     @mock.patch.object(AuthManager, "get_credentials")
     def test_list_metric_key(self, get_creds, list_metrics):
         """Test the functionality for a list metric request."""
-        # Mock a message with list metric key and value
-        message = Message()
-        message.key = "list_metric_request"
-        message.value = json.dumps({"metrics_list_request": {"correlation_id": 1}})
+        value = {"metrics_list_request": {"correlation_id": 1}}
 
         get_creds.return_value = type('obj', (object,), {
             'config': '{"insecure":true}'
@@ -103,7 +96,7 @@ class TestMetricReq(unittest.TestCase):
         list_metrics.return_value = []
 
         # Call the metric functionality and check list functionality
-        self.metrics.metric_calls(message, 'test_id')
+        self.metrics.handle_request('list_metric_request', value, 'test_id')
         list_metrics.assert_called_with(mock.ANY, mock.ANY, {"correlation_id": 1}, False)
 
     @mock.patch.object(Common, "get_auth_token", mock.Mock())
@@ -112,13 +105,10 @@ class TestMetricReq(unittest.TestCase):
     @mock.patch.object(Common, "perform_request")
     def test_update_metric_key(self, perf_req, get_creds):
         """Test the functionality for an update metric request."""
-        # Mock a message with update metric key and value
-        message = Message()
-        message.key = "update_metric_request"
-        message.value = json.dumps({"metric_update_request":
-                                        {"correlation_id": 1,
-                                         "metric_name": "my_metric",
-                                         "resource_uuid": "my_r_id"}})
+        value = {"metric_update_request":
+                     {"correlation_id": 1,
+                      "metric_name": "my_metric",
+                      "resource_uuid": "my_r_id"}}
 
         get_creds.return_value = type('obj', (object,), {
             'config': '{"insecure":true}'
@@ -130,35 +120,29 @@ class TestMetricReq(unittest.TestCase):
 
         # Call metric functionality and confirm no function is called
         # Gnocchi does not support updating a metric configuration
-        self.metrics.metric_calls(message, 'test_id')
+        self.metrics.handle_request('update_metric_request', value, 'test_id')
 
     @mock.patch.object(Common, "get_auth_token", mock.Mock())
     @mock.patch.object(Common, 'get_endpoint', mock.Mock())
-    @mock.patch.object(metric_req.Metrics, "configure_metric")
+    @mock.patch.object(OpenstackMetricHandler, "configure_metric")
     @mock.patch.object(AuthManager, "get_credentials")
     def test_config_metric_key(self, get_credentials, config_metric):
         """Test the functionality for a create metric request."""
-        # Mock a message with create metric key and value
-        message = Message()
-        message.key = "create_metric_request"
-        message.value = json.dumps({"metric_create_request": {"correlation_id": 123}})
+        value = {"metric_create_request": {"correlation_id": 123}}
         get_credentials.return_value = type('obj', (object,), {'config': '{"insecure":true}'})
         # Call metric functionality and check config metric
         config_metric.return_value = "metric_id", "resource_id"
-        self.metrics.metric_calls(message, 'test_id')
+        self.metrics.handle_request('create_metric_request', value, 'test_id')
         config_metric.assert_called_with(mock.ANY, mock.ANY, {"correlation_id": 123}, False)
 
     @mock.patch.object(Common, "get_auth_token", mock.Mock())
     @mock.patch.object(Common, 'get_endpoint', mock.Mock())
-    @mock.patch.object(metric_req.Metrics, "read_metric_data")
+    @mock.patch.object(OpenstackMetricHandler, "read_metric_data")
     @mock.patch.object(AuthManager, "get_credentials")
     @mock.patch.object(Common, "perform_request")
     def test_read_data_key(self, perf_req, get_creds, read_data):
         """Test the functionality for a read metric data request."""
-        # Mock a message with a read data key and value
-        message = Message()
-        message.key = "read_metric_data_request"
-        message.value = json.dumps({"correlation_id": 123, "metric_name": "cpu_utilization", "resource_uuid": "uuid"})
+        value = {"correlation_id": 123, "metric_name": "cpu_utilization", "resource_uuid": "uuid"}
 
         get_creds.return_value = type('obj', (object,), {
             'config': '{"insecure":true}'
@@ -170,6 +154,6 @@ class TestMetricReq(unittest.TestCase):
 
         # Call metric functionality and check read data metrics
         read_data.return_value = "time_stamps", "data_values"
-        self.metrics.metric_calls(message, 'test_id')
+        self.metrics.handle_request('read_metric_data_request', value, 'test_id')
         read_data.assert_called_with(
-            mock.ANY, mock.ANY, json.loads(message.value), False)
+            mock.ANY, mock.ANY, value, False)

@@ -21,7 +21,6 @@
 ##
 """Generate valid responses to send back to the SO."""
 
-import json
 import logging
 
 log = logging.getLogger(__name__)
@@ -29,13 +28,13 @@ log = logging.getLogger(__name__)
 schema_version = "1.0"
 
 
-class OpenStack_Response(object):
+class OpenStackResponseBuilder(object):
     """Generates responses for OpenStack plugin."""
 
     def __init__(self):
         """Initialize OpenStack Response instance."""
 
-    def generate_response(self, key, **kwargs):
+    def generate_response(self, key, **kwargs) -> dict:
         """Make call to appropriate response function."""
         if key == "list_alarm_response":
             message = self.alarm_list_response(**kwargs)
@@ -63,15 +62,15 @@ class OpenStack_Response(object):
 
         return message
 
-    def alarm_list_response(self, **kwargs):
+    def alarm_list_response(self, **kwargs) -> dict:
         """Generate the response for an alarm list request."""
         alarm_list_resp = {"schema_version": schema_version,
                            "schema_type": "list_alarm_response",
                            "correlation_id": kwargs['cor_id'],
                            "list_alarm_response": kwargs['alarm_list']}
-        return json.dumps(alarm_list_resp)
+        return alarm_list_resp
 
-    def create_alarm_response(self, **kwargs):
+    def create_alarm_response(self, **kwargs) -> dict:
         """Generate a response for a create alarm request."""
         create_alarm_resp = {"schema_version": schema_version,
                              "schema_type": "create_alarm_response",
@@ -79,9 +78,9 @@ class OpenStack_Response(object):
                                  "correlation_id": kwargs['cor_id'],
                                  "alarm_uuid": kwargs['alarm_id'],
                                  "status": kwargs['status']}}
-        return json.dumps(create_alarm_resp)
+        return create_alarm_resp
 
-    def delete_alarm_response(self, **kwargs):
+    def delete_alarm_response(self, **kwargs) -> dict:
         """Generate a response for a delete alarm request."""
         delete_alarm_resp = {"schema_version": schema_version,
                              "schema_type": "alarm_deletion_response",
@@ -89,9 +88,9 @@ class OpenStack_Response(object):
                                  "correlation_id": kwargs['cor_id'],
                                  "alarm_uuid": kwargs['alarm_id'],
                                  "status": kwargs['status']}}
-        return json.dumps(delete_alarm_resp)
+        return delete_alarm_resp
 
-    def update_alarm_response(self, **kwargs):
+    def update_alarm_response(self, **kwargs) -> dict:
         """Generate a response for an update alarm request."""
         update_alarm_resp = {"schema_version": schema_version,
                              "schema_type": "update_alarm_response",
@@ -99,9 +98,9 @@ class OpenStack_Response(object):
                                  "correlation_id": kwargs['cor_id'],
                                  "alarm_uuid": kwargs['alarm_id'],
                                  "status": kwargs['status']}}
-        return json.dumps(update_alarm_resp)
+        return update_alarm_resp
 
-    def metric_create_response(self, **kwargs):
+    def metric_create_response(self, **kwargs) -> dict:
         """Generate a response for a create metric request."""
         create_metric_resp = {"schema_version": schema_version,
                               "schema_type": "create_metric_response",
@@ -110,9 +109,9 @@ class OpenStack_Response(object):
                                   "metric_uuid": kwargs['metric_id'],
                                   "resource_uuid": kwargs['resource_id'],
                                   "status": kwargs['status']}}
-        return json.dumps(create_metric_resp)
+        return create_metric_resp
 
-    def read_metric_data_response(self, **kwargs):
+    def read_metric_data_response(self, **kwargs) -> dict:
         """Generate a response for a read metric data request."""
         read_metric_data_resp = {"schema_version": schema_version,
                                  "schema_type": "read_metric_data_response",
@@ -124,9 +123,9 @@ class OpenStack_Response(object):
                                  "metrics_data": {
                                      "time_series": kwargs['times'],
                                      "metrics_series": kwargs['metrics']}}
-        return json.dumps(read_metric_data_resp)
+        return read_metric_data_resp
 
-    def delete_metric_response(self, **kwargs):
+    def delete_metric_response(self, **kwargs) -> dict:
         """Generate a response for a delete metric request."""
         delete_metric_resp = {"schema_version": schema_version,
                               "schema_type": "delete_metric_response",
@@ -135,9 +134,9 @@ class OpenStack_Response(object):
                               "resource_uuid": kwargs['resource_id'],
                               "correlation_id": kwargs['cor_id'],
                               "status": kwargs['status']}
-        return json.dumps(delete_metric_resp)
+        return delete_metric_resp
 
-    def update_metric_response(self, **kwargs):
+    def update_metric_response(self, **kwargs) -> dict:
         """Generate a repsonse for an update metric request."""
         update_metric_resp = {"schema_version": schema_version,
                               "schema_type": "update_metric_response",
@@ -146,18 +145,18 @@ class OpenStack_Response(object):
                                   "metric_uuid": kwargs['metric_id'],
                                   "status": kwargs['status'],
                                   "resource_uuid": kwargs['resource_id']}}
-        return json.dumps(update_metric_resp)
+        return update_metric_resp
 
-    def list_metric_response(self, **kwargs):
+    def list_metric_response(self, **kwargs) -> dict:
         """Generate a response for a list metric request."""
         list_metric_resp = {"schema_version": schema_version,
                             "schema_type": "list_metric_response",
                             "correlation_id": kwargs['cor_id'],
                             "status": kwargs['status'],
                             "metrics_list": kwargs['metric_list']}
-        return json.dumps(list_metric_resp)
+        return list_metric_resp
 
-    def notify_alarm(self, **kwargs):
+    def notify_alarm(self, **kwargs) -> dict:
         """Generate a response to send alarm notifications."""
         notify_alarm_resp = {"schema_version": schema_version,
                              "schema_type": "notify_alarm",
@@ -172,4 +171,4 @@ class OpenStack_Response(object):
                                  "severity": kwargs['sev'],
                                  "status": kwargs['state'],
                                  "start_date": kwargs['date']}}
-        return json.dumps(notify_alarm_resp)
+        return notify_alarm_resp

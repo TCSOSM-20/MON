@@ -28,7 +28,7 @@ import unittest
 import mock
 
 from osm_mon.core.settings import Config
-from osm_mon.plugins.OpenStack.Aodh import alarming as alarm_req
+from osm_mon.plugins.OpenStack.Aodh import alarm_handler as alarm_req
 from osm_mon.plugins.OpenStack.common import Common
 
 log = logging.getLogger(__name__)
@@ -55,7 +55,7 @@ class TestAlarming(unittest.TestCase):
     def setUp(self):
         """Setup for tests."""
         super(TestAlarming, self).setUp()
-        self.alarming = alarm_req.Alarming()
+        self.alarming = alarm_req.OpenstackAlarmHandler()
 
     @mock.patch.object(Common, "perform_request")
     def test_config_invalid_alarm_req(self, perf_req):
@@ -152,6 +152,9 @@ class TestAlarming(unittest.TestCase):
     @mock.patch.object(Common, "perform_request")
     def test_ack_alarm_req(self, perf_req):
         """Test update alarm state for acknowledge alarm request."""
+        resp = Response({})
+        perf_req.return_value = resp
+
         self.alarming.update_alarm_state(alarm_endpoint, auth_token, "my_alarm_id", True)
 
         perf_req.assert_called_with(
@@ -185,7 +188,7 @@ class TestAlarming(unittest.TestCase):
         perf_req.assert_called_with(mock.ANY, auth_token, req_type="get")
         self.assertEqual(perf_req.call_count, 1)
 
-    @mock.patch.object(alarm_req.Alarming, "check_payload")
+    @mock.patch.object(alarm_req.OpenstackAlarmHandler, "check_payload")
     @mock.patch.object(Common, "perform_request")
     def test_update_alarm_valid(self, perf_req, check_pay):
         """Test valid update alarm request."""

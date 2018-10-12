@@ -22,7 +22,6 @@
 """Test that the correct responses are generated for each message."""
 
 import logging
-
 import unittest
 
 import mock
@@ -38,7 +37,7 @@ class TestOpenStackResponse(unittest.TestCase):
     def setUp(self):
         """Setup for testing OpenStack plugin responses."""
         super(TestOpenStackResponse, self).setUp()
-        self.plugin_resp = resp.OpenStack_Response()
+        self.plugin_resp = resp.OpenStackResponseBuilder()
 
     def test_invalid_key(self):
         """Test if an invalid key is entered for a response."""
@@ -46,70 +45,70 @@ class TestOpenStackResponse(unittest.TestCase):
         self.assertEqual(message, None)
 
     @mock.patch.object(
-        resp.OpenStack_Response, "alarm_list_response")
+        resp.OpenStackResponseBuilder, "alarm_list_response")
     def test_list_alarm_resp(self, alarm_list_resp):
         """Test out a function call for a list alarm response."""
         message = self.plugin_resp.generate_response("list_alarm_response")
         self.assertEqual(alarm_list_resp.return_value, message)
 
     @mock.patch.object(
-        resp.OpenStack_Response, "list_metric_response")
+        resp.OpenStackResponseBuilder, "list_metric_response")
     def test_list_metric_resp(self, metric_list_resp):
         """Test list metric response function call."""
         message = self.plugin_resp.generate_response("list_metric_response")
         self.assertEqual(message, metric_list_resp.return_value)
 
     @mock.patch.object(
-        resp.OpenStack_Response, "delete_alarm_response")
+        resp.OpenStackResponseBuilder, "delete_alarm_response")
     def test_delete_alarm_resp(self, del_alarm_resp):
         """Test delete alarm response function call."""
         message = self.plugin_resp.generate_response("delete_alarm_response")
         self.assertEqual(message, del_alarm_resp.return_value)
 
     @mock.patch.object(
-        resp.OpenStack_Response, "delete_metric_response")
+        resp.OpenStackResponseBuilder, "delete_metric_response")
     def test_delete_metric_resp(self, del_metric_resp):
         """Test the response functionality of delete metric response."""
         message = self.plugin_resp.generate_response("delete_metric_response")
         self.assertEqual(message, del_metric_resp.return_value)
 
     @mock.patch.object(
-        resp.OpenStack_Response, "create_alarm_response")
+        resp.OpenStackResponseBuilder, "create_alarm_response")
     def test_create_alarm_resp(self, config_alarm_resp):
         """Test create alarm response function call."""
         message = self.plugin_resp.generate_response("create_alarm_response")
         self.assertEqual(message, config_alarm_resp.return_value)
 
     @mock.patch.object(
-        resp.OpenStack_Response, "metric_create_response")
+        resp.OpenStackResponseBuilder, "metric_create_response")
     def test_create_metric_resp(self, config_metric_resp):
         """Test create metric response function call."""
         message = self.plugin_resp.generate_response("create_metric_response")
         self.assertEqual(message, config_metric_resp.return_value)
 
     @mock.patch.object(
-        resp.OpenStack_Response, "update_alarm_response")
+        resp.OpenStackResponseBuilder, "update_alarm_response")
     def test_update_alarm_resp(self, up_alarm_resp):
         """Test update alarm response function call."""
         message = self.plugin_resp.generate_response("update_alarm_response")
         self.assertEqual(message, up_alarm_resp.return_value)
 
     @mock.patch.object(
-        resp.OpenStack_Response, "update_metric_response")
+        resp.OpenStackResponseBuilder, "update_metric_response")
     def test_update_metric_resp(self, up_metric_resp):
         """Test update metric response function call."""
         message = self.plugin_resp.generate_response("update_metric_response")
         self.assertEqual(message, up_metric_resp.return_value)
 
     @mock.patch.object(
-        resp.OpenStack_Response, "notify_alarm")
+        resp.OpenStackResponseBuilder, "notify_alarm")
     def test_notify_alarm(self, notify_alarm):
         """Test notify alarm response function call."""
         message = self.plugin_resp.generate_response("notify_alarm")
         self.assertEqual(message, notify_alarm.return_value)
 
     @mock.patch.object(
-        resp.OpenStack_Response, "read_metric_data_response")
+        resp.OpenStackResponseBuilder, "read_metric_data_response")
     def test_read_metric_data_resp(self, read_data_resp):
         """Test read metric data response function call."""
         message = self.plugin_resp.generate_response(

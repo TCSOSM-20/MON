@@ -25,15 +25,13 @@ import datetime
 import json
 import logging
 import time
-from json import JSONDecodeError
 
 import six
-import yaml
 
 from osm_mon.core.auth import AuthManager
-from osm_mon.core.message_bus.producer import KafkaProducer
+from osm_mon.core.settings import Config
 from osm_mon.plugins.OpenStack.common import Common
-from osm_mon.plugins.OpenStack.response import OpenStack_Response
+from osm_mon.plugins.OpenStack.response import OpenStackResponseBuilder
 
 log = logging.getLogger(__name__)
 
@@ -58,27 +56,26 @@ PERIOD_MS = {
 }
 
 
-class Metrics(object):
+class OpenstackMetricHandler(object):
     """OpenStack metric requests performed via the Gnocchi API."""
 
     def __init__(self):
         """Initialize the metric actions."""
+        self._cfg = Config.instance()
 
         # Use the Response class to generate valid json response messages
-        self._response = OpenStack_Response()
-
-        # Initializer a producer to send responses back to SO
-        self._producer = KafkaProducer("metric_response")
+        self._response = OpenStackResponseBuilder()
 
         self._auth_manager = AuthManager()
 
-    def metric_calls(self, message, vim_uuid):
-        """Consume info from the message bus to manage metric requests."""
-        log.info("OpenStack metric action required.")
-        try:
-            values = json.loads(message.value)
-        except JSONDecodeError:
-            values = yaml.safe_load(message.value)
+    def handle_request(self, key: str, values: dict, vim_uuid: str) -> dict:
+        """
+        Processes metric request message depending on it's key
+        :param key: Kafka message key
+        :param values: Dict containing metric request data. Follows models defined in core.models.
+        :param vim_uuid: UUID of the VIM to handle the metric request.
+        :return: Dict containing metric response data. Follows models defined in core.models.
+        """
 
         log.info("OpenStack metric action required.")
 
@@ -91,7 +88,7 @@ class Metrics(object):
 
         auth_token = Common.get_auth_token(vim_uuid, verify_ssl=verify_ssl)
 
-        if message.key == "create_metric_request":
+        if key == "create_metric_request":
             metric_details = values['metric_create_request']
             status = False
             metric_id = None
@@ -105,13 +102,13 @@ class Metrics(object):
                 log.exception("Error creating metric")
                 raise e
             finally:
-                self._generate_and_send_response('create_metric_response',
-                                                 metric_details['correlation_id'],
-                                                 status=status,
-                                                 metric_id=metric_id,
-                                                 resource_id=resource_id)
+                return self._response.generate_response('create_metric_response',
+                                                        cor_id=metric_details['correlation_id'],
+                                                        status=status,
+                                                        metric_id=metric_id,
+                                                        resource_id=resource_id)
 
-        elif message.key == "read_metric_data_request":
+        elif key == "read_metric_data_request":
             metric_id = None
             timestamps = []
             metric_data = []
@@ -130,16 +127,16 @@ class Metrics(object):
                 log.exception("Error reading metric data")
                 raise e
             finally:
-                self._generate_and_send_response('read_metric_data_response',
-                                                 values['correlation_id'],
-                                                 status=status,
-                                                 metric_id=metric_id,
-                                                 metric_name=values['metric_name'],
-                                                 resource_id=values['resource_uuid'],
-                                                 times=timestamps,
-                                                 metrics=metric_data)
+                return self._response.generate_response('read_metric_data_response',
+                                                        cor_id=values['correlation_id'],
+                                                        status=status,
+                                                        metric_id=metric_id,
+                                                        metric_name=values['metric_name'],
+                                                        resource_id=values['resource_uuid'],
+                                                        times=timestamps,
+                                                        metrics=metric_data)
 
-        elif message.key == "delete_metric_request":
+        elif key == "delete_metric_request":
             metric_id = None
             status = False
             try:
@@ -155,14 +152,14 @@ class Metrics(object):
                 log.exception("Error deleting metric")
                 raise e
             finally:
-                self._generate_and_send_response('delete_metric_response',
-                                                 values['correlation_id'],
-                                                 metric_id=metric_id,
-                                                 metric_name=values['metric_name'],
-                                                 status=status,
-                                                 resource_id=values['resource_uuid'])
+                return self._response.generate_response('delete_metric_response',
+                                                        cor_id=values['correlation_id'],
+                                                        metric_id=metric_id,
+                                                        metric_name=values['metric_name'],
+                                                        status=status,
+                                                        resource_id=values['resource_uuid'])
 
-        elif message.key == "update_metric_request":
+        elif key == "update_metric_request":
             # Gnocchi doesn't support configuration updates
             # Log and send a response back to this effect
             log.warning("Gnocchi doesn't support metric configuration updates.")
@@ -170,13 +167,13 @@ class Metrics(object):
             metric_name = req_details['metric_name']
             resource_id = req_details['resource_uuid']
             metric_id = self.get_metric_id(endpoint, auth_token, metric_name, resource_id, verify_ssl)
-            self._generate_and_send_response('update_metric_response',
-                                             req_details['correlation_id'],
-                                             status=False,
-                                             resource_id=resource_id,
-                                             metric_id=metric_id)
+            return self._response.generate_response('update_metric_response',
+                                                    cor_id=req_details['correlation_id'],
+                                                    status=False,
+                                                    resource_id=resource_id,
+                                                    metric_id=metric_id)
 
-        elif message.key == "list_metric_request":
+        elif key == "list_metric_request":
             list_details = values['metrics_list_request']
             metric_list = []
             status = False
@@ -189,13 +186,13 @@ class Metrics(object):
                 log.exception("Error listing metrics")
                 raise e
             finally:
-                self._generate_and_send_response('list_metric_response',
-                                                 list_details['correlation_id'],
-                                                 status=status,
-                                                 metric_list=metric_list)
+                return self._response.generate_response('list_metric_response',
+                                                        cor_id=list_details['correlation_id'],
+                                                        status=status,
+                                                        metric_list=metric_list)
 
         else:
-            log.warning("Unknown key %s, no action will be performed.", message.key)
+            raise ValueError("Unknown key {}, no action will be performed.".format(key))
 
     def configure_metric(self, endpoint, auth_token, values, verify_ssl):
         """Create the new metric in Gnocchi."""
@@ -457,14 +454,3 @@ class Metrics(object):
             return res_list
         else:
             return resp_list
-
-    def _generate_and_send_response(self, key, correlation_id, **kwargs):
-        try:
-            resp_message = self._response.generate_response(
-                key, cor_id=correlation_id, **kwargs)
-            log.info("Response Message: %s", resp_message)
-            self._producer.publish_metrics_response(
-                key, resp_message)
-        except Exception as e:
-            log.exception("Response creation failed:")
-            raise e

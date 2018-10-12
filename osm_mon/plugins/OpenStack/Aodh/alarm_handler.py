@@ -23,18 +23,16 @@
 
 import json
 import logging
-from json import JSONDecodeError
+from io import UnsupportedOperation
 
 import six
-import yaml
 
 from osm_mon.core.auth import AuthManager
 from osm_mon.core.database import DatabaseManager
-from osm_mon.core.message_bus.producer import KafkaProducer
 from osm_mon.core.settings import Config
-from osm_mon.plugins.OpenStack.Gnocchi.metrics import METRIC_MAPPINGS
+from osm_mon.plugins.OpenStack.Gnocchi.metric_handler import METRIC_MAPPINGS
 from osm_mon.plugins.OpenStack.common import Common
-from osm_mon.plugins.OpenStack.response import OpenStack_Response
+from osm_mon.plugins.OpenStack.response import OpenStackResponseBuilder
 
 log = logging.getLogger(__name__)
 
@@ -53,31 +51,26 @@ STATISTICS = {
     "sum": "sum"}
 
 
-class Alarming(object):
+class OpenstackAlarmHandler(object):
     """Carries out alarming requests and responses via Aodh API."""
 
     def __init__(self):
         """Create the OpenStack alarming instance."""
         self._database_manager = DatabaseManager()
         self._auth_manager = AuthManager()
+        self._cfg = Config.instance()
 
         # Use the Response class to generate valid json response messages
-        self._response = OpenStack_Response()
+        self._response = OpenStackResponseBuilder()
 
-        # Initializer a producer to send responses back to SO
-        self._producer = KafkaProducer("alarm_response")
-
-    def alarming(self, message, vim_uuid):
+    def handle_message(self, key: str, values: dict, vim_uuid: str):
         """
         Processes alarm request message depending on it's key
-        :param message: Message containing key and value attributes. This last one can be in JSON or YAML format.
+        :param key: Kafka message key
+        :param values: Dict containing alarm request data. Follows models defined in core.models.
         :param vim_uuid: UUID of the VIM to handle the alarm request.
-        :return:
+        :return: Dict containing alarm response data. Follows models defined in core.models.
         """
-        try:
-            values = json.loads(message.value)
-        except JSONDecodeError:
-            values = yaml.safe_load(message.value)
 
         log.info("OpenStack alarm action required.")
 
@@ -91,7 +84,7 @@ class Alarming(object):
         vim_account = self._auth_manager.get_credentials(vim_uuid)
         vim_config = json.loads(vim_account.config)
 
-        if message.key == "create_alarm_request":
+        if key == "create_alarm_request":
             alarm_details = values['alarm_create_request']
             alarm_id = None
             status = False
@@ -119,12 +112,12 @@ class Alarming(object):
                 log.exception("Error creating alarm")
                 raise e
             finally:
-                self._generate_and_send_response('create_alarm_response',
-                                                 alarm_details['correlation_id'],
-                                                 status=status,
-                                                 alarm_id=alarm_id)
+                return self._response.generate_response('create_alarm_response',
+                                                        cor_id=alarm_details['correlation_id'],
+                                                        status=status,
+                                                        alarm_id=alarm_id)
 
-        elif message.key == "list_alarm_request":
+        elif key == "list_alarm_request":
             list_details = values['alarm_list_request']
             alarm_list = None
             try:
@@ -134,11 +127,11 @@ class Alarming(object):
                 log.exception("Error listing alarms")
                 raise e
             finally:
-                self._generate_and_send_response('list_alarm_response',
-                                                 list_details['correlation_id'],
-                                                 alarm_list=alarm_list)
+                return self._response.generate_response('list_alarm_response',
+                                                        cor_id=list_details['correlation_id'],
+                                                        alarm_list=alarm_list)
 
-        elif message.key == "delete_alarm_request":
+        elif key == "delete_alarm_request":
             request_details = values['alarm_delete_request']
             alarm_id = request_details['alarm_uuid']
             status = False
@@ -150,12 +143,12 @@ class Alarming(object):
                 log.exception("Error deleting alarm")
                 raise e
             finally:
-                self._generate_and_send_response('delete_alarm_response',
-                                                 request_details['correlation_id'],
-                                                 status=status,
-                                                 alarm_id=alarm_id)
+                return self._response.generate_response('delete_alarm_response',
+                                                        cor_id=request_details['correlation_id'],
+                                                        status=status,
+                                                        alarm_id=alarm_id)
 
-        elif message.key == "acknowledge_alarm":
+        elif key == "acknowledge_alarm_request":
             try:
                 alarm_id = values['ack_details']['alarm_uuid']
 
@@ -165,9 +158,11 @@ class Alarming(object):
                 log.info("Acknowledged the alarm and cleared it.")
             except Exception as e:
                 log.exception("Error acknowledging alarm")
-                raise e
+                raise
+            finally:
+                return None
 
-        elif message.key == "update_alarm_request":
+        elif key == "update_alarm_request":
             # Update alarm configurations
             alarm_details = values['alarm_update_request']
             alarm_id = None
@@ -180,13 +175,13 @@ class Alarming(object):
                 log.exception("Error updating alarm")
                 raise e
             finally:
-                self._generate_and_send_response('update_alarm_response',
-                                                 alarm_details['correlation_id'],
-                                                 status=status,
-                                                 alarm_id=alarm_id)
+                return self._response.generate_response('update_alarm_response',
+                                                        cor_id=alarm_details['correlation_id'],
+                                                        status=status,
+                                                        alarm_id=alarm_id)
 
         else:
-            log.debug("Unknown key, no action will be performed")
+            raise UnsupportedOperation("Unknown key {}, no action will be performed.".format(key))
 
     def configure_alarm(self, alarm_endpoint, auth_token, values, vim_config, verify_ssl):
         """Create requested alarm in Aodh."""
@@ -200,7 +195,6 @@ class Alarming(object):
         if metric_name not in METRIC_MAPPINGS.keys():
             raise KeyError("Metric {} is not supported.".format(metric_name))
 
-        #FIXME
         if 'granularity' in vim_config and 'granularity' not in values:
             values['granularity'] = vim_config['granularity']
         payload = self.check_payload(values, metric_name, resource_id,
@@ -290,8 +284,10 @@ class Alarming(object):
         url = "{}/v2/alarms/%s/state".format(endpoint) % alarm_id
         payload = json.dumps("ok")
 
-        Common.perform_request(
+        result = Common.perform_request(
             url, auth_token, req_type="put", payload=payload, verify_ssl=verify_ssl)
+
+        return json.loads(result.text)
 
     def update_alarm(self, endpoint, auth_token, values, vim_config, verify_ssl):
         """Get alarm name for an alarm configuration update."""
@@ -374,6 +370,7 @@ class Alarming(object):
     def check_for_metric(self, auth_token, metric_endpoint, metric_name, resource_id, verify_ssl):
         """
         Checks if resource has a specific metric. If not, throws exception.
+        :param verify_ssl: Boolean flag to set SSL cert validation
         :param auth_token: OpenStack auth token
         :param metric_endpoint: OpenStack metric endpoint
         :param metric_name: Metric name
@@ -390,15 +387,4 @@ class Alarming(object):
             return metrics_dict[METRIC_MAPPINGS[metric_name]]
         except Exception as e:
             log.exception("Desired Gnocchi metric not found:", e)
-            raise e
-
-    def _generate_and_send_response(self, key, correlation_id, **kwargs):
-        try:
-            resp_message = self._response.generate_response(
-                key, cor_id=correlation_id, **kwargs)
-            log.info("Response Message: %s", resp_message)
-            self._producer.publish_alarm_response(
-                key, resp_message)
-        except Exception as e:
-            log.exception("Response creation failed:")
             raise e

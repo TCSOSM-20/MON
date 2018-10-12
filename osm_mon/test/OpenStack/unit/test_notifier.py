@@ -25,9 +25,9 @@ import json
 import unittest
 
 import mock
+from kafka import KafkaProducer
 
 from osm_mon.core.database import DatabaseManager, Alarm
-from osm_mon.core.message_bus.producer import KafkaProducer
 from osm_mon.plugins.OpenStack.Aodh.notifier import NotifierHandler
 
 post_data = {"severity": "critical",
@@ -76,6 +76,8 @@ class MockNotifierHandler(NotifierHandler):
         pass
 
 
+@mock.patch.object(KafkaProducer, "__init__", lambda *args, **kwargs: None)
+@mock.patch.object(KafkaProducer, "flush", mock.Mock())
 class TestNotifier(unittest.TestCase):
     """Test the NotifierHandler class for requests from aodh."""
 
@@ -100,7 +102,7 @@ class TestNotifier(unittest.TestCase):
         set_head.assert_called_once()
         notify.assert_called_with(post_data)
 
-    @mock.patch.object(KafkaProducer, "publish_alarm_response")
+    @mock.patch.object(NotifierHandler, "_publish_response")
     @mock.patch.object(DatabaseManager, "get_alarm")
     def test_notify_alarm_valid_alarm(
             self, get_alarm, notify):
@@ -113,10 +115,9 @@ class TestNotifier(unittest.TestCase):
         get_alarm.return_value = mock_alarm
 
         self.handler.notify_alarm(post_data)
+        notify.assert_called_with('notify_alarm', mock.ANY)
 
-        notify.assert_called_with("notify_alarm", mock.ANY)
-
-    @mock.patch.object(KafkaProducer, "publish_alarm_response")
+    @mock.patch.object(NotifierHandler, "_publish_response")
     @mock.patch.object(DatabaseManager, "get_alarm")
     def test_notify_alarm_invalid_alarm(
             self, get_alarm, notify):

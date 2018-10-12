@@ -24,11 +24,14 @@
 """VMware MON plugin tests."""
 
 import logging
+import sys
 
-# Initialise a logger for tests
-logging.basicConfig(filename='vmware_mon_tests.log',
-                    format='%(asctime)s %(message)s',
-                    datefmt='%m/%d/%Y %I:%M:%S %p', filemode='a',
-                    level=logging.INFO)
+from osm_mon.core.settings import Config
+
+cfg = Config.instance()
+logging.basicConfig(stream=sys.stdout,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    datefmt='%m/%d/%Y %I:%M:%S %p',
+                    level=logging.getLevelName(cfg.OSMMON_LOG_LEVEL))
 log = logging.getLogger(__name__)
 

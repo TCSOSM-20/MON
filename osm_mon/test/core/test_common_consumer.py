@@ -5,8 +5,8 @@ from kafka import KafkaProducer
 from kafka.errors import KafkaError
 from osm_common import dbmongo
 
-from osm_mon.core.database import VimCredentials
-from osm_mon.core.message_bus.common_consumer import *
+from osm_mon.core.database import VimCredentials, DatabaseManager
+from osm_mon.core.message_bus.common_consumer import CommonConsumer
 
 
 @mock.patch.object(dbmongo.DbMongo, "db_connect", mock.Mock())
