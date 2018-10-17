@@ -1,4 +1,5 @@
-#!/usr/bin/env bash
+# -*- coding: utf-8 -*-
+
 # Copyright 2018 Whitestack, LLC
 # *************************************************************
 
@@ -16,12 +17,6 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-
 # For those usages not covered by the Apache License, Version 2.0 please
 # contact: bdiaz@whitestack.com or glavado@whitestack.com
 ##
-/bin/bash /mon/osm_mon/plugins/vRealiseOps/vROPs_Webservice/install.sh
-python3 /mon/osm_mon/plugins/OpenStack/Aodh/notifier.py &
-python3 /mon/osm_mon/core/message_bus/common_consumer.py &
-osm-mon-prometheus-exporter
-

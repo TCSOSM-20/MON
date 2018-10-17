@@ -66,7 +66,8 @@ class Config(object):
         CfgParam('OS_DEFAULT_GRANULARITY', "300", six.text_type),
         CfgParam('REQUEST_TIMEOUT', 10, int),
         CfgParam('OSMMON_LOG_LEVEL', "INFO", six.text_type),
-        CfgParam('OSMMON_KAFKA_LOG_LEVEL', "INFO", six.text_type),
+        CfgParam('OSMMON_KAFKA_LOG_LEVEL', "WARN", six.text_type),
+        CfgParam('OSMMON_COLLECTOR_INTERVAL', 10, int),
     ]
 
     _config_dict = {cfg.key: cfg for cfg in _configuration}

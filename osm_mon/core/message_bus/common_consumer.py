@@ -91,6 +91,8 @@ class CommonConsumer:
 
         topics = ['metric_request', 'alarm_request', 'vim_account']
         common_consumer.subscribe(topics)
+        common_consumer.poll()
+        common_consumer.seek_to_end()
 
         log.info("Listening for messages...")
         for message in common_consumer:

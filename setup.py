@@ -73,7 +73,7 @@ setup(
     include_package_data=True,
     entry_points={
         "console_scripts": [
-            "osm-mon-exporter = osm_mon.cmd.exporter:main",
+            "osm-mon-prometheus-exporter = osm_mon.cmd.mon_prometheus_exporter:main",
         ]
     },
     dependency_links=[

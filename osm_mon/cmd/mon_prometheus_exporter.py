@@ -25,7 +25,7 @@ import logging
 import sys
 
 from osm_mon.core.settings import Config
-from osm_mon.exporter.exporter import MonExporter
+from osm_mon.collector.prometheus_exporter import MonPrometheusExporter
 
 
 def main():
@@ -42,9 +42,9 @@ def main():
     kafka_handler.setFormatter(kafka_formatter)
     kafka_logger.addHandler(kafka_handler)
     log = logging.getLogger(__name__)
-    log.info("Starting MON Exporter...")
+    log.info("Starting MON Prometheus Exporter...")
     log.info("Config: %s", vars(cfg))
-    exporter = MonExporter()
+    exporter = MonPrometheusExporter()
     exporter.run()
 
 

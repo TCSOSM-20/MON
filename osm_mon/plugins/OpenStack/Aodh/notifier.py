@@ -131,7 +131,6 @@ def run(server_class=HTTPServer, handler_class=NotifierHandler, port=8662):
     try:
         server_address = ('', port)
         httpd = server_class(server_address, handler_class)
-        print('Starting alarm notifier...')
         log.info("Starting alarm notifier server on port: %s", port)
         httpd.serve_forever()
     except Exception as exc:
