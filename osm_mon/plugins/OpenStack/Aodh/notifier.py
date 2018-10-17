@@ -25,6 +25,7 @@
 import json
 import logging
 import os
+import re
 import sys
 import time
 
@@ -138,10 +139,11 @@ def run(server_class=HTTPServer, handler_class=NotifierHandler, port=8662):
 
 
 if __name__ == "__main__":
-    from sys import argv
-
-    # Runs the webserver
-    if len(argv) == 2:
-        run(port=int(argv[1]))
+    cfg = Config.instance()
+    p = re.compile(':(\d+)', re.IGNORECASE)
+    m = p.search(cfg.OS_NOTIFIER_URI)
+    if m:
+        port = m.group(1)
+        run(port=int(port))
     else:
         run()
