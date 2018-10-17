@@ -10,6 +10,4 @@ class Consumer(KafkaConsumer):
         super().__init__(bootstrap_servers=cfg.BROKER_URI,
                          key_deserializer=bytes.decode,
                          value_deserializer=bytes.decode,
-                         group_id=group_id,
-                         session_timeout_ms=60000,
-                         heartbeat_interval_ms=20000)
+                         group_id=group_id)

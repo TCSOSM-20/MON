@@ -22,7 +22,6 @@
 import json
 import logging
 import sys
-import threading
 from json import JSONDecodeError
 
 import six
@@ -95,8 +94,7 @@ class CommonConsumer:
 
         log.info("Listening for messages...")
         for message in common_consumer:
-            t = threading.Thread(target=self.consume_message, args=(message,))
-            t.start()
+            self.consume_message(message)
 
     def consume_message(self, message):
         log.info("Message arrived: %s", message)
