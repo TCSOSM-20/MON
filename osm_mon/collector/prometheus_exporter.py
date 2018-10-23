@@ -20,12 +20,12 @@
 # For those usages not covered by the Apache License, Version 2.0 please
 # contact: bdiaz@whitestack.com or glavado@whitestack.com
 ##
+import asyncio
 import logging
 import threading
 import time
-from http.server import HTTPServer
 
-from prometheus_client import MetricsHandler
+from prometheus_client import start_http_server
 from prometheus_client.core import REGISTRY
 
 from osm_mon.collector.collector import MonCollector
@@ -37,35 +37,35 @@ log = logging.getLogger(__name__)
 class MonPrometheusExporter:
 
     def __init__(self):
-        self.mon_collector = MonCollector()
         self.custom_collector = CustomCollector()
 
     def _run_exporter(self):
         log.debug('_run_exporter')
         REGISTRY.register(self.custom_collector)
-        server_address = ('', 8000)
-        httpd = HTTPServer(server_address, MetricsHandler)
         log.info("Starting MON Prometheus exporter at port %s", 8000)
-        httpd.serve_forever()
+        start_http_server(8000)
 
     def run(self):
         log.debug('_run')
-        self._run_exporter()
-        self._run_collector()
+        collector_thread = threading.Thread(target=self._run_collector)
+        collector_thread.setDaemon(True)
+        collector_thread.start()
+        exporter_thread = threading.Thread(target=self._run_exporter)
+        exporter_thread.setDaemon(True)
+        exporter_thread.start()
+        collector_thread.join()
+        exporter_thread.join()
 
     def _run_collector(self):
         log.debug('_run_collector')
-        t = threading.Thread(target=self._collect_metrics_forever)
-        t.setDaemon(True)
-        t.start()
-
-    def _collect_metrics_forever(self):
-        log.debug('_collect_metrics_forever')
+        asyncio.set_event_loop(asyncio.new_event_loop())
+        mon_collector = MonCollector()
         cfg = Config.instance()
         while True:
-            time.sleep(cfg.OSMMON_COLLECTOR_INTERVAL)
-            metrics = self.mon_collector.collect_metrics()
+            log.debug('_run_collector_loop')
+            metrics = asyncio.get_event_loop().run_until_complete(mon_collector.collect_metrics())
             self.custom_collector.metrics = metrics
+            time.sleep(cfg.OSMMON_COLLECTOR_INTERVAL)
 
 
 class CustomCollector(object):
@@ -80,8 +80,7 @@ class CustomCollector(object):
 
     def collect(self):
         log.debug("collect")
-        metrics = self.mon_collector.collect_metrics()
-        return metrics
+        return self.metrics
 
 
 if __name__ == '__main__':

@@ -91,8 +91,21 @@ class CommonConsumer:
 
         topics = ['metric_request', 'alarm_request', 'vim_account']
         common_consumer.subscribe(topics)
-        common_consumer.poll()
-        common_consumer.seek_to_end()
+        retries = 1
+        max_retries = 5
+        while True:
+            try:
+                common_consumer.poll()
+                common_consumer.seek_to_end()
+                break
+            except Exception:
+                log.error("Error getting Kafka partitions. Maybe Kafka is not ready yet.")
+                log.error("Retry number %d of %d", retries, max_retries)
+                if retries >= max_retries:
+                    log.error("Achieved max number of retries. Logging exception and exiting...")
+                    log.exception("Exception: ")
+                    return
+                retries = retries + 1
 
         log.info("Listening for messages...")
         for message in common_consumer:

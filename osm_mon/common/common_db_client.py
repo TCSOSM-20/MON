@@ -43,6 +43,9 @@ class CommonDbClient:
         return [self.get_vnfr(nsr_id, member['member-vnf-index']) for member in
                 self.get_nsr(nsr_id)['nsd']['constituent-vnfd']]
 
+    def get_vnfrs(self):
+        return self.common_db.get_list('vnfrs')
+
     def get_vnfd(self, vnfd_id: str):
         vnfr = self.common_db.get_one("vnfds",
                                       {"_id": vnfd_id})

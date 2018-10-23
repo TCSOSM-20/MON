@@ -53,7 +53,7 @@ setup(
     scripts=['osm_mon/plugins/vRealiseOps/vROPs_Webservice/vrops_webservice',
              'osm_mon/core/message_bus/common_consumer.py'],
     install_requires=[
-        "kafka==1.3.*",
+        "kafka-python==1.4.*",
         "requests==2.18.*",
         "cherrypy==14.0.*",
         "jsmin==2.2.*",
@@ -68,7 +68,8 @@ setup(
         "bottle==0.12.*",
         "peewee==3.1.*",
         "pyyaml==3.*",
-        "osm-common"
+        "osm-common",
+        "n2vc"
     ],
     include_package_data=True,
     entry_points={

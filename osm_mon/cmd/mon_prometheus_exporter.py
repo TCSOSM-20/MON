@@ -30,17 +30,21 @@ from osm_mon.collector.prometheus_exporter import MonPrometheusExporter
 
 def main():
     cfg = Config.instance()
-    log_formatter_str = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    logging.basicConfig(stream=sys.stdout,
-                        format=log_formatter_str,
-                        datefmt='%m/%d/%Y %I:%M:%S %p',
-                        level=logging.getLevelName(cfg.OSMMON_LOG_LEVEL))
+
+    root = logging.getLogger()
+    root.setLevel(logging.getLevelName(cfg.OSMMON_LOG_LEVEL))
+    ch = logging.StreamHandler(sys.stdout)
+    ch.setLevel(logging.getLevelName(cfg.OSMMON_LOG_LEVEL))
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s', '%m/%d/%Y %I:%M:%S %p')
+    ch.setFormatter(formatter)
+    root.addHandler(ch)
+
     kafka_logger = logging.getLogger('kafka')
     kafka_logger.setLevel(logging.getLevelName(cfg.OSMMON_KAFKA_LOG_LEVEL))
-    kafka_formatter = logging.Formatter(log_formatter_str)
     kafka_handler = logging.StreamHandler(sys.stdout)
-    kafka_handler.setFormatter(kafka_formatter)
+    kafka_handler.setFormatter(formatter)
     kafka_logger.addHandler(kafka_handler)
+
     log = logging.getLogger(__name__)
     log.info("Starting MON Prometheus Exporter...")
     log.info("Config: %s", vars(cfg))
