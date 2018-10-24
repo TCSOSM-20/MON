@@ -22,6 +22,7 @@
 import json
 import logging
 import sys
+import time
 from json import JSONDecodeError
 
 import six
@@ -106,6 +107,7 @@ class CommonConsumer:
                     log.exception("Exception: ")
                     return
                 retries = retries + 1
+                time.sleep(2)
 
         log.info("Listening for messages...")
         for message in common_consumer:
