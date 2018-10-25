@@ -62,10 +62,14 @@ class MonPrometheusExporter:
         mon_collector = MonCollector()
         cfg = Config.instance()
         while True:
-            log.debug('_run_collector_loop')
-            metrics = asyncio.get_event_loop().run_until_complete(mon_collector.collect_metrics())
-            self.custom_collector.metrics = metrics
-            time.sleep(cfg.OSMMON_COLLECTOR_INTERVAL)
+            try:
+                log.debug('_run_collector_loop')
+                metrics = asyncio.get_event_loop().run_until_complete(mon_collector.collect_metrics())
+                self.custom_collector.metrics = metrics
+                time.sleep(cfg.OSMMON_COLLECTOR_INTERVAL)
+            except Exception:
+                log.exception("Error collecting metrics")
+
 
 
 class CustomCollector(object):

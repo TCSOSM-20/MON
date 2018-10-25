@@ -41,9 +41,6 @@ def main():
 
     kafka_logger = logging.getLogger('kafka')
     kafka_logger.setLevel(logging.getLevelName(cfg.OSMMON_KAFKA_LOG_LEVEL))
-    kafka_handler = logging.StreamHandler(sys.stdout)
-    kafka_handler.setFormatter(formatter)
-    kafka_logger.addHandler(kafka_handler)
 
     log = logging.getLogger(__name__)
     log.info("Starting MON Prometheus Exporter...")
