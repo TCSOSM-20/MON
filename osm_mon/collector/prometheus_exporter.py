@@ -71,7 +71,6 @@ class MonPrometheusExporter:
                 log.exception("Error collecting metrics")
 
 
-
 class CustomCollector(object):
 
     def __init__(self):

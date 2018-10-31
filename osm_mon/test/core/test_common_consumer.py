@@ -21,8 +21,8 @@
 # contact: bdiaz@whitestack.com or glavado@whitestack.com
 ##
 import unittest
+from unittest import mock
 
-import mock
 from kafka import KafkaProducer
 from kafka.errors import KafkaError
 from osm_common import dbmongo

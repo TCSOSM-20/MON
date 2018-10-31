@@ -23,8 +23,7 @@
 import asyncio
 import random
 import unittest
-
-from mock import mock
+from unittest import mock
 
 from osm_mon.collector.collector import MonCollector
 
@@ -34,12 +33,6 @@ class MonCollectorTest(unittest.TestCase):
         super().setUp()
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(None)
-
-    def test_generate_vca_vdu_name(self):
-        vdur_name = 'test-juju-metrics01-1-ubuntuvdu1-1'
-        expected = 'test-juju-metricsab-b-ubuntuvdub'
-        result = self.loop.run_until_complete(MonCollector._generate_vca_vdu_name(vdur_name))
-        self.assertEqual(result, expected)
 
     @mock.patch.object(random, 'randint')
     def test_generate_read_metric_payload(self, randint):
@@ -57,6 +50,5 @@ class MonCollectorTest(unittest.TestCase):
             'collection_period': 1,
             'collection_unit': 'DAY',
         }
-        result = self.loop.run_until_complete(
-            MonCollector._generate_read_metric_payload(metric_name, nsr_id, vdu_name, vnf_member_index))
+        result = MonCollector._generate_read_metric_payload(metric_name, nsr_id, vdu_name, vnf_member_index)
         self.assertEqual(result, expected_payload)

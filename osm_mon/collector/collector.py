@@ -23,9 +23,7 @@
 import json
 import logging
 import random
-import re
 import uuid
-from string import ascii_lowercase
 
 from n2vc.vnf import N2VC
 from prometheus_client.core import GaugeMetricFamily
@@ -44,6 +42,7 @@ class MonCollector:
         self.kafka_server = cfg.BROKER_URI
         self.common_db_client = CommonDbClient()
         self.n2vc = N2VC(server=cfg.OSMMON_VCA_HOST, user=cfg.OSMMON_VCA_USER, secret=cfg.OSMMON_VCA_SECRET)
+        self.producer_timeout = 5
 
     async def collect_metrics(self):
         """
@@ -65,6 +64,7 @@ class MonCollector:
         vca_model_name = 'default'
         for vnfr in vnfrs:
             nsr_id = vnfr['nsr-id-ref']
+            nsr = self.common_db_client.get_nsr(nsr_id)
             vnfd = self.common_db_client.get_vnfd(vnfr['vnfd-id'])
             for vdur in vnfr['vdur']:
                 # This avoids errors when vdur records have not been completely filled
@@ -78,11 +78,13 @@ class MonCollector:
                 if 'monitoring-param' in vdu:
                     for param in vdu['monitoring-param']:
                         metric_name = param['nfvi-metric']
-                        payload = await self._generate_read_metric_payload(metric_name, nsr_id, vdu_name,
-                                                                           vnf_member_index)
+                        payload = self._generate_read_metric_payload(metric_name,
+                                                                     nsr_id,
+                                                                     vdu_name,
+                                                                     vnf_member_index)
                         producer.send(topic='metric_request', key='read_metric_data_request',
                                       value=json.dumps(payload))
-                        producer.flush(5)
+                        producer.flush(self.producer_timeout)
                         for message in consumer:
                             if message.key == 'read_metric_data_response':
                                 content = json.loads(message.value)
@@ -100,7 +102,7 @@ class MonCollector:
                                                                         metric_reading)
                                     break
                 if 'vdu-configuration' in vdu and 'metrics' in vdu['vdu-configuration']:
-                    vnf_name_vca = await self._generate_vca_vdu_name(vdu_name)
+                    vnf_name_vca = self.n2vc.FormatApplicationName(nsr['name'], vnf_member_index, vdur['vdu-id-ref'])
                     vnf_metrics = await self.n2vc.GetMetrics(vca_model_name, vnf_name_vca)
                     log.debug('VNF Metrics: %s', vnf_metrics)
                     for vnf_metric_list in vnf_metrics.values():
@@ -115,24 +117,12 @@ class MonCollector:
                             metrics[vnf_metric['key']].add_metric([nsr_id, vnf_member_index, vdu_name],
                                                                   float(vnf_metric['value']))
         consumer.close()
-        producer.close(5)
+        producer.close(self.producer_timeout)
         log.debug("metric.values = %s", metrics.values())
         return metrics.values()
 
     @staticmethod
-    async def _generate_vca_vdu_name(vdu_name) -> str:
-        """
-        Replaces all digits in vdu name for corresponding ascii characters. This is the format required by N2VC.
-        :param vdu_name: Vdu name according to the vdur
-        :return: Name with digits replaced with characters
-        """
-        vnf_name_vca = ''.join(
-            ascii_lowercase[int(char)] if char.isdigit() else char for char in vdu_name)
-        vnf_name_vca = re.sub(r'-[a-z]+$', '', vnf_name_vca)
-        return vnf_name_vca
-
-    @staticmethod
-    async def _generate_read_metric_payload(metric_name, nsr_id, vdu_name, vnf_member_index) -> dict:
+    def _generate_read_metric_payload(metric_name, nsr_id, vdu_name, vnf_member_index) -> dict:
         """
         Builds JSON payload for asking for a metric measurement in MON. It follows the model defined in core.models.
         :param metric_name: OSM metric name (e.g.: cpu_utilization)
