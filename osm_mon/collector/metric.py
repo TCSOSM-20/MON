@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 # Copyright 2018 Whitestack, LLC
 # *************************************************************
 
@@ -20,8 +19,12 @@
 # For those usages not covered by the Apache License, Version 2.0 please
 # contact: bdiaz@whitestack.com or glavado@whitestack.com
 ##
-/bin/bash /mon/osm_mon/plugins/vRealiseOps/vROPs_Webservice/install.sh
-python3 /mon/osm_mon/plugins/OpenStack/Aodh/notifier.py &
-python3 /mon/osm_mon/core/message_bus/common_consumer.py &
-osm-mon-collector
 
+
+class Metric:
+    def __init__(self, nsr_id, vnf_member_index, vdur_name, name, value):
+        self.nsr_id = nsr_id
+        self.vnf_member_index = vnf_member_index
+        self.vdur_name = vdur_name
+        self.name = name
+        self.value = value

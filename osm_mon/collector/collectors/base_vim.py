@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 # Copyright 2018 Whitestack, LLC
 # *************************************************************
 
@@ -20,8 +19,12 @@
 # For those usages not covered by the Apache License, Version 2.0 please
 # contact: bdiaz@whitestack.com or glavado@whitestack.com
 ##
-/bin/bash /mon/osm_mon/plugins/vRealiseOps/vROPs_Webservice/install.sh
-python3 /mon/osm_mon/plugins/OpenStack/Aodh/notifier.py &
-python3 /mon/osm_mon/core/message_bus/common_consumer.py &
-osm-mon-collector
+from multiprocessing import Queue
 
+
+class BaseVimCollector:
+    def __init__(self, vim_account_id: str):
+        pass
+
+    def collect(self, vnfr: dict, queue: Queue):
+        pass

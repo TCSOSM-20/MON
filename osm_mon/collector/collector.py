@@ -20,125 +20,89 @@
 # For those usages not covered by the Apache License, Version 2.0 please
 # contact: bdiaz@whitestack.com or glavado@whitestack.com
 ##
-import json
 import logging
-import random
-import uuid
+import multiprocessing
+import time
 
-from n2vc.vnf import N2VC
-from prometheus_client.core import GaugeMetricFamily
-
+from osm_mon.collector.backends.prometheus import PrometheusBackend
+from osm_mon.collector.collectors.juju import VCACollector
+from osm_mon.collector.collectors.openstack import OpenstackCollector
 from osm_mon.common.common_db_client import CommonDbClient
-from osm_mon.core.message_bus.consumer import Consumer
-from osm_mon.core.message_bus.producer import Producer
+from osm_mon.core.database import DatabaseManager
 from osm_mon.core.settings import Config
 
 log = logging.getLogger(__name__)
 
+VIM_COLLECTORS = {
+    "openstack": OpenstackCollector
+}
 
-class MonCollector:
+
+class Collector:
     def __init__(self):
-        cfg = Config.instance()
-        self.kafka_server = cfg.BROKER_URI
-        self.common_db_client = CommonDbClient()
-        self.n2vc = N2VC(server=cfg.OSMMON_VCA_HOST, user=cfg.OSMMON_VCA_USER, secret=cfg.OSMMON_VCA_SECRET)
+        self.common_db = CommonDbClient()
         self.producer_timeout = 5
+        self.consumer_timeout = 5
+        self.plugins = []
+        self.database_manager = DatabaseManager()
+        self.database_manager.create_tables()
 
-    async def collect_metrics(self):
-        """
-        Collects vdu metrics. These can be vim and/or n2vc metrics.
-        It checks for monitoring-params or metrics inside vdu section of vnfd, then collects the metric accordingly.
-        If vim related, it sends a metric read request through Kafka, to be handled by mon-proxy.
-        If n2vc related, it uses the n2vc client to obtain the readings.
-        :return: lists of metrics
-        """
-        # TODO(diazb): Remove dependencies on prometheus_client
-        log.debug("collect_metrics")
-        producer = Producer()
-        consumer = Consumer('mon-collector-' + str(uuid.uuid4()),
-                            consumer_timeout_ms=10000,
-                            enable_auto_commit=False)
-        consumer.subscribe(['metric_response'])
-        metrics = {}
-        vnfrs = self.common_db_client.get_vnfrs()
-        vca_model_name = 'default'
+    def init_plugins(self):
+        prometheus_plugin = PrometheusBackend()
+        self.plugins.append(prometheus_plugin)
+
+    def collect_forever(self):
+        log.debug('collect_forever')
+        cfg = Config.instance()
+        while True:
+            try:
+                self.collect_metrics()
+                time.sleep(cfg.OSMMON_COLLECTOR_INTERVAL)
+            except Exception:
+                log.exception("Error collecting metrics")
+
+    def _get_vim_account_id(self, nsr_id: str, vnf_member_index: int) -> str:
+        vnfr = self.common_db.get_vnfr(nsr_id, vnf_member_index)
+        return vnfr['vim-account-id']
+
+    def _get_vim_type(self, vim_account_id):
+        """Get the vim type that is required by the message."""
+        credentials = self.database_manager.get_credentials(vim_account_id)
+        return credentials.type
+
+    def _init_vim_collector_and_collect(self, vnfr: dict, vim_account_id: str, queue: multiprocessing.Queue):
+        # TODO(diazb) Add support for vrops and aws
+        vim_type = self._get_vim_type(vim_account_id)
+        if vim_type in VIM_COLLECTORS:
+            collector = VIM_COLLECTORS[vim_type](vim_account_id)
+            collector.collect(vnfr, queue)
+        else:
+            log.debug("vimtype %s is not supported.", vim_type)
+
+    def _init_vca_collector_and_collect(self, vnfr: dict, queue: multiprocessing.Queue):
+        vca_collector = VCACollector()
+        vca_collector.collect(vnfr, queue)
+
+    def collect_metrics(self):
+        queue = multiprocessing.Queue()
+        vnfrs = self.common_db.get_vnfrs()
+        processes = []
         for vnfr in vnfrs:
             nsr_id = vnfr['nsr-id-ref']
-            nsr = self.common_db_client.get_nsr(nsr_id)
-            vnfd = self.common_db_client.get_vnfd(vnfr['vnfd-id'])
-            for vdur in vnfr['vdur']:
-                # This avoids errors when vdur records have not been completely filled
-                if 'name' not in vdur:
-                    continue
-                vdu = next(
-                    filter(lambda vdu: vdu['id'] == vdur['vdu-id-ref'], vnfd['vdu'])
-                )
-                vnf_member_index = vnfr['member-vnf-index-ref']
-                vdu_name = vdur['name']
-                if 'monitoring-param' in vdu:
-                    for param in vdu['monitoring-param']:
-                        metric_name = param['nfvi-metric']
-                        payload = self._generate_read_metric_payload(metric_name,
-                                                                     nsr_id,
-                                                                     vdu_name,
-                                                                     vnf_member_index)
-                        producer.send(topic='metric_request', key='read_metric_data_request',
-                                      value=json.dumps(payload))
-                        producer.flush(self.producer_timeout)
-                        for message in consumer:
-                            if message.key == 'read_metric_data_response':
-                                content = json.loads(message.value)
-                                if content['correlation_id'] == payload['correlation_id']:
-                                    log.debug("Found read_metric_data_response with same correlation_id")
-                                    if len(content['metrics_data']['metrics_series']):
-                                        metric_reading = content['metrics_data']['metrics_series'][-1]
-                                        if metric_name not in metrics.keys():
-                                            metrics[metric_name] = GaugeMetricFamily(
-                                                metric_name,
-                                                'OSM metric',
-                                                labels=['ns_id', 'vnf_member_index', 'vdu_name']
-                                            )
-                                        metrics[metric_name].add_metric([nsr_id, vnf_member_index, vdu_name],
-                                                                        metric_reading)
-                                    break
-                if 'vdu-configuration' in vdu and 'metrics' in vdu['vdu-configuration']:
-                    vnf_name_vca = self.n2vc.FormatApplicationName(nsr['name'], vnf_member_index, vdur['vdu-id-ref'])
-                    vnf_metrics = await self.n2vc.GetMetrics(vca_model_name, vnf_name_vca)
-                    log.debug('VNF Metrics: %s', vnf_metrics)
-                    for vnf_metric_list in vnf_metrics.values():
-                        for vnf_metric in vnf_metric_list:
-                            log.debug("VNF Metric: %s", vnf_metric)
-                            if vnf_metric['key'] not in metrics.keys():
-                                metrics[vnf_metric['key']] = GaugeMetricFamily(
-                                    vnf_metric['key'],
-                                    'OSM metric',
-                                    labels=['ns_id', 'vnf_member_index', 'vdu_name']
-                                )
-                            metrics[vnf_metric['key']].add_metric([nsr_id, vnf_member_index, vdu_name],
-                                                                  float(vnf_metric['value']))
-        consumer.close()
-        producer.close(self.producer_timeout)
-        log.debug("metric.values = %s", metrics.values())
-        return metrics.values()
-
-    @staticmethod
-    def _generate_read_metric_payload(metric_name, nsr_id, vdu_name, vnf_member_index) -> dict:
-        """
-        Builds JSON payload for asking for a metric measurement in MON. It follows the model defined in core.models.
-        :param metric_name: OSM metric name (e.g.: cpu_utilization)
-        :param nsr_id: NSR ID
-        :param vdu_name: Vdu name according to the vdur
-        :param vnf_member_index: Index of the VNF in the NS according to the vnfr
-        :return: JSON payload as dict
-        """
-        cor_id = random.randint(1, 10e7)
-        payload = {
-            'correlation_id': cor_id,
-            'metric_name': metric_name,
-            'ns_id': nsr_id,
-            'vnf_member_index': vnf_member_index,
-            'vdu_name': vdu_name,
-            'collection_period': 1,
-            'collection_unit': 'DAY',
-        }
-        return payload
+            vnf_member_index = vnfr['member-vnf-index-ref']
+            vim_account_id = self._get_vim_account_id(nsr_id, vnf_member_index)
+            p = multiprocessing.Process(target=self._init_vim_collector_and_collect,
+                                        args=(vnfr, vim_account_id, queue))
+            processes.append(p)
+            p.start()
+            p = multiprocessing.Process(target=self._init_vca_collector_and_collect,
+                                        args=(vnfr, queue))
+            processes.append(p)
+            p.start()
+        for process in processes:
+            process.join()
+        metrics = []
+        while not queue.empty():
+            metrics.append(queue.get())
+        for plugin in self.plugins:
+            plugin.handle(metrics)

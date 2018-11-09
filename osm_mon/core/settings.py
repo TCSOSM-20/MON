@@ -63,7 +63,7 @@ class Config(object):
         CfgParam('MONGO_URI', "mongo:27017", six.text_type),
         CfgParam('DATABASE', "sqlite:///mon_sqlite.db", six.text_type),
         CfgParam('OS_NOTIFIER_URI', "http://localhost:8662", six.text_type),
-        CfgParam('OS_DEFAULT_GRANULARITY', "300", six.text_type),
+        CfgParam('OS_DEFAULT_GRANULARITY', 300, int),
         CfgParam('REQUEST_TIMEOUT', 10, int),
         CfgParam('OSMMON_LOG_LEVEL', "INFO", six.text_type),
         CfgParam('OSMMON_KAFKA_LOG_LEVEL', "WARN", six.text_type),

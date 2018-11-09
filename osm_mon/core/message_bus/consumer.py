@@ -10,6 +10,6 @@ class Consumer(KafkaConsumer):
         super().__init__(bootstrap_servers=cfg.BROKER_URI,
                          key_deserializer=bytes.decode,
                          value_deserializer=bytes.decode,
-                         max_poll_interval_ms=900000,
+                         max_poll_interval_ms=180000,
                          group_id=group_id,
                          **kwargs)

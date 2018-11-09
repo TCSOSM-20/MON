@@ -68,13 +68,15 @@ setup(
         "bottle==0.12.*",
         "peewee==3.1.*",
         "pyyaml==3.*",
+        "prometheus_client==0.4.*",
+        "gnocchiclient==7.0.*",
         "osm-common",
         "n2vc"
     ],
     include_package_data=True,
     entry_points={
         "console_scripts": [
-            "osm-mon-prometheus-exporter = osm_mon.cmd.mon_prometheus_exporter:main",
+            "osm-mon-collector = osm_mon.cmd.mon_collector:main",
         ]
     },
     dependency_links=[

@@ -92,7 +92,7 @@ class TestAlarming(unittest.TestCase):
         self.alarming.configure_alarm(alarm_endpoint, auth_token, values, {}, True)
         payload = {"name": "disk_write_ops",
                    "gnocchi_resources_threshold_rule": {"resource_type": "generic", "comparison_operator": "gt",
-                                                        "granularity": "300", "metric": "disk.write.requests",
+                                                        "granularity": 300, "metric": "disk.write.requests",
                                                         "aggregation_method": "mean", "threshold": 60,
                                                         "resource_id": "my_r_id"},
                    "alarm_actions": ["http://localhost:8662"], "repeat_actions": True, "state": "ok", "type": "gnocchi_resources_threshold",

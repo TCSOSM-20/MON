@@ -384,10 +384,7 @@ class OpenstackMetricHandler(object):
         # FIXME: Local timezone may differ from timezone set in Gnocchi, causing discrepancies in measures
         stop_time = time.strftime("%Y-%m-%d") + "T" + time.strftime("%X")
         end_time = int(round(time.time() * 1000))
-        if collection_unit == 'YEAR':
-            diff = PERIOD_MS[collection_unit]
-        else:
-            diff = collection_period * PERIOD_MS[collection_unit]
+        diff = collection_period * PERIOD_MS[collection_unit]
         s_time = (end_time - diff) / 1000.0
         start_time = datetime.datetime.fromtimestamp(s_time).strftime(
             '%Y-%m-%dT%H:%M:%S.%f')

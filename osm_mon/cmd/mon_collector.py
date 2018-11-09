@@ -24,8 +24,8 @@
 import logging
 import sys
 
+from osm_mon.collector.collector import Collector
 from osm_mon.core.settings import Config
-from osm_mon.collector.prometheus_exporter import MonPrometheusExporter
 
 
 def main():
@@ -43,10 +43,11 @@ def main():
     kafka_logger.setLevel(logging.getLevelName(cfg.OSMMON_KAFKA_LOG_LEVEL))
 
     log = logging.getLogger(__name__)
-    log.info("Starting MON Prometheus Exporter...")
+    log.info("Starting MON Collector...")
     log.info("Config: %s", vars(cfg))
-    exporter = MonPrometheusExporter()
-    exporter.run()
+    collector = Collector()
+    collector.init_plugins()
+    collector.collect_forever()
 
 
 if __name__ == '__main__':
