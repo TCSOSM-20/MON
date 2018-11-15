@@ -19,12 +19,10 @@
 # For those usages not covered by the Apache License, Version 2.0 please
 # contact: bdiaz@whitestack.com or glavado@whitestack.com
 ##
-from multiprocessing import Queue
+
+from osm_mon.collector.collectors.base import BaseCollector
 
 
-class BaseVimCollector:
+class BaseVimCollector(BaseCollector):
     def __init__(self, vim_account_id: str):
-        pass
-
-    def collect(self, vnfr: dict, queue: Queue):
         pass

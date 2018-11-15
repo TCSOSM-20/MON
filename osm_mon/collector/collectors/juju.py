@@ -21,13 +21,13 @@
 ##
 import asyncio
 import logging
-from multiprocessing import Queue
+from typing import List
 
 from n2vc.vnf import N2VC
 
 from osm_mon.collector.collectors.base import BaseCollector
 from osm_mon.collector.metric import Metric
-from osm_mon.common.common_db_client import CommonDbClient
+from osm_mon.core.common_db import CommonDbClient
 from osm_mon.core.settings import Config
 
 log = logging.getLogger(__name__)
@@ -40,11 +40,12 @@ class VCACollector(BaseCollector):
         self.loop = asyncio.get_event_loop()
         self.n2vc = N2VC(server=cfg.OSMMON_VCA_HOST, user=cfg.OSMMON_VCA_USER, secret=cfg.OSMMON_VCA_SECRET)
 
-    def collect(self, vnfr: dict, queue: Queue):
+    def collect(self, vnfr: dict) -> List[Metric]:
         vca_model_name = 'default'
         nsr_id = vnfr['nsr-id-ref']
         vnf_member_index = vnfr['member-vnf-index-ref']
         vnfd = self.common_db.get_vnfd(vnfr['vnfd-id'])
+        metrics = []
         for vdur in vnfr['vdur']:
             nsr = self.common_db.get_nsr(nsr_id)
             vdu = next(
@@ -52,20 +53,20 @@ class VCACollector(BaseCollector):
             )
             if 'vdu-configuration' in vdu and 'metrics' in vdu['vdu-configuration']:
                 vnf_name_vca = self.n2vc.FormatApplicationName(nsr['name'], vnf_member_index, vdur['vdu-id-ref'])
-                metrics = self.loop.run_until_complete(self.n2vc.GetMetrics(vca_model_name, vnf_name_vca))
+                measures = self.loop.run_until_complete(self.n2vc.GetMetrics(vca_model_name, vnf_name_vca))
                 log.debug('Metrics: %s', metrics)
-                for metric_list in metrics.values():
-                    for metric in metric_list:
-                        log.debug("Metric: %s", metric)
-                        metric = Metric(nsr_id, vnf_member_index, vdur['name'], metric['key'], float(metric['value']))
-                        queue.put(metric)
-            if 'vnf-configuration' in vnfr and 'metrics' in vnfr['vnf-configuration']:
+                for measure_list in measures.values():
+                    for measure in measure_list:
+                        log.debug("Metric: %s", measure)
+                        metric = Metric(nsr_id, vnf_member_index, vdur['name'], measure['key'], float(measure['value']))
+                        metrics.append(metric)
+            if 'vnf-configuration' in vnfd and 'metrics' in vnfd['vnf-configuration']:
                 vnf_name_vca = self.n2vc.FormatApplicationName(nsr['name'], vnf_member_index, vdur['vdu-id-ref'])
-                metrics = self.loop.run_until_complete(self.n2vc.GetMetrics(vca_model_name, vnf_name_vca))
+                measures = self.loop.run_until_complete(self.n2vc.GetMetrics(vca_model_name, vnf_name_vca))
                 log.debug('Metrics: %s', metrics)
-                for metric_list in metrics.values():
-                    for metric in metric_list:
-                        log.debug("Metric: %s", metric)
-                        metric = Metric(nsr_id, vnf_member_index, vdur['name'], metric['key'], float(metric['value']))
-                        queue.put(metric)
-            # TODO (diazb): Implement vnf-configuration config
+                for measure_list in measures.values():
+                    for measure in measure_list:
+                        log.debug("Metric: %s", measure)
+                        metric = Metric(nsr_id, vnf_member_index, vdur['name'], measure['key'], float(measure['value']))
+                        metrics.append(metric)
+        return metrics

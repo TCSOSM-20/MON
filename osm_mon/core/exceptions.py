@@ -1,4 +1,5 @@
-#!/usr/bin/env bash
+# -*- coding: utf-8 -*-
+
 # Copyright 2018 Whitestack, LLC
 # *************************************************************
 
@@ -16,11 +17,11 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-
 # For those usages not covered by the Apache License, Version 2.0 please
 # contact: bdiaz@whitestack.com or glavado@whitestack.com
 ##
-osm-mon-server &
-osm-mon-evaluator &
-osm-mon-collector
 
+
+class MetricNotFound(Exception):
+    def __init__(self):
+        super(MetricNotFound, self).__init__()

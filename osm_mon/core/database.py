@@ -24,7 +24,7 @@
 
 import logging
 
-from peewee import *
+from peewee import CharField, TextField, FloatField, Model
 from playhouse.db_url import connect
 
 from osm_mon.core.settings import Config
@@ -37,6 +37,7 @@ db = connect(cfg.DATABASE)
 
 
 class BaseModel(Model):
+
     class Meta:
         database = db
 
@@ -53,65 +54,66 @@ class VimCredentials(BaseModel):
 
 
 class Alarm(BaseModel):
-    alarm_id = CharField()
+    name = CharField()
+    severity = CharField()
     threshold = FloatField()
     operation = CharField()
-    metric_name = CharField()
-    vdu_name = CharField()
+    statistic = CharField()
+    monitoring_param = CharField()
+    vdur_name = CharField()
     vnf_member_index = CharField()
-    ns_id = CharField()
-    credentials = ForeignKeyField(VimCredentials, backref='alarms')
+    nsr_id = CharField()
 
 
 class DatabaseManager:
-    def create_tables(self):
+    def create_tables(self) -> None:
         try:
             db.connect()
             db.create_tables([VimCredentials, Alarm])
             db.close()
-        except Exception as e:
+        except Exception:
             log.exception("Error creating tables: ")
 
-    def get_credentials(self, vim_uuid):
+    def get_credentials(self, vim_uuid) -> VimCredentials:
         return VimCredentials.get_or_none(VimCredentials.uuid == vim_uuid)
 
-    def save_credentials(self, vim_credentials):
+    def save_credentials(self, vim_credentials) -> VimCredentials:
         """Saves vim credentials. If a record with same uuid exists, overwrite it."""
         exists = VimCredentials.get_or_none(VimCredentials.uuid == vim_credentials.uuid)
         if exists:
-            vim_credentials.id = exists.id
+            vim_credentials.uuid = exists.uuid
         vim_credentials.save()
+        return vim_credentials
 
-    def get_credentials_for_alarm_id(self, alarm_id, vim_type):
-        alarm = Alarm.select() \
-            .where(Alarm.alarm_id == alarm_id) \
-            .join(VimCredentials) \
-            .where(VimCredentials.type == vim_type).get()
-        return alarm.credentials
-
-    def get_alarm(self, alarm_id, vim_type):
-        alarm = Alarm.select() \
-            .where(Alarm.alarm_id == alarm_id) \
-            .join(VimCredentials) \
-            .where(VimCredentials.type == vim_type).get()
+    def get_alarm(self, alarm_id) -> Alarm:
+        alarm = (Alarm.select()
+                 .where(Alarm.alarm_id == alarm_id)
+                 .get())
         return alarm
 
-    def save_alarm(self, alarm_id, vim_uuid, threshold=None, operation=None, metric_name=None, vdu_name=None,
-                   vnf_member_index=None, ns_id=None):
-        """Saves alarm. If a record with same id and vim_uuid exists, overwrite it."""
+    def save_alarm(self, name, threshold, operation, severity, statistic, metric_name, vdur_name,
+                   vnf_member_index, nsr_id) -> Alarm:
+        """Saves alarm."""
         alarm = Alarm()
-        alarm.alarm_id = alarm_id
-        creds = VimCredentials.get(VimCredentials.uuid == vim_uuid)
-        alarm.credentials = creds
+        alarm.name = name
         alarm.threshold = threshold
         alarm.operation = operation
-        alarm.metric_name = metric_name
-        alarm.vdu_name = vdu_name
+        alarm.severity = severity
+        alarm.statistic = statistic
+        alarm.monitoring_param = metric_name
+        alarm.vdur_name = vdur_name
         alarm.vnf_member_index = vnf_member_index
-        alarm.ns_id = ns_id
-        exists = Alarm.select(Alarm.alarm_id == alarm.alarm_id) \
-            .join(VimCredentials) \
-            .where(VimCredentials.uuid == vim_uuid)
-        if len(exists):
-            alarm.id = exists[0].id
+        alarm.nsr_id = nsr_id
         alarm.save()
+        return alarm
+
+    def delete_alarm(self, alarm_id) -> None:
+        alarm = (Alarm.select()
+                 .where(Alarm.alarm_id == alarm_id)
+                 .get())
+        alarm.delete()
+
+    def get_vim_type(self, vim_account_id) -> str:
+        """Get the vim type that is required by the message."""
+        credentials = self.get_credentials(vim_account_id)
+        return str(credentials.type)

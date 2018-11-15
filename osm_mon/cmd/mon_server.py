@@ -1,4 +1,5 @@
-#!/usr/bin/env bash
+# -*- coding: utf-8 -*-
+
 # Copyright 2018 Whitestack, LLC
 # *************************************************************
 
@@ -20,7 +21,33 @@
 # For those usages not covered by the Apache License, Version 2.0 please
 # contact: bdiaz@whitestack.com or glavado@whitestack.com
 ##
-osm-mon-server &
-osm-mon-evaluator &
-osm-mon-collector
+import logging
+import sys
 
+from osm_mon.core.settings import Config
+from osm_mon.server.server import Server
+
+
+def main():
+    cfg = Config.instance()
+
+    root = logging.getLogger()
+    root.setLevel(logging.getLevelName(cfg.OSMMON_LOG_LEVEL))
+    ch = logging.StreamHandler(sys.stdout)
+    ch.setLevel(logging.getLevelName(cfg.OSMMON_LOG_LEVEL))
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s', '%m/%d/%Y %I:%M:%S %p')
+    ch.setFormatter(formatter)
+    root.addHandler(ch)
+
+    kafka_logger = logging.getLogger('kafka')
+    kafka_logger.setLevel(logging.getLevelName(cfg.OSMMON_KAFKA_LOG_LEVEL))
+
+    log = logging.getLogger(__name__)
+    log.info("Starting MON Server...")
+    log.info("Config: %s", vars(cfg))
+    server = Server()
+    server.run()
+
+
+if __name__ == '__main__':
+    main()

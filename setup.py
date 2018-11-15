@@ -50,8 +50,6 @@ setup(
     license=_license,
     packages=[_name],
     package_dir={_name: _name},
-    scripts=['osm_mon/plugins/vRealiseOps/vROPs_Webservice/vrops_webservice',
-             'osm_mon/core/message_bus/common_consumer.py'],
     install_requires=[
         "kafka-python==1.4.*",
         "requests==2.18.*",
@@ -76,6 +74,8 @@ setup(
     include_package_data=True,
     entry_points={
         "console_scripts": [
+            "osm-mon-server = osm_mon.cmd.mon_server:main",
+            "osm-mon-evaluator = osm_mon.cmd.mon_evaluator:main",
             "osm-mon-collector = osm_mon.cmd.mon_collector:main",
         ]
     },

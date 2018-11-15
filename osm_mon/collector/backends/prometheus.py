@@ -41,6 +41,8 @@ class PrometheusBackend(BaseBackend):
         self._start_exporter(8000)
 
     def handle(self, metrics: List[Metric]):
+        log.debug('handle')
+        log.debug('metrics: %s', metrics)
         prometheus_metrics = []
         for metric in metrics:
             prometheus_metric = GaugeMetricFamily(
@@ -54,6 +56,7 @@ class PrometheusBackend(BaseBackend):
 
     def _start_exporter(self, port):
         log.debug('_start_exporter')
+        log.debug('port: %s', port)
         REGISTRY.register(self.custom_collector)
         log.info("Starting MON Prometheus exporter at port %s", port)
         start_http_server(port)
