@@ -32,7 +32,8 @@ class CommonDbClient:
         self.common_db = dbmongo.DbMongo()
         self.common_db.db_connect({'host': cfg.MONGO_URI.split(':')[0],
                                    'port': int(cfg.MONGO_URI.split(':')[1]),
-                                   'name': 'osm'})
+                                   'name': 'osm',
+                                   'commonkey': cfg.OSMMON_DATABASE_COMMONKEY})
 
     def get_vnfr(self, nsr_id: str, member_index: int):
         vnfr = self.common_db.get_one("vnfrs",
@@ -68,3 +69,6 @@ class CommonDbClient:
                 return vdur
         raise ValueError('vdur not found for nsr-id %s, member_index %s and vdu_name %s', nsr_id, member_index,
                          vdu_name)
+
+    def decrypt_vim_password(self, vim_password: str, schema_version: str, vim_id: str):
+        return self.common_db.decrypt(vim_password, schema_version, vim_id)

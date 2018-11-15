@@ -121,6 +121,9 @@ class CommonConsumer:
 
             if message.topic == "vim_account":
                 if message.key == "create" or message.key == "edit":
+                    values['vim_password'] = self.common_db.decrypt_vim_password(values['vim_password'],
+                                                                                 values['schema_version'],
+                                                                                 values['_id'])
                     self.auth_manager.store_auth_credentials(values)
                 if message.key == "delete":
                     self.auth_manager.delete_auth_credentials(values)

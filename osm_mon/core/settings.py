@@ -71,6 +71,7 @@ class Config(object):
         CfgParam('OSMMON_VCA_HOST', "localhost", six.text_type),
         CfgParam('OSMMON_VCA_SECRET', "secret", six.text_type),
         CfgParam('OSMMON_VCA_USER', "admin", six.text_type),
+        CfgParam('OSMMON_DATABASE_COMMONKEY', "changeme", six.text_type),
     ]
 
     _config_dict = {cfg.key: cfg for cfg in _configuration}
