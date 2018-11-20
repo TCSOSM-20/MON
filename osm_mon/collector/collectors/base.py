@@ -19,11 +19,11 @@
 # For those usages not covered by the Apache License, Version 2.0 please
 # contact: bdiaz@whitestack.com or glavado@whitestack.com
 ##
+from typing import List
+
+from osm_mon.collector.metric import Metric
 
 
 class BaseCollector:
-    def collect(self, vnfr: dict):
-        pass
-
-    def collect_one(self, nsr_id: str, vnf_member_index: int, vdur_name: str, metric_name: str):
+    def collect(self, vnfr: dict) -> List[Metric]:
         pass

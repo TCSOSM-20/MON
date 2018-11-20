@@ -61,13 +61,13 @@ class CommonDbClient:
                                          {"_id": nslcmop_id})
         return nslcmop
 
-    def get_vdur(self, nsr_id, member_index, vdu_name):
+    def get_vdur(self, nsr_id, member_index, vdur_name):
         vnfr = self.get_vnfr(nsr_id, member_index)
         for vdur in vnfr['vdur']:
-            if vdur['name'] == vdu_name:
+            if vdur['name'] == vdur_name:
                 return vdur
-        raise ValueError('vdur not found for nsr-id %s, member_index %s and vdu_name %s', nsr_id, member_index,
-                         vdu_name)
+        raise ValueError('vdur not found for nsr-id %s, member_index %s and vdur_name %s', nsr_id, member_index,
+                         vdur_name)
 
     def decrypt_vim_password(self, vim_password: str, schema_version: str, vim_id: str):
         return self.common_db.decrypt(vim_password, schema_version, vim_id)

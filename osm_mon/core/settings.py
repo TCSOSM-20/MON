@@ -60,7 +60,7 @@ class Config(object):
 
     _configuration = [
         CfgParam('BROKER_URI', "localhost:9092", six.text_type),
-        CfgParam('MONGO_URI', "mongo:27017", six.text_type),
+        CfgParam('MONGO_URI', "mongodb://mongo:27017", six.text_type),
         CfgParam('DATABASE', "sqlite:///mon_sqlite.db", six.text_type),
         CfgParam('OS_DEFAULT_GRANULARITY', 300, int),
         CfgParam('REQUEST_TIMEOUT', 10, int),
@@ -72,6 +72,7 @@ class Config(object):
         CfgParam('OSMMON_VCA_SECRET', "secret", six.text_type),
         CfgParam('OSMMON_VCA_USER', "admin", six.text_type),
         CfgParam('OSMMON_DATABASE_COMMONKEY', "changeme", six.text_type),
+        CfgParam('OSMMON_PROMETHEUS_URL', "http://prometheus:9090", six.text_type),
     ]
 
     _config_dict = {cfg.key: cfg for cfg in _configuration}
