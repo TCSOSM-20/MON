@@ -43,16 +43,17 @@ class PrometheusBackend(BaseBackend):
     def handle(self, metrics: List[Metric]):
         log.debug('handle')
         log.debug('metrics: %s', metrics)
-        prometheus_metrics = []
+        prometheus_metrics = {}
         for metric in metrics:
-            prometheus_metric = GaugeMetricFamily(
-                OSM_METRIC_PREFIX + metric.name,
-                'OSM metric',
-                labels=['ns_id', 'vnf_member_index', 'vdu_name']
-            )
-            prometheus_metric.add_metric([metric.nsr_id, metric.vnf_member_index, metric.vdur_name], metric.value)
-            prometheus_metrics.append(prometheus_metric)
-        self.custom_collector.metrics = prometheus_metrics
+            if metric.name not in prometheus_metrics:
+                prometheus_metrics[metric.name] = GaugeMetricFamily(
+                    OSM_METRIC_PREFIX + metric.name,
+                    'OSM metric',
+                    labels=['ns_id', 'vnf_member_index', 'vdu_name']
+                )
+            prometheus_metrics[metric.name].add_metric([metric.nsr_id, metric.vnf_member_index, metric.vdur_name],
+                                                       metric.value)
+        self.custom_collector.metrics = prometheus_metrics.values()
 
     def _start_exporter(self, port):
         log.debug('_start_exporter')
