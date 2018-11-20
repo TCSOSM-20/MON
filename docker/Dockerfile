@@ -37,7 +37,7 @@ COPY . /mon
 RUN pip3 install /mon
 
 ENV BROKER_URI kafka:9092
-ENV MONGO_URI mongo:27017
+ENV MONGO_URI mongodb://mongo:27017
 ENV DATABASE sqlite:///mon_sqlite.db
 ENV OS_NOTIFIER_URI localhost:8662
 ENV OS_DEFAULT_GRANULARITY 300

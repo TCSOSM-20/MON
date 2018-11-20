@@ -30,8 +30,7 @@ class CommonDbClient:
     def __init__(self):
         cfg = Config.instance()
         self.common_db = dbmongo.DbMongo()
-        self.common_db.db_connect({'host': cfg.MONGO_URI.split(':')[0],
-                                   'port': int(cfg.MONGO_URI.split(':')[1]),
+        self.common_db.db_connect({'uri': cfg.MONGO_URI,
                                    'name': 'osm',
                                    'commonkey': cfg.OSMMON_DATABASE_COMMONKEY})
 
