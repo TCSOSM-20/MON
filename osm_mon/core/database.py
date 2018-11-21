@@ -81,7 +81,7 @@ class DatabaseManager:
         """Saves vim credentials. If a record with same uuid exists, overwrite it."""
         exists = VimCredentials.get_or_none(VimCredentials.uuid == vim_credentials.uuid)
         if exists:
-            vim_credentials.id = exists.id
+            vim_credentials.uuid = exists.uuid
         vim_credentials.save()
         return vim_credentials
 

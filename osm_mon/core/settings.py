@@ -62,7 +62,6 @@ class Config(object):
         CfgParam('BROKER_URI', "localhost:9092", six.text_type),
         CfgParam('MONGO_URI', "mongodb://mongo:27017", six.text_type),
         CfgParam('DATABASE', "sqlite:///mon_sqlite.db", six.text_type),
-        CfgParam('OS_NOTIFIER_URI', "http://localhost:8662", six.text_type),
         CfgParam('OS_DEFAULT_GRANULARITY', 300, int),
         CfgParam('REQUEST_TIMEOUT', 10, int),
         CfgParam('OSMMON_LOG_LEVEL', "INFO", six.text_type),
