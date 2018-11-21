@@ -1,0 +1,148 @@
+# Copyright 2017 Intel Research and Development Ireland Limited
+# *************************************************************
+
+# This file is part of OSM Monitoring module
+# All Rights Reserved to Intel Corporation
+
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+
+#         http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+# For those usages not covered by the Apache License, Version 2.0 please
+# contact: helena.mcgough@intel.com or adrian.hoban@intel.com
+##
+# __author__ = Helena McGough
+#
+"""A Webserver to send alarm notifications from Aodh to the SO."""
+import json
+import logging
+import os
+import re
+import sys
+import time
+
+from six.moves.BaseHTTPServer import BaseHTTPRequestHandler
+from six.moves.BaseHTTPServer import HTTPServer
+
+# Initialise a logger for alarm notifier
+from osm_mon.core.message_bus.producer import Producer
+from osm_mon.core.settings import Config
+
+cfg = Config.instance()
+
+logging.basicConfig(stream=sys.stdout,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    datefmt='%m/%d/%Y %I:%M:%S %p',
+                    level=logging.getLevelName(cfg.OSMMON_LOG_LEVEL))
+log = logging.getLogger(__name__)
+
+kafka_logger = logging.getLogger('kafka')
+kafka_logger.setLevel(logging.getLevelName(cfg.OSMMON_KAFKA_LOG_LEVEL))
+kafka_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+kafka_handler = logging.StreamHandler(sys.stdout)
+kafka_handler.setFormatter(kafka_formatter)
+kafka_logger.addHandler(kafka_handler)
+
+sys.path.append(os.path.abspath(os.path.join(os.path.realpath(__file__), '..', '..', '..', '..', '..')))
+
+from osm_mon.core.database import DatabaseManager
+
+from osm_mon.plugins.OpenStack.response import OpenStackResponseBuilder
+
+
+class NotifierHandler(BaseHTTPRequestHandler):
+    """Handler class for alarm_actions triggered by OSM alarms."""
+
+    def _set_headers(self):
+        """Set the headers for a request."""
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+
+    def do_GET(self):
+        """Get request functionality."""
+        self._set_headers()
+
+    def do_POST(self):
+        """POST request function."""
+        # Gets header and data from the post request and records info
+        self._set_headers()
+        # Gets the size of data
+        content_length = int(self.headers['Content-Length'])
+        post_data = self.rfile.read(content_length)
+        # Python 2/3 string compatibility
+        try:
+            post_data = post_data.decode()
+        except AttributeError:
+            pass
+        log.info("This alarm was triggered: %s", post_data)
+
+        # Send alarm notification to message bus
+        try:
+            self.notify_alarm(json.loads(post_data))
+        except Exception:
+            log.exception("Error notifying alarm")
+
+    def notify_alarm(self, values):
+        """Sends alarm notification message to bus."""
+
+        # Initialise configuration and authentication for response message
+        response = OpenStackResponseBuilder()
+
+        database_manager = DatabaseManager()
+
+        alarm_id = values['alarm_id']
+        alarm = database_manager.get_alarm(alarm_id, 'openstack')
+        # Process an alarm notification if resource_id is valid
+        # Get date and time for response message
+        a_date = time.strftime("%d-%m-%Y") + " " + time.strftime("%X")
+        # Generate and send response
+        resp_message = response.generate_response(
+            'notify_alarm',
+            alarm_id=alarm_id,
+            vdu_name=alarm.vdur_name,
+            vnf_member_index=alarm.vnf_member_index,
+            ns_id=alarm.nsr_id,
+            metric_name=alarm.monitoring_param,
+            operation=alarm.operation,
+            threshold_value=alarm.threshold,
+            sev=values['severity'],
+            date=a_date,
+            state=values['current'])
+        self._publish_response('notify_alarm', json.dumps(resp_message))
+        log.info("Sent alarm notification: %s", resp_message)
+
+    def _publish_response(self, key: str, msg: str):
+        producer = Producer()
+        producer.send(topic='alarm_response', key=key, value=msg)
+        producer.flush()
+
+
+def run(server_class=HTTPServer, handler_class=NotifierHandler, port=8662):
+    """Run the webserver application to retrieve alarm notifications."""
+    try:
+        server_address = ('', port)
+        httpd = server_class(server_address, handler_class)
+        log.info("Starting alarm notifier server on port: %s", port)
+        httpd.serve_forever()
+    except Exception as exc:
+        log.warning("Failed to start webserver, %s", exc)
+
+
+if __name__ == "__main__":
+    cfg = Config.instance()
+    p = re.compile(':(\d+)', re.IGNORECASE)
+    m = p.search(cfg.OS_NOTIFIER_URI)
+    if m:
+        port = m.group(1)
+        run(port=int(port))
+    else:
+        run()
