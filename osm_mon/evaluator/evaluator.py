@@ -157,7 +157,7 @@ class Evaluator:
         # Generate and send response
         resp_message = response.generate_response(
             'notify_alarm',
-            alarm_id=alarm.id,
+            alarm_id=alarm.uuid,
             vdu_name=alarm.vdur_name,
             vnf_member_index=alarm.vnf_member_index,
             ns_id=alarm.nsr_id,

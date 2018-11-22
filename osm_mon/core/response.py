@@ -83,8 +83,8 @@ class ResponseBuilder(object):
     def delete_alarm_response(self, **kwargs) -> dict:
         """Generate a response for a delete alarm request."""
         delete_alarm_resp = {"schema_version": schema_version,
-                             "schema_type": "alarm_deletion_response",
-                             "alarm_deletion_response": {
+                             "schema_type": "alarm_delete_response",
+                             "alarm_delete_response": {
                                  "correlation_id": kwargs['cor_id'],
                                  "alarm_uuid": kwargs['alarm_id'],
                                  "status": kwargs['status']}}

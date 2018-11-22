@@ -21,7 +21,7 @@
 {
   "schema_version": { "type": "string" },
   "schema_type": { "type": "string" },
-  "alarm_deletion_response":
+  "alarm_delete_response":
   {
     "correlation_id": { "type": "integer" },
     "alarm_uuid": { "type": "string" },

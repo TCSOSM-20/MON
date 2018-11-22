@@ -1,66 +1,57 @@
 ..
-       # Copyright 2017 Intel Research and Development Ireland Limited
-       # *************************************************************
-       # This file is part of OSM Monitoring module
-       # All Rights Reserved to Intel Corporation
-       #
-       # Licensed under the Apache License, Version 2.0 (the "License"); you may
-       # not use this file except in compliance with the License. You may obtain
-       # a copy of the License at
-       #
-       #         http://www.apache.org/licenses/LICENSE-2.0
-       #
-       # Unless required by applicable law or agreed to in writing, software
-       # distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-       # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-       # License for the specific language governing permissions and limitations
-       # under the License.
-       #
-       # For those usages not covered by the Apache License, Version 2.0 please
-       # contact: prithiv.mohan@intel.com or adrian.hoban@intel.com
+ Copyright 2018 Whitestack, LLC
+ *************************************************************
+
+ This file is part of OSM Monitoring module
+ All Rights Reserved to Whitestack, LLC
+
+ Licensed under the Apache License, Version 2.0 (the "License"); you may
+ not use this file except in compliance with the License. You may obtain
+ a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ License for the specific language governing permissions and limitations
+ under the License.
+ For those usages not covered by the Apache License, Version 2.0 please
+ contact: bdiaz@whitestack.com or glavado@whitestack.com
 
 OSM MON Module
 ****************
 
-MON is a monitoring module for OSM. This module leverages the monitoring
-tool of the supported VIMs through MON's native plugin to send and receive
-metrics and alarms for a VNF.
+MON is a monitoring module for OSM.
+It collects metrics from VIMs and VNFs and exports them to a Prometheus TSDB.
+It manages and evaluates alarms based on those metrics.
 
 Components
 **********
 
 MON module has the following components:
 
- - MON Core, which includes Message Bus and Models
- - Plugin drivers for various VIMs
+ - MON Central: Handles vim accounts registration and alarms CRUD operations, through messages in the Kafka bus.
+ - MON Collector: Collects metrics from VIMs and VNFs and then exports them to a TSDB. It uses a plugin model both for collectors and for backends.
+ - MON Evaluator: Evaluates alarms and sends notifications through the Kafka bus when they trigger.
 
-The MON module communication is classified as
 
- - External to MON(requests to MON from SO)
- - Internal to MON(responses to MON from plugins)
+Supported Collector Plugins
+***************************
 
-Supported Plugins
-******************
-
-Supported VIMs are OpenStack, VMWare, AWS for now. MON can send/receive metrics
-and alarms from the following plugins in this release.
-
- - Gnocchi, Aodh (OpenStack)
- - vROps (VMWare)
- - CloudWatch (AWS)
+ - OpenStack: Requires Aodh and Gnocchi to be enabled.
+ - VROPS: TBD
+ - AWS: TBD
 
 Developers
 **********
 
-  - Prithiv Mohan, Intel Research and Development Ltd, Ireland
-  - Helena McGough, Intel Research and Development Ltd, Ireland
-  - Sachin Bhangare, VMWare, India
-  - Wajeeha Hamid, XFlow Research, Pakistan
+  - Benjamín Díaz, Whitestack, Argentina
 
 Maintainers
 ***********
 
- - Adrian Hoban, Intel Research and Development Ltd, Ireland
+ - Gianpietro Lavado, Whitestack, Peru
 
 Contributions
 *************

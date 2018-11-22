@@ -1,22 +1,25 @@
-# Copyright 2017 Intel Research and Development Ireland Limited
+# -*- coding: utf-8 -*-
+
+# Copyright 2018 Whitestack, LLC
 # *************************************************************
+
 # This file is part of OSM Monitoring module
-# All Rights Reserved to Intel Corporation
-#
-# Licensed under the Apache License, Version 2.0 (the "License"); you
-# may not use this file except in compliance with the License. You may
-# obtain a copy of the License at
-#
+# All Rights Reserved to Whitestack, LLC
+
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+
 #         http://www.apache.org/licenses/LICENSE-2.0
-#
+
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
-# implied. See the License for the specific language governing
-# permissions and limitations under the License.
-#
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
 # For those usages not covered by the Apache License, Version 2.0 please
-# contact: helena.mcgough@intel.com or adrian.hoban@intel.com
+# contact: bdiaz@whitestack.com or glavado@whitestack.com
+##
 """A common KafkaConsumer for all MON plugins."""
 
 import json
@@ -91,7 +94,7 @@ class Server:
                         response = response_builder.generate_response('create_alarm_response',
                                                                       cor_id=alarm_details['correlation_id'],
                                                                       status=True,
-                                                                      alarm_id=alarm.id)
+                                                                      alarm_id=alarm.uuid)
                     except Exception:
                         log.exception("Error creating alarm: ")
                         response = response_builder.generate_response('create_alarm_response',
@@ -100,18 +103,18 @@ class Server:
                                                                       alarm_id=None)
                 if message.key == "delete_alarm_request":
                     alarm_details = values['alarm_delete_request']
-                    response_builder = ResponseBuilder()
                     alarm_uuid = alarm_details['alarm_uuid']
+                    response_builder = ResponseBuilder()
                     cor_id = alarm_details['correlation_id']
                     try:
                         self.database_manager.delete_alarm(alarm_uuid)
-                        response = response_builder.generate_response('create_alarm_response',
+                        response = response_builder.generate_response('delete_alarm_response',
                                                                       cor_id=cor_id,
                                                                       status=True,
                                                                       alarm_id=alarm_uuid)
                     except Exception:
-                        log.exception("Error creating alarm: ")
-                        response = response_builder.generate_response('create_alarm_response',
+                        log.exception("Error deleting alarm: ")
+                        response = response_builder.generate_response('delete_alarm_response',
                                                                       cor_id=cor_id,
                                                                       status=False,
                                                                       alarm_id=alarm_uuid)

@@ -23,8 +23,9 @@
 ##
 
 import logging
+import uuid
 
-from peewee import CharField, TextField, FloatField, Model
+from peewee import CharField, TextField, FloatField, Model, AutoField
 from playhouse.db_url import connect
 
 from osm_mon.core.settings import Config
@@ -37,6 +38,7 @@ db = connect(cfg.DATABASE)
 
 
 class BaseModel(Model):
+    id = AutoField(primary_key=True)
 
     class Meta:
         database = db
@@ -54,6 +56,7 @@ class VimCredentials(BaseModel):
 
 
 class Alarm(BaseModel):
+    uuid = CharField(unique=True)
     name = CharField()
     severity = CharField()
     threshold = FloatField()
@@ -81,7 +84,7 @@ class DatabaseManager:
         """Saves vim credentials. If a record with same uuid exists, overwrite it."""
         exists = VimCredentials.get_or_none(VimCredentials.uuid == vim_credentials.uuid)
         if exists:
-            vim_credentials.uuid = exists.uuid
+            vim_credentials.id = exists.id
         vim_credentials.save()
         return vim_credentials
 
@@ -94,7 +97,9 @@ class DatabaseManager:
     def save_alarm(self, name, threshold, operation, severity, statistic, metric_name, vdur_name,
                    vnf_member_index, nsr_id) -> Alarm:
         """Saves alarm."""
+        # TODO: Add uuid optional param and check if exists to handle updates (see self.save_credentials)
         alarm = Alarm()
+        alarm.uuid = str(uuid.uuid4())
         alarm.name = name
         alarm.threshold = threshold
         alarm.operation = operation
@@ -107,11 +112,11 @@ class DatabaseManager:
         alarm.save()
         return alarm
 
-    def delete_alarm(self, alarm_id) -> None:
+    def delete_alarm(self, alarm_uuid) -> None:
         alarm = (Alarm.select()
-                 .where(Alarm.alarm_id == alarm_id)
+                 .where(Alarm.uuid == alarm_uuid)
                  .get())
-        alarm.delete()
+        alarm.delete_instance()
 
     def get_vim_type(self, vim_account_id) -> str:
         """Get the vim type that is required by the message."""
