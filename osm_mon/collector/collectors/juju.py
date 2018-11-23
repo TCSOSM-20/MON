@@ -46,8 +46,8 @@ class VCACollector(BaseCollector):
         vnf_member_index = vnfr['member-vnf-index-ref']
         vnfd = self.common_db.get_vnfd(vnfr['vnfd-id'])
         metrics = []
+        nsr = self.common_db.get_nsr(nsr_id)
         for vdur in vnfr['vdur']:
-            nsr = self.common_db.get_nsr(nsr_id)
             vdu = next(
                 filter(lambda vdu: vdu['id'] == vdur['vdu-id-ref'], vnfd['vdu'])
             )
@@ -60,13 +60,13 @@ class VCACollector(BaseCollector):
                         log.debug("Metric: %s", measure)
                         metric = Metric(nsr_id, vnf_member_index, vdur['name'], measure['key'], float(measure['value']))
                         metrics.append(metric)
-            if 'vnf-configuration' in vnfd and 'metrics' in vnfd['vnf-configuration']:
-                vnf_name_vca = self.n2vc.FormatApplicationName(nsr['name'], vnf_member_index, vdur['vdu-id-ref'])
-                measures = self.loop.run_until_complete(self.n2vc.GetMetrics(vca_model_name, vnf_name_vca))
-                log.debug('Metrics: %s', metrics)
-                for measure_list in measures.values():
-                    for measure in measure_list:
-                        log.debug("Metric: %s", measure)
-                        metric = Metric(nsr_id, vnf_member_index, vdur['name'], measure['key'], float(measure['value']))
-                        metrics.append(metric)
+        if 'vnf-configuration' in vnfd and 'metrics' in vnfd['vnf-configuration']:
+            vnf_name_vca = self.n2vc.FormatApplicationName(nsr['name'], vnf_member_index, 'vnfd')
+            measures = self.loop.run_until_complete(self.n2vc.GetMetrics(vca_model_name, vnf_name_vca))
+            log.debug('Metrics: %s', metrics)
+            for measure_list in measures.values():
+                for measure in measure_list:
+                    log.debug("Metric: %s", measure)
+                    metric = Metric(nsr_id, vnf_member_index, '', measure['key'], float(measure['value']))
+                    metrics.append(metric)
         return metrics
