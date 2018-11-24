@@ -136,8 +136,15 @@ class Evaluator:
                 processes.append(p)
                 p.start()
             if 'vnf-metric' in vnf_monitoring_param:
-                log.warning("vnf-metric is not currently supported.")
-                continue
+                vnf_metric_name = vnf_monitoring_param['vnf-metric']['vnf-metric-name-ref']
+                p = multiprocessing.Process(target=self._evaluate_metric,
+                                            args=(nsr_id,
+                                                  vnf_member_index,
+                                                  '',
+                                                  vnf_metric_name,
+                                                  alarm))
+                processes.append(p)
+                p.start()
 
         for process in processes:
             process.join()
