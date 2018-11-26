@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "Installing python dependencies via pip..."
-pip3 install kafka-python==1.4.3
+pip3 install aiokafka==0.4.*
 pip3 install requests==2.18.*
 pip3 install cherrypy==14.0.*
 pip3 install jsmin==2.2.*

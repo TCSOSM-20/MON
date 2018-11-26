@@ -18,7 +18,7 @@
 
 # For those usages not covered by the Apache License, Version 2.0 please
 # contact: prithiv.mohan@intel.com or adrian.hoban@intel.com
-kafka-python==1.4.3
+aiokafka==0.4.*
 requests==2.18.*
 cherrypy==14.0.*
 jsmin==2.2.*

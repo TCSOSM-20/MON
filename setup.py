@@ -51,7 +51,7 @@ setup(
     packages=[_name],
     package_dir={_name: _name},
     install_requires=[
-        "kafka-python==1.4.3",
+        "aiokafka==0.4.*",
         "requests==2.18.*",
         "cherrypy==14.0.*",
         "jsmin==2.2.*",

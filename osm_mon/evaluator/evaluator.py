@@ -59,7 +59,7 @@ class Evaluator:
             OSM_METRIC_PREFIX + metric_name, nsr_id, vdur_name, vnf_member_index)
         request_url = cfg.OSMMON_PROMETHEUS_URL + "/api/v1/query?" + query_section
         log.info("Querying Prometheus: %s", request_url)
-        r = requests.get(request_url)
+        r = requests.get(request_url, timeout=cfg.OSMMON_REQUEST_TIMEOUT)
         if r.status_code == 200:
             json_response = r.json()
             if json_response['status'] == 'success':

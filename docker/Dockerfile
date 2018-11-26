@@ -41,7 +41,7 @@ ENV MONGO_URI mongodb://mongo:27017
 ENV DATABASE sqlite:///mon_sqlite.db
 ENV OS_NOTIFIER_URI localhost:8662
 ENV OS_DEFAULT_GRANULARITY 300
-ENV REQUEST_TIMEOUT 10
+ENV OSMMON_REQUEST_TIMEOUT 10
 ENV OSMMON_LOG_LEVEL INFO
 ENV OSMMON_KAFKA_LOG_LEVEL INFO
 ENV OSMMON_VCA_HOST localhost
@@ -53,5 +53,8 @@ ENV OSMMON_EVALUATOR_INTERVAL 30
 ENV OSMMON_PROMETHEUS_URL http://prometheus:9090
 
 EXPOSE 8000
+
+HEALTHCHECK --interval=5s --timeout=2s --retries=12 \
+  CMD osm-mon-healthcheck || exit 1
 
 CMD /bin/bash mon/docker/scripts/runInstall.sh
