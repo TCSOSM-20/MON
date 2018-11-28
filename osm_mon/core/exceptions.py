@@ -23,5 +23,8 @@
 
 
 class MetricNotFound(Exception):
-    def __init__(self):
-        super(MetricNotFound, self).__init__()
+    pass
+
+
+class VcaDeploymentInfoNotFound(Exception):
+    pass

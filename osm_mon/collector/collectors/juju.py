@@ -28,6 +28,7 @@ from n2vc.vnf import N2VC
 from osm_mon.collector.collectors.base import BaseCollector
 from osm_mon.collector.metric import Metric
 from osm_mon.core.common_db import CommonDbClient
+from osm_mon.core.exceptions import VcaDeploymentInfoNotFound
 from osm_mon.core.settings import Config
 
 log = logging.getLogger(__name__)
@@ -41,32 +42,50 @@ class VCACollector(BaseCollector):
         self.n2vc = N2VC(server=cfg.OSMMON_VCA_HOST, user=cfg.OSMMON_VCA_USER, secret=cfg.OSMMON_VCA_SECRET)
 
     def collect(self, vnfr: dict) -> List[Metric]:
-        vca_model_name = 'default'
         nsr_id = vnfr['nsr-id-ref']
         vnf_member_index = vnfr['member-vnf-index-ref']
         vnfd = self.common_db.get_vnfd(vnfr['vnfd-id'])
         metrics = []
-        nsr = self.common_db.get_nsr(nsr_id)
         for vdur in vnfr['vdur']:
+            # This avoids errors when vdur records have not been completely filled
+            if 'name' not in vdur:
+                continue
             vdu = next(
                 filter(lambda vdu: vdu['id'] == vdur['vdu-id-ref'], vnfd['vdu'])
             )
             if 'vdu-configuration' in vdu and 'metrics' in vdu['vdu-configuration']:
-                vnf_name_vca = self.n2vc.FormatApplicationName(nsr['name'], vnf_member_index, vdur['vdu-id-ref'])
-                measures = self.loop.run_until_complete(self.n2vc.GetMetrics(vca_model_name, vnf_name_vca))
-                log.debug('Metrics: %s', metrics)
+                try:
+                    vca_deployment_info = self.get_vca_deployment_info(nsr_id, vnf_member_index, vdur['name'])
+                except VcaDeploymentInfoNotFound:
+                    continue
+                measures = self.loop.run_until_complete(self.n2vc.GetMetrics(vca_deployment_info['model'],
+                                                                             vca_deployment_info['application']))
+                log.debug('Measures: %s', measures)
                 for measure_list in measures.values():
                     for measure in measure_list:
-                        log.debug("Metric: %s", measure)
+                        log.debug("Measure: %s", measure)
                         metric = Metric(nsr_id, vnf_member_index, vdur['name'], measure['key'], float(measure['value']))
                         metrics.append(metric)
         if 'vnf-configuration' in vnfd and 'metrics' in vnfd['vnf-configuration']:
-            vnf_name_vca = self.n2vc.FormatApplicationName(nsr['name'], vnf_member_index, 'vnfd')
-            measures = self.loop.run_until_complete(self.n2vc.GetMetrics(vca_model_name, vnf_name_vca))
-            log.debug('Metrics: %s', metrics)
+            try:
+                vca_deployment_info = self.get_vca_deployment_info(nsr_id, vnf_member_index, None)
+            except VcaDeploymentInfoNotFound:
+                return metrics
+            measures = self.loop.run_until_complete(self.n2vc.GetMetrics(vca_deployment_info['model'],
+                                                                         vca_deployment_info['application']))
+            log.debug('Measures: %s', measures)
             for measure_list in measures.values():
                 for measure in measure_list:
-                    log.debug("Metric: %s", measure)
+                    log.debug("Measure: %s", measure)
                     metric = Metric(nsr_id, vnf_member_index, '', measure['key'], float(measure['value']))
                     metrics.append(metric)
         return metrics
+
+    def get_vca_deployment_info(self, nsr_id, vnf_member_index, vdur_name):
+        nsr = self.common_db.get_nsr(nsr_id)
+        for vca_deployment in nsr["_admin"]["deployed"]["VCA"]:
+            if vca_deployment:
+                if vca_deployment['member-vnf-index'] == vnf_member_index and vca_deployment['vdu_name'] == vdur_name:
+                    return vca_deployment
+        raise VcaDeploymentInfoNotFound("VCA deployment info for nsr_id {}, index {} and vdur_name {} not found."
+                                        .format(nsr_id, vnf_member_index, vdur_name))
