@@ -44,7 +44,7 @@ def main():
 
     log = logging.getLogger(__name__)
     log.info("Starting MON Server...")
-    log.info("Config: %s", vars(cfg))
+    log.debug("Config: %s", vars(cfg))
     server = Server()
     server.run()
 

@@ -44,7 +44,7 @@ def main():
 
     log = logging.getLogger(__name__)
     log.info("Starting MON Collector...")
-    log.info("Config: %s", vars(cfg))
+    log.debug("Config: %s", vars(cfg))
     collector = Collector()
     collector.init_backends()
     collector.collect_forever()
