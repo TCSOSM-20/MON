@@ -25,6 +25,7 @@ import logging
 import multiprocessing
 import time
 
+import peewee
 import requests
 from osm_common.dbbase import DbException
 
@@ -87,6 +88,9 @@ class Evaluator:
             try:
                 self.evaluate()
                 time.sleep(cfg.OSMMON_EVALUATOR_INTERVAL)
+            except peewee.PeeweeException:
+                log.exception("Database error evaluating alarms: ")
+                raise
             except Exception:
                 log.exception("Error evaluating alarms")
 

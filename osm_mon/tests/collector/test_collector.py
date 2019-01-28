@@ -20,35 +20,28 @@
 # For those usages not covered by the Apache License, Version 2.0 please
 # contact: bdiaz@whitestack.com or glavado@whitestack.com
 ##
+import os
 import unittest
 from unittest import mock
 
-from peewee import SqliteDatabase
-
 from osm_mon.collector.collector import Collector
 from osm_mon.collector.collectors.openstack import OpenstackCollector
-from osm_mon.core import database
-from osm_mon.core.database import DatabaseManager, VimCredentials, Alarm
-
-test_db = SqliteDatabase(':memory:')
-
-MODELS = [VimCredentials, Alarm]
+from osm_mon.core.database import DatabaseManager, db
 
 
 class CollectorTest(unittest.TestCase):
     def setUp(self):
         super().setUp()
-        database.db = test_db
-        test_db.bind(MODELS)
-        test_db.connect()
-        test_db.drop_tables(MODELS)
-        test_db.create_tables(MODELS)
+        os.environ["DATABASE"] = "sqlite:///:memory:"
+        db_manager = DatabaseManager()
+        db_manager.create_tables()
 
     def tearDown(self):
         super().tearDown()
-        test_db.close()
+        db.close()
 
     @mock.patch("osm_mon.collector.collector.CommonDbClient", mock.Mock())
+    @mock.patch.object(Collector, "_init_backends", mock.Mock())
     @mock.patch.object(OpenstackCollector, "__init__", lambda *args, **kwargs: None)
     @mock.patch.object(OpenstackCollector, "collect")
     @mock.patch.object(DatabaseManager, "get_vim_type")
@@ -59,6 +52,7 @@ class CollectorTest(unittest.TestCase):
         collect.assert_called_once_with({})
 
     @mock.patch("osm_mon.collector.collector.CommonDbClient", mock.Mock())
+    @mock.patch.object(Collector, "_init_backends", mock.Mock())
     @mock.patch.object(OpenstackCollector, "collect")
     @mock.patch.object(DatabaseManager, "get_vim_type")
     def test_init_vim_collector_and_collect_unknown(self, _get_vim_type, openstack_collect):

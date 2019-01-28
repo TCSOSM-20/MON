@@ -24,6 +24,8 @@ import logging
 import multiprocessing
 import time
 
+import peewee
+
 from osm_mon.collector.backends.prometheus import PrometheusBackend
 from osm_mon.collector.collectors.juju import VCACollector
 from osm_mon.collector.collectors.openstack import OpenstackCollector
@@ -50,10 +52,7 @@ class Collector:
         self.database_manager = DatabaseManager()
         self.database_manager.create_tables()
         self.queue = multiprocessing.Queue()
-
-    def init_backends(self):
-        for backend in METRIC_BACKENDS:
-            self.plugins.append(backend())
+        self._init_backends()
 
     def collect_forever(self):
         log.debug('collect_forever')
@@ -62,6 +61,9 @@ class Collector:
             try:
                 self.collect_metrics()
                 time.sleep(cfg.OSMMON_COLLECTOR_INTERVAL)
+            except peewee.PeeweeException:
+                log.exception("Database error consuming message: ")
+                raise
             except Exception:
                 log.exception("Error collecting metrics")
 
@@ -106,3 +108,7 @@ class Collector:
             metrics.append(self.queue.get())
         for plugin in self.plugins:
             plugin.handle(metrics)
+
+    def _init_backends(self):
+        for backend in METRIC_BACKENDS:
+            self.plugins.append(backend())

@@ -46,7 +46,6 @@ def main():
     log.info("Starting MON Collector...")
     log.debug("Config: %s", vars(cfg))
     collector = Collector()
-    collector.init_backends()
     collector.collect_forever()
 
 
