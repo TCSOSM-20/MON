@@ -99,8 +99,7 @@ class OpenstackCollector(BaseVimCollector):
                 for param in vdu['monitoring-param']:
                     metric_name = param['nfvi-metric']
                     gnocchi_metric_name = METRIC_MAPPINGS[metric_name]
-                    delta = 10 * self.granularity
-                    start_date = datetime.datetime.now() - datetime.timedelta(seconds=delta)
+                    start_date = datetime.datetime.now() - datetime.timedelta(seconds=self.granularity)
                     resource_id = self._get_resource_uuid(nsr_id, vnf_member_index, vdur['name'])
                     try:
                         measures = self.gnocchi_client.metric.get_measures(gnocchi_metric_name,
