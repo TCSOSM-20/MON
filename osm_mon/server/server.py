@@ -84,7 +84,16 @@ class Server:
                     values['vim_password'] = self.common_db.decrypt_vim_password(values['vim_password'],
                                                                                  values['schema_version'],
                                                                                  values['_id'])
+
+                    vim_config_encrypted = ("admin_password", "nsx_password", "vcenter_password")
+                    if 'config' in values:
+                        for key in values['config']:
+                            if key in vim_config_encrypted:
+                                values['config'][key] = self.common_db.decrypt_vim_password(values['config'][key],
+                                                                                            values['schema_version'],
+                                                                                            values['_id'])
                     self.auth_manager.store_auth_credentials(values)
+
                 if message.key == "delete":
                     self.auth_manager.delete_auth_credentials(values)
 
