@@ -20,9 +20,9 @@
 # contact: bdiaz@whitestack.com or glavado@whitestack.com
 ##
 
+from osm_mon.collector.vnf_collectors.base import BaseCollector
 
-class Metric:
-    def __init__(self, tags: dict, name: str, value):
-        self.tags = tags
-        self.name = name
-        self.value = value
+
+class BaseVimCollector(BaseCollector):
+    def __init__(self, vim_account_id: str):
+        pass

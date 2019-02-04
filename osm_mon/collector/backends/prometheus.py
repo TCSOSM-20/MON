@@ -49,10 +49,9 @@ class PrometheusBackend(BaseBackend):
                 prometheus_metrics[metric.name] = GaugeMetricFamily(
                     OSM_METRIC_PREFIX + metric.name,
                     'OSM metric',
-                    labels=['ns_id', 'vnf_member_index', 'vdu_name']
+                    labels=list(metric.tags.keys())
                 )
-            prometheus_metrics[metric.name].add_metric([metric.nsr_id, metric.vnf_member_index, metric.vdur_name],
-                                                       metric.value)
+            prometheus_metrics[metric.name].add_metric(list(metric.tags.values()), metric.value)
         self.custom_collector.metrics = prometheus_metrics.values()
 
     def _start_exporter(self, port):

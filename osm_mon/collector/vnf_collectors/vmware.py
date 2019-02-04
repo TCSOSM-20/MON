@@ -23,17 +23,17 @@
 
 import json
 import logging
+import time
+import traceback
+from xml.etree import ElementTree as XmlElementTree
 
+import requests
+import six
 from pyvcloud.vcd.client import BasicLoginCredentials
 from pyvcloud.vcd.client import Client
-import requests
-import time
-from xml.etree import ElementTree as XmlElementTree
-import traceback
-import six
 
-from osm_mon.collector.collectors.base_vim import BaseVimCollector
-from osm_mon.collector.metric import Metric
+from osm_mon.collector.vnf_collectors.base_vim import BaseVimCollector
+from osm_mon.collector.vnf_metric import VnfMetric
 from osm_mon.core.auth import AuthManager
 from osm_mon.core.common_db import CommonDbClient
 from osm_mon.core.settings import Config
@@ -270,7 +270,7 @@ class VMwareCollector(BaseVimCollector):
                             for resource_identifier in resource_identifiers:
                                 if resource_identifier['identifierType']['name'] == 'VMEntityObjectID':
                                     if resource_identifier.get('value') is not None and \
-                                        resource_identifier['value'] == vm_moref_id:
+                                            resource_identifier['value'] == vm_moref_id:
                                         vm_resource_id = resource['identifier']
                                         log.info("Found VM resource ID: {} for vm_moref_id: {}".format(vm_resource_id,
                                                                                                        vm_moref_id))
@@ -316,7 +316,7 @@ class VMwareCollector(BaseVimCollector):
                         begin_time = end_time - time_diff
 
                         api_url = "/suite-api/api/resources/{}/stats?statKey={}&begin={}&end={}".format(
-                                  resource_id, vrops_metric_name, str(begin_time), str(end_time))
+                            resource_id, vrops_metric_name, str(begin_time), str(end_time))
 
                         headers = {'Accept': 'application/json'}
 
@@ -347,11 +347,11 @@ class VMwareCollector(BaseVimCollector):
                                                     metrics_data['metrics_series'] = stat_list_v[0]['data']
 
                         if metrics_data:
-                            metric = Metric(nsr_id,
-                                            vnf_member_index,
-                                            vdur['name'],
-                                            metric_name,
-                                            metrics_data['metrics_series'][-1])
+                            metric = VnfMetric(nsr_id,
+                                               vnf_member_index,
+                                               vdur['name'],
+                                               metric_name,
+                                               metrics_data['metrics_series'][-1])
 
                             metrics.append(metric)
 

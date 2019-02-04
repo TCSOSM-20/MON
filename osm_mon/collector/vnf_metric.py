@@ -19,10 +19,14 @@
 # For those usages not covered by the Apache License, Version 2.0 please
 # contact: bdiaz@whitestack.com or glavado@whitestack.com
 ##
+from osm_mon.collector.metric import Metric
 
 
-class Metric:
-    def __init__(self, tags: dict, name: str, value):
-        self.tags = tags
-        self.name = name
-        self.value = value
+class VnfMetric(Metric):
+    def __init__(self, nsr_id, vnf_member_index, vdur_name, name, value):
+        tags = {
+            'ns_id': nsr_id,
+            'vnf_member_index': vnf_member_index,
+            'vdu_name': vdur_name
+        }
+        super().__init__(tags, name, value)

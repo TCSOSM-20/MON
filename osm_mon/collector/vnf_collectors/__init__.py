@@ -19,10 +19,3 @@
 # For those usages not covered by the Apache License, Version 2.0 please
 # contact: bdiaz@whitestack.com or glavado@whitestack.com
 ##
-
-
-class Metric:
-    def __init__(self, tags: dict, name: str, value):
-        self.tags = tags
-        self.name = name
-        self.value = value

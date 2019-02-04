@@ -24,6 +24,7 @@
 import logging
 import sys
 
+from osm_mon.core.database import DatabaseManager
 from osm_mon.core.settings import Config
 from osm_mon.server.server import Server
 
@@ -45,6 +46,10 @@ def main():
     log = logging.getLogger(__name__)
     log.info("Starting MON Server...")
     log.debug("Config: %s", vars(cfg))
+    log.info("Initializing database...")
+    db_manager = DatabaseManager()
+    db_manager.create_tables()
+    log.info("Database initialized correctly.")
     server = Server()
     server.run()
 

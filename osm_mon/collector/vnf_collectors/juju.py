@@ -25,8 +25,9 @@ from typing import List
 
 from n2vc.vnf import N2VC
 
-from osm_mon.collector.collectors.base import BaseCollector
 from osm_mon.collector.metric import Metric
+from osm_mon.collector.vnf_collectors.base import BaseCollector
+from osm_mon.collector.vnf_metric import VnfMetric
 from osm_mon.core.common_db import CommonDbClient
 from osm_mon.core.exceptions import VcaDeploymentInfoNotFound
 from osm_mon.core.settings import Config
@@ -64,7 +65,8 @@ class VCACollector(BaseCollector):
                 for measure_list in measures.values():
                     for measure in measure_list:
                         log.debug("Measure: %s", measure)
-                        metric = Metric(nsr_id, vnf_member_index, vdur['name'], measure['key'], float(measure['value']))
+                        metric = VnfMetric(nsr_id, vnf_member_index, vdur['name'], measure['key'],
+                                           float(measure['value']))
                         metrics.append(metric)
         if 'vnf-configuration' in vnfd and 'metrics' in vnfd['vnf-configuration']:
             try:
@@ -77,7 +79,7 @@ class VCACollector(BaseCollector):
             for measure_list in measures.values():
                 for measure in measure_list:
                     log.debug("Measure: %s", measure)
-                    metric = Metric(nsr_id, vnf_member_index, '', measure['key'], float(measure['value']))
+                    metric = VnfMetric(nsr_id, vnf_member_index, '', measure['key'], float(measure['value']))
                     metrics.append(metric)
         return metrics
 

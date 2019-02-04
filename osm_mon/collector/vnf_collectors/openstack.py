@@ -29,8 +29,9 @@ from gnocchiclient.v1 import client as gnocchi_client
 from keystoneauth1 import session
 from keystoneauth1.identity import v3
 
-from osm_mon.collector.collectors.base_vim import BaseVimCollector
 from osm_mon.collector.metric import Metric
+from osm_mon.collector.vnf_collectors.base_vim import BaseVimCollector
+from osm_mon.collector.vnf_metric import VnfMetric
 from osm_mon.core.auth import AuthManager
 from osm_mon.core.common_db import CommonDbClient
 from osm_mon.core.settings import Config
@@ -108,7 +109,7 @@ class OpenstackCollector(BaseVimCollector):
                                                                            resource_id=resource_id,
                                                                            granularity=self.granularity)
                         if len(measures):
-                            metric = Metric(nsr_id, vnf_member_index, vdur['name'], metric_name, measures[-1][2])
+                            metric = VnfMetric(nsr_id, vnf_member_index, vdur['name'], metric_name, measures[-1][2])
                             metrics.append(metric)
                     except gnocchiclient.exceptions.NotFound as e:
                         log.debug("No metric found: %s", e)

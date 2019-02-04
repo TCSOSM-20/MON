@@ -75,3 +75,6 @@ class CommonDbClient:
     def get_vim_account_id(self, nsr_id: str, vnf_member_index: int) -> str:
         vnfr = self.get_vnfr(nsr_id, vnf_member_index)
         return vnfr['vim-account-id']
+
+    def get_vim_accounts(self):
+        return self.common_db.get_list('vim_accounts')

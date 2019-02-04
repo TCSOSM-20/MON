@@ -27,9 +27,11 @@ import time
 import peewee
 
 from osm_mon.collector.backends.prometheus import PrometheusBackend
-from osm_mon.collector.collectors.juju import VCACollector
-from osm_mon.collector.collectors.openstack import OpenstackCollector
-from osm_mon.collector.collectors.vmware import VMwareCollector
+from osm_mon.collector.vnf_collectors.vmware import VMwareCollector
+from osm_mon.collector.infra_collectors.openstack import OpenstackInfraCollector
+from osm_mon.collector.metric import Metric
+from osm_mon.collector.vnf_collectors.juju import VCACollector
+from osm_mon.collector.vnf_collectors.openstack import OpenstackCollector
 from osm_mon.core.common_db import CommonDbClient
 from osm_mon.core.database import DatabaseManager
 from osm_mon.core.settings import Config
@@ -39,6 +41,9 @@ log = logging.getLogger(__name__)
 VIM_COLLECTORS = {
     "openstack": OpenstackCollector,
     "vmware": VMwareCollector
+}
+VIM_INFRA_COLLECTORS = {
+    "openstack": OpenstackInfraCollector
 }
 METRIC_BACKENDS = [
     PrometheusBackend
@@ -69,12 +74,24 @@ class Collector:
 
     def _collect_vim_metrics(self, vnfr: dict, vim_account_id: str):
         # TODO(diazb) Add support for vrops and aws
-        vim_type = self.database_manager.get_vim_type(vim_account_id)
+        database_manager = DatabaseManager()
+        vim_type = database_manager.get_vim_type(vim_account_id)
         if vim_type in VIM_COLLECTORS:
             collector = VIM_COLLECTORS[vim_type](vim_account_id)
             metrics = collector.collect(vnfr)
             for metric in metrics:
                 self.queue.put(metric)
+        else:
+            log.debug("vimtype %s is not supported.", vim_type)
+
+    def _collect_vim_infra_metrics(self, vim_account_id: str):
+        database_manager = DatabaseManager()
+        vim_type = database_manager.get_vim_type(vim_account_id)
+        if vim_type in VIM_INFRA_COLLECTORS:
+            collector = VIM_INFRA_COLLECTORS[vim_type](vim_account_id)
+            status = collector.is_vim_ok()
+            status_metric = Metric({'vim_id': vim_account_id}, 'vim_status', status)
+            self.queue.put(status_metric)
         else:
             log.debug("vimtype %s is not supported.", vim_type)
 
@@ -99,6 +116,12 @@ class Collector:
             p.start()
             p = multiprocessing.Process(target=self._collect_vca_metrics,
                                         args=(vnfr,))
+            processes.append(p)
+            p.start()
+        vims = self.common_db.get_vim_accounts()
+        for vim in vims:
+            p = multiprocessing.Process(target=self._collect_vim_infra_metrics,
+                                        args=(vim['_id'],))
             processes.append(p)
             p.start()
         for process in processes:

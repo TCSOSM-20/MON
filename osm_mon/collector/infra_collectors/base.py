@@ -21,8 +21,5 @@
 ##
 
 
-class Metric:
-    def __init__(self, tags: dict, name: str, value):
-        self.tags = tags
-        self.name = name
-        self.value = value
+class BaseInfraCollector:
+    pass

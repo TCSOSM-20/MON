@@ -25,6 +25,7 @@ import logging
 import sys
 
 from osm_mon.collector.collector import Collector
+from osm_mon.core.database import DatabaseManager
 from osm_mon.core.settings import Config
 
 
@@ -45,6 +46,10 @@ def main():
     log = logging.getLogger(__name__)
     log.info("Starting MON Collector...")
     log.debug("Config: %s", vars(cfg))
+    log.info("Initializing database...")
+    db_manager = DatabaseManager()
+    db_manager.create_tables()
+    log.info("Database initialized correctly.")
     collector = Collector()
     collector.collect_forever()
 

@@ -25,7 +25,7 @@ import unittest
 from unittest import mock
 
 from osm_mon.collector.collector import Collector
-from osm_mon.collector.collectors.openstack import OpenstackCollector
+from osm_mon.collector.vnf_collectors.openstack import OpenstackCollector
 from osm_mon.core.database import DatabaseManager, db
 
 
