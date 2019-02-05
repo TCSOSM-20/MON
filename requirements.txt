@@ -29,5 +29,6 @@ peewee==3.1.*
 pyyaml==3.*
 prometheus_client==0.4.*
 gnocchiclient==7.0.*
+pyvcloud==19.1.1
 git+https://osm.etsi.org/gerrit/osm/common.git#egg=osm-common
 git+https://osm.etsi.org/gerrit/osm/N2VC.git#egg=n2vc

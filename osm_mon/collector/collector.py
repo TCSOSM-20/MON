@@ -27,6 +27,7 @@ import time
 from osm_mon.collector.backends.prometheus import PrometheusBackend
 from osm_mon.collector.collectors.juju import VCACollector
 from osm_mon.collector.collectors.openstack import OpenstackCollector
+from osm_mon.collector.collectors.vmware import VMwareCollector
 from osm_mon.core.common_db import CommonDbClient
 from osm_mon.core.database import DatabaseManager
 from osm_mon.core.settings import Config
@@ -34,7 +35,8 @@ from osm_mon.core.settings import Config
 log = logging.getLogger(__name__)
 
 VIM_COLLECTORS = {
-    "openstack": OpenstackCollector
+    "openstack": OpenstackCollector,
+    "vmware": VMwareCollector
 }
 METRIC_BACKENDS = [
     PrometheusBackend

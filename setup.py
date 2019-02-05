@@ -62,6 +62,7 @@ setup(
         "pyyaml==3.*",
         "prometheus_client==0.4.*",
         "gnocchiclient==7.0.*",
+        "pyvcloud==19.1.1",
         "osm-common",
         "n2vc"
     ],
