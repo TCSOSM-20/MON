@@ -21,18 +21,20 @@
 # For those usages not covered by the Apache License, Version 2.0 please
 # contact: bdiaz@whitestack.com or glavado@whitestack.com
 ##
-from osm_common import dbmongo
+from osm_common import dbmongo, dbmemory
 
-from osm_mon.core.settings import Config
+from osm_mon.core.config import Config
 
 
 class CommonDbClient:
-    def __init__(self):
-        cfg = Config.instance()
-        self.common_db = dbmongo.DbMongo()
-        self.common_db.db_connect({'uri': cfg.MONGO_URI,
-                                   'name': 'osm',
-                                   'commonkey': cfg.OSMMON_DATABASE_COMMONKEY})
+    def __init__(self, config: Config):
+        if config.get('database', 'driver') == "mongo":
+            self.common_db = dbmongo.DbMongo()
+        elif config.get('database', 'driver') == "memory":
+            self.common_db = dbmemory.DbMemory()
+        else:
+            raise Exception("Unknown database driver {}".format(config.get('section', 'driver')))
+        self.common_db.db_connect(config.get("database"))
 
     def get_vnfr(self, nsr_id: str, member_index: int):
         vnfr = self.common_db.get_one("vnfrs",

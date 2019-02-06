@@ -27,14 +27,15 @@ from keystoneclient.v3 import client
 
 from osm_mon.collector.infra_collectors.base_vim import BaseVimInfraCollector
 from osm_mon.core.auth import AuthManager
+from osm_mon.core.config import Config
 
 log = logging.getLogger(__name__)
 
 
 class OpenstackInfraCollector(BaseVimInfraCollector):
-    def __init__(self, vim_account_id: str):
-        super().__init__(vim_account_id)
-        self.auth_manager = AuthManager()
+    def __init__(self, config: Config, vim_account_id: str):
+        super().__init__(config, vim_account_id)
+        self.auth_manager = AuthManager(config)
         self.keystone_client = self._build_keystone_client(vim_account_id)
 
     def is_vim_ok(self) -> bool:

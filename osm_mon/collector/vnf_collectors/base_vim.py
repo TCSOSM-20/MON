@@ -21,8 +21,9 @@
 ##
 
 from osm_mon.collector.vnf_collectors.base import BaseCollector
+from osm_mon.core.config import Config
 
 
 class BaseVimCollector(BaseCollector):
-    def __init__(self, vim_account_id: str):
-        pass
+    def __init__(self, config: Config, vim_account_id: str):
+        super().__init__(config)

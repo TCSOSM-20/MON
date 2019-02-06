@@ -22,8 +22,12 @@
 from typing import List
 
 from osm_mon.collector.metric import Metric
+from osm_mon.core.config import Config
 
 
 class BaseCollector:
+    def __init__(self, config: Config):
+        pass
+
     def collect(self, vnfr: dict) -> List[Metric]:
         pass

@@ -26,11 +26,13 @@ from unittest import mock
 from osm_common import dbmongo
 
 from osm_mon.core.common_db import CommonDbClient
+from osm_mon.core.config import Config
 
 
 class CommonDbClientTest(unittest.TestCase):
     def setUp(self):
         super().setUp()
+        self.config = Config()
 
     @mock.patch.object(dbmongo.DbMongo, "db_connect", mock.Mock())
     @mock.patch.object(CommonDbClient, "get_vnfr")
@@ -56,7 +58,7 @@ class CommonDbClientTest(unittest.TestCase):
                                  'created-time': 1526044312.0999322,
                                  'vnfd-id': 'a314c865-aee7-4d9b-9c9d-079d7f857f01',
                                  'id': 'a314c865-aee7-4d9b-9c9d-079d7f857f01'}
-        common_db_client = CommonDbClient()
+        common_db_client = CommonDbClient(self.config)
         vim_account_id = common_db_client.get_vim_account_id('5ec3f571-d540-4cb0-9992-971d1b08312e', 1)
         self.assertEqual(vim_account_id, 'c1740601-7287-48c8-a2c9-bce8fee459eb')
 
@@ -84,7 +86,7 @@ class CommonDbClientTest(unittest.TestCase):
                                 'created-time': 1526044312.0999322,
                                 'vnfd-id': 'a314c865-aee7-4d9b-9c9d-079d7f857f01',
                                 'id': 'a314c865-aee7-4d9b-9c9d-079d7f857f01'}
-        common_db_client = CommonDbClient()
+        common_db_client = CommonDbClient(self.config)
         vdur = common_db_client.get_vdur('5ec3f571-d540-4cb0-9992-971d1b08312e', '1', 'ubuntuvnf_vnfd-VM')
         expected_vdur = {
             'internal-connection-point': [],

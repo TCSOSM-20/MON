@@ -29,18 +29,19 @@ from osm_mon.collector.metric import Metric
 from osm_mon.collector.vnf_collectors.base import BaseCollector
 from osm_mon.collector.vnf_metric import VnfMetric
 from osm_mon.core.common_db import CommonDbClient
+from osm_mon.core.config import Config
 from osm_mon.core.exceptions import VcaDeploymentInfoNotFound
-from osm_mon.core.settings import Config
 
 log = logging.getLogger(__name__)
 
 
 class VCACollector(BaseCollector):
-    def __init__(self):
-        cfg = Config.instance()
-        self.common_db = CommonDbClient()
+    def __init__(self, config: Config):
+        super().__init__(config)
+        self.common_db = CommonDbClient(config)
         self.loop = asyncio.get_event_loop()
-        self.n2vc = N2VC(server=cfg.OSMMON_VCA_HOST, user=cfg.OSMMON_VCA_USER, secret=cfg.OSMMON_VCA_SECRET)
+        self.n2vc = N2VC(server=config.get('vca', 'host'), user=config.get('vca', 'user'),
+                         secret=config.get('vca', 'secret'))
 
     def collect(self, vnfr: dict) -> List[Metric]:
         nsr_id = vnfr['nsr-id-ref']

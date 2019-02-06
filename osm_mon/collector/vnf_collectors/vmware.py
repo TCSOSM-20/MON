@@ -36,7 +36,7 @@ from osm_mon.collector.vnf_collectors.base_vim import BaseVimCollector
 from osm_mon.collector.vnf_metric import VnfMetric
 from osm_mon.core.auth import AuthManager
 from osm_mon.core.common_db import CommonDbClient
-from osm_mon.core.settings import Config
+from osm_mon.core.config import Config
 
 log = logging.getLogger(__name__)
 
@@ -67,11 +67,10 @@ requests.packages.urllib3.disable_warnings()
 
 
 class VMwareCollector(BaseVimCollector):
-    def __init__(self, vim_account_id: str):
-        super().__init__(vim_account_id)
-        self.common_db = CommonDbClient()
-        self.auth_manager = AuthManager()
-        self.granularity = self._get_granularity(vim_account_id)
+    def __init__(self, config: Config, vim_account_id: str):
+        super().__init__(config, vim_account_id)
+        self.common_db = CommonDbClient(config)
+        self.auth_manager = AuthManager(config)
         vim_account = self.get_vim_account(vim_account_id)
         self.vrops_site = vim_account['vrops_site']
         self.vrops_user = vim_account['vrops_user']
@@ -92,6 +91,7 @@ class VMwareCollector(BaseVimCollector):
 
         log.info("Logging into vCD org as admin.")
 
+        admin_user = None
         try:
             host = self.vcloud_site
             admin_user = self.admin_username
@@ -151,21 +151,13 @@ class VMwareCollector(BaseVimCollector):
 
         return vim_account
 
-    def _get_granularity(self, vim_account_id: str):
-        creds = self.auth_manager.get_credentials(vim_account_id)
-        vim_config = json.loads(creds.config)
-        if 'granularity' in vim_config:
-            return int(vim_config['granularity'])
-        else:
-            cfg = Config.instance()
-            return cfg.OS_DEFAULT_GRANULARITY
-
     def get_vm_moref_id(self, vapp_uuid):
         """
            Method to get the moref_id of given VM
            arg - vapp_uuid
            return - VM mored_id
         """
+        vm_moref_id = None
         try:
             if vapp_uuid:
                 vm_details = self.get_vapp_details_rest(vapp_uuid)

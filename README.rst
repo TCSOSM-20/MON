@@ -39,8 +39,8 @@ MON module has the following components:
 Supported Collector Plugins
 ***************************
 
- - OpenStack: Requires Aodh and Gnocchi to be enabled.
- - VROPS: TBD
+ - OpenStack: Requires Gnocchi to be enabled.
+ - VROPS
  - AWS: TBD
 
 Developers

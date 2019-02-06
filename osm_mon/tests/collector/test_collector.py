@@ -26,14 +26,16 @@ from unittest import mock
 
 from osm_mon.collector.collector import Collector
 from osm_mon.collector.vnf_collectors.openstack import OpenstackCollector
+from osm_mon.core.config import Config
 from osm_mon.core.database import DatabaseManager, db
 
 
 class CollectorTest(unittest.TestCase):
     def setUp(self):
         super().setUp()
-        os.environ["DATABASE"] = "sqlite:///:memory:"
-        db_manager = DatabaseManager()
+        os.environ["OSMMON_SQL_DATABASE_URI"] = "sqlite:///:memory:"
+        self.config = Config()
+        db_manager = DatabaseManager(self.config)
         db_manager.create_tables()
 
     def tearDown(self):
@@ -47,7 +49,7 @@ class CollectorTest(unittest.TestCase):
     @mock.patch.object(DatabaseManager, "get_vim_type")
     def test_init_vim_collector_and_collect_openstack(self, _get_vim_type, collect):
         _get_vim_type.return_value = 'openstack'
-        collector = Collector()
+        collector = Collector(self.config)
         collector._collect_vim_metrics({}, 'test_vim_account_id')
         collect.assert_called_once_with({})
 
@@ -57,14 +59,14 @@ class CollectorTest(unittest.TestCase):
     @mock.patch.object(DatabaseManager, "get_vim_type")
     def test_init_vim_collector_and_collect_unknown(self, _get_vim_type, openstack_collect):
         _get_vim_type.return_value = 'unknown'
-        collector = Collector()
+        collector = Collector(self.config)
         collector._collect_vim_metrics({}, 'test_vim_account_id')
         openstack_collect.assert_not_called()
 
     @mock.patch("osm_mon.collector.collector.CommonDbClient", mock.Mock())
     @mock.patch("osm_mon.collector.collector.VCACollector", autospec=True)
     def test_collect_vca_metrics(self, vca_collector):
-        collector = Collector()
+        collector = Collector(self.config)
         collector._collect_vca_metrics({})
-        vca_collector.assert_called_once_with()
+        vca_collector.assert_called_once_with(self.config)
         vca_collector.return_value.collect.assert_called_once_with({})

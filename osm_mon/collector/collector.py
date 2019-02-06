@@ -27,14 +27,14 @@ import time
 import peewee
 
 from osm_mon.collector.backends.prometheus import PrometheusBackend
-from osm_mon.collector.vnf_collectors.vmware import VMwareCollector
 from osm_mon.collector.infra_collectors.openstack import OpenstackInfraCollector
 from osm_mon.collector.metric import Metric
 from osm_mon.collector.vnf_collectors.juju import VCACollector
 from osm_mon.collector.vnf_collectors.openstack import OpenstackCollector
+from osm_mon.collector.vnf_collectors.vmware import VMwareCollector
 from osm_mon.core.common_db import CommonDbClient
+from osm_mon.core.config import Config
 from osm_mon.core.database import DatabaseManager
-from osm_mon.core.settings import Config
 
 log = logging.getLogger(__name__)
 
@@ -51,21 +51,21 @@ METRIC_BACKENDS = [
 
 
 class Collector:
-    def __init__(self):
-        self.common_db = CommonDbClient()
+    def __init__(self, config: Config):
+        self.conf = config
+        self.common_db = CommonDbClient(self.conf)
         self.plugins = []
-        self.database_manager = DatabaseManager()
+        self.database_manager = DatabaseManager(self.conf)
         self.database_manager.create_tables()
         self.queue = multiprocessing.Queue()
         self._init_backends()
 
     def collect_forever(self):
         log.debug('collect_forever')
-        cfg = Config.instance()
         while True:
             try:
                 self.collect_metrics()
-                time.sleep(cfg.OSMMON_COLLECTOR_INTERVAL)
+                time.sleep(int(self.conf.get('collector', 'interval')))
             except peewee.PeeweeException:
                 log.exception("Database error consuming message: ")
                 raise
@@ -74,10 +74,10 @@ class Collector:
 
     def _collect_vim_metrics(self, vnfr: dict, vim_account_id: str):
         # TODO(diazb) Add support for vrops and aws
-        database_manager = DatabaseManager()
+        database_manager = DatabaseManager(self.conf)
         vim_type = database_manager.get_vim_type(vim_account_id)
         if vim_type in VIM_COLLECTORS:
-            collector = VIM_COLLECTORS[vim_type](vim_account_id)
+            collector = VIM_COLLECTORS[vim_type](self.conf, vim_account_id)
             metrics = collector.collect(vnfr)
             for metric in metrics:
                 self.queue.put(metric)
@@ -85,10 +85,10 @@ class Collector:
             log.debug("vimtype %s is not supported.", vim_type)
 
     def _collect_vim_infra_metrics(self, vim_account_id: str):
-        database_manager = DatabaseManager()
+        database_manager = DatabaseManager(self.conf)
         vim_type = database_manager.get_vim_type(vim_account_id)
         if vim_type in VIM_INFRA_COLLECTORS:
-            collector = VIM_INFRA_COLLECTORS[vim_type](vim_account_id)
+            collector = VIM_INFRA_COLLECTORS[vim_type](self.conf, vim_account_id)
             status = collector.is_vim_ok()
             status_metric = Metric({'vim_id': vim_account_id}, 'vim_status', status)
             self.queue.put(status_metric)
@@ -98,7 +98,7 @@ class Collector:
     def _collect_vca_metrics(self, vnfr: dict):
         log.debug('_collect_vca_metrics')
         log.debug('vnfr: %s', vnfr)
-        vca_collector = VCACollector()
+        vca_collector = VCACollector(self.conf)
         metrics = vca_collector.collect(vnfr)
         for metric in metrics:
             self.queue.put(metric)
@@ -125,7 +125,7 @@ class Collector:
             processes.append(p)
             p.start()
         for process in processes:
-            process.join()
+            process.join(timeout=10)
         metrics = []
         while not self.queue.empty():
             metrics.append(self.queue.get())

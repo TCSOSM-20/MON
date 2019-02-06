@@ -23,12 +23,15 @@
 import unittest
 from unittest import mock
 
+from osm_mon.core.config import Config
+
 from osm_mon.core.database import VimCredentials, DatabaseManager
 
 
 class DatbaseManagerTest(unittest.TestCase):
     def setUp(self):
         super().setUp()
+        self.config = Config()
 
     @mock.patch.object(DatabaseManager, "get_credentials")
     def test_get_vim_type(self, get_credentials):
@@ -41,6 +44,6 @@ class DatbaseManagerTest(unittest.TestCase):
         mock_creds.type = 'openstack'
 
         get_credentials.return_value = mock_creds
-        database_manager = DatabaseManager()
+        database_manager = DatabaseManager(self.config)
         vim_type = database_manager.get_vim_type('test_id')
         self.assertEqual(vim_type, 'openstack')

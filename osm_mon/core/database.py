@@ -28,7 +28,7 @@ import uuid
 from peewee import CharField, TextField, FloatField, Model, AutoField, Proxy
 from playhouse.db_url import connect
 
-from osm_mon.core.settings import Config
+from osm_mon.core.config import Config
 
 log = logging.getLogger(__name__)
 
@@ -67,10 +67,8 @@ class Alarm(BaseModel):
 
 
 class DatabaseManager:
-    def __init__(self):
-        cfg = Config.instance()
-        cfg.read_environ()
-        db.initialize(connect(cfg.DATABASE))
+    def __init__(self, config: Config):
+        db.initialize(connect(config.get('sql', 'database_uri')))
 
     def create_tables(self) -> None:
         with db.atomic():

@@ -25,14 +25,16 @@
 import json
 import logging
 
+from osm_mon.core.config import Config
+
 from osm_mon.core.database import VimCredentials, DatabaseManager
 
 log = logging.getLogger(__name__)
 
 
 class AuthManager:
-    def __init__(self):
-        self.database_manager = DatabaseManager()
+    def __init__(self, config: Config):
+        self.database_manager = DatabaseManager(config)
 
     def store_auth_credentials(self, creds_dict):
         log.info(creds_dict)

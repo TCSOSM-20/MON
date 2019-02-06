@@ -34,7 +34,7 @@ from osm_mon.collector.vnf_collectors.base_vim import BaseVimCollector
 from osm_mon.collector.vnf_metric import VnfMetric
 from osm_mon.core.auth import AuthManager
 from osm_mon.core.common_db import CommonDbClient
-from osm_mon.core.settings import Config
+from osm_mon.core.config import Config
 
 log = logging.getLogger(__name__)
 
@@ -52,10 +52,11 @@ METRIC_MAPPINGS = {
 
 
 class OpenstackCollector(BaseVimCollector):
-    def __init__(self, vim_account_id: str):
-        super().__init__(vim_account_id)
-        self.common_db = CommonDbClient()
-        self.auth_manager = AuthManager()
+    def __init__(self, config: Config, vim_account_id: str):
+        super().__init__(config, vim_account_id)
+        self.conf = config
+        self.common_db = CommonDbClient(config)
+        self.auth_manager = AuthManager(config)
         self.granularity = self._get_granularity(vim_account_id)
         self.gnocchi_client = self._build_gnocchi_client(vim_account_id)
 
@@ -81,8 +82,7 @@ class OpenstackCollector(BaseVimCollector):
         if 'granularity' in vim_config:
             return int(vim_config['granularity'])
         else:
-            cfg = Config.instance()
-            return cfg.OS_DEFAULT_GRANULARITY
+            return int(self.conf.get('openstack', 'default_granularity'))
 
     def collect(self, vnfr: dict) -> List[Metric]:
         nsr_id = vnfr['nsr-id-ref']

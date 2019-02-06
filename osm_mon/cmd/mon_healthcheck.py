@@ -19,6 +19,7 @@
 # For those usages not covered by the Apache License, Version 2.0 please
 # contact: bdiaz@whitestack.com or glavado@whitestack.com
 ##
+import argparse
 import asyncio
 import logging
 import subprocess
@@ -27,16 +28,20 @@ import sys
 import requests
 from aiokafka import AIOKafkaConsumer
 
-from osm_mon.core.settings import Config
+from osm_mon.core.config import Config
 
 log = logging.getLogger(__name__)
 
 
 def main():
-    # Check Kafka
+    parser = argparse.ArgumentParser(prog='osm-mon-healthcheck')
+    parser.add_argument('--config-file', nargs='?', help='MON configuration file')
+    args = parser.parse_args()
+    cfg = Config(args.config_file)
+
     if not _processes_running():
         sys.exit(1)
-    if not _is_kafka_ok():
+    if not _is_kafka_ok(cfg.get('message', 'host'), cfg.get('message', 'port')):
         sys.exit(1)
     if not _is_prometheus_exporter_ok():
         sys.exit(1)
@@ -49,6 +54,7 @@ def _processes_running():
             if process_name in row:
                 return True
         return False
+
     processes_to_check = ['osm-mon-collector', 'osm-mon-evaluator', 'osm-mon-server']
     ps = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE).communicate()[0]
     processes_running = ps.decode().split('\n')
@@ -68,12 +74,11 @@ def _is_prometheus_exporter_ok():
         return False
 
 
-def _is_kafka_ok():
+def _is_kafka_ok(host, port):
     async def _test_kafka(loop):
-        cfg = Config.instance()
         consumer = AIOKafkaConsumer(
             'healthcheck',
-            loop=loop, bootstrap_servers=cfg.BROKER_URI)
+            loop=loop, bootstrap_servers='{}:{}'.format(host, port))
         await consumer.start()
         await consumer.stop()
 
