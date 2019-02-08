@@ -75,34 +75,44 @@ class DatabaseManager:
         db.initialize(connect(config.get('sql', 'database_uri')))
 
     def create_tables(self) -> None:
+        db.connect()
         with db.atomic():
             router = Router(db, os.path.dirname(migrations.__file__))
             router.run()
+        db.close()
 
     def get_credentials(self, vim_uuid: str = None) -> VimCredentials:
+        db.connect()
         with db.atomic():
-            return VimCredentials.get_or_none(VimCredentials.uuid == vim_uuid)
+            vim_credentials = VimCredentials.get_or_none(VimCredentials.uuid == vim_uuid)
+        db.close()
+        return vim_credentials
 
     def save_credentials(self, vim_credentials) -> VimCredentials:
         """Saves vim credentials. If a record with same uuid exists, overwrite it."""
+        db.connect()
         with db.atomic():
             exists = VimCredentials.get_or_none(VimCredentials.uuid == vim_credentials.uuid)
             if exists:
                 vim_credentials.id = exists.id
             vim_credentials.save()
-            return vim_credentials
+        db.close()
+        return vim_credentials
 
     def get_alarm(self, alarm_id) -> Alarm:
+        db.connect()
         with db.atomic():
             alarm = (Alarm.select()
                      .where(Alarm.alarm_id == alarm_id)
                      .get())
-            return alarm
+        db.close()
+        return alarm
 
     def save_alarm(self, name, threshold, operation, severity, statistic, metric_name, vdur_name,
                    vnf_member_index, nsr_id) -> Alarm:
         """Saves alarm."""
         # TODO: Add uuid optional param and check if exists to handle updates (see self.save_credentials)
+        db.connect()
         with db.atomic():
             alarm = Alarm()
             alarm.uuid = str(uuid.uuid4())
@@ -116,14 +126,17 @@ class DatabaseManager:
             alarm.vnf_member_index = vnf_member_index
             alarm.nsr_id = nsr_id
             alarm.save()
-            return alarm
+        db.close()
+        return alarm
 
     def delete_alarm(self, alarm_uuid) -> None:
+        db.connect()
         with db.atomic():
             alarm = (Alarm.select()
                      .where(Alarm.uuid == alarm_uuid)
                      .get())
             alarm.delete_instance()
+        db.close()
 
     def get_vim_type(self, vim_account_id) -> str:
         """Get the vim type that is required by the message."""

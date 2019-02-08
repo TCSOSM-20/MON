@@ -28,7 +28,7 @@ from osm_mon.core.config import Config
 from osm_mon.core.database import VimCredentials, DatabaseManager
 
 
-class DatbaseManagerTest(unittest.TestCase):
+class DatabaseManagerTest(unittest.TestCase):
     def setUp(self):
         super().setUp()
         self.config = Config()
@@ -42,6 +42,7 @@ class DatbaseManagerTest(unittest.TestCase):
         mock_creds.password = 'password'
         mock_creds.tenant_name = 'tenant_name'
         mock_creds.type = 'openstack'
+        mock_creds.config = '{}'
 
         get_credentials.return_value = mock_creds
         database_manager = DatabaseManager(self.config)
