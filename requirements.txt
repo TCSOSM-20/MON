@@ -31,5 +31,6 @@ prometheus_client==0.4.*
 gnocchiclient==7.0.*
 pymysql==0.9.*
 pyvcloud==19.1.*
+python-ceilometerclient==2.9.*
 git+https://osm.etsi.org/gerrit/osm/common.git@v5.0#egg=osm-common
 git+https://osm.etsi.org/gerrit/osm/N2VC.git@v5.0#egg=n2vc
