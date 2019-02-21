@@ -1,8 +1,10 @@
-# Copyright 2017 Intel Research and Development Ireland Limited
+# -*- coding: utf-8 -*-
+
+# Copyright 2018 Whitestack, LLC
 # *************************************************************
 
 # This file is part of OSM Monitoring module
-# All Rights Reserved to Intel Corporation
+# All Rights Reserved to Whitestack, LLC
 
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -17,20 +19,5 @@
 # under the License.
 
 # For those usages not covered by the Apache License, Version 2.0 please
-# contact: prithiv.mohan@intel.com or adrian.hoban@intel.com
-aiokafka==0.4.*
-requests==2.18.*
-jsmin==2.2.*
-jsonschema==2.6.*
-python-keystoneclient==3.15.*
-six==1.11.*
-peewee==3.8.*
-pyyaml==3.*
-prometheus_client==0.4.*
-gnocchiclient==7.0.*
-pymysql==0.9.*
-pyvcloud==19.1.*
-python-ceilometerclient==2.9.*
-peewee-migrate==1.1.*
-git+https://osm.etsi.org/gerrit/osm/common.git@v5.0#egg=osm-common
-git+https://osm.etsi.org/gerrit/osm/N2VC.git@v5.0#egg=n2vc
+# contact: bdiaz@whitestack.com or glavado@whitestack.com
+##

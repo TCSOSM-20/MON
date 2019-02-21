@@ -46,11 +46,11 @@ def main():
     root.addHandler(ch)
 
     log = logging.getLogger(__name__)
+    log.info("Starting MON Server...")
     log.debug("Config: %s", cfg.conf)
     log.info("Initializing database...")
     db_manager = DatabaseManager(cfg)
     db_manager.create_tables()
-    log.info("Starting MON Server...")
     log.info("Database initialized correctly.")
     loop = asyncio.get_event_loop()
     server = Server(cfg, loop)

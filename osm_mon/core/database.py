@@ -23,11 +23,14 @@
 ##
 
 import logging
+import os
 import uuid
 
 from peewee import CharField, TextField, FloatField, Model, AutoField, Proxy
+from peewee_migrate import Router
 from playhouse.db_url import connect
 
+from osm_mon import migrations
 from osm_mon.core.config import Config
 
 log = logging.getLogger(__name__)
@@ -72,7 +75,8 @@ class DatabaseManager:
 
     def create_tables(self) -> None:
         with db.atomic():
-            db.create_tables([VimCredentials, Alarm])
+            router = Router(db, os.path.dirname(migrations.__file__))
+            router.run()
 
     def get_credentials(self, vim_uuid: str = None) -> VimCredentials:
         with db.atomic():
