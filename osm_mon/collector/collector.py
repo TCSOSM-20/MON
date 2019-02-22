@@ -28,7 +28,6 @@ import peewee
 
 from osm_mon.collector.backends.prometheus import PrometheusBackend
 from osm_mon.collector.infra_collectors.openstack import OpenstackInfraCollector
-from osm_mon.collector.metric import Metric
 from osm_mon.collector.vnf_collectors.juju import VCACollector
 from osm_mon.collector.vnf_collectors.openstack import OpenstackCollector
 from osm_mon.collector.vnf_collectors.vmware import VMwareCollector
@@ -89,9 +88,9 @@ class Collector:
         vim_type = database_manager.get_vim_type(vim_account_id)
         if vim_type in VIM_INFRA_COLLECTORS:
             collector = VIM_INFRA_COLLECTORS[vim_type](self.conf, vim_account_id)
-            status = collector.is_vim_ok()
-            status_metric = Metric({'vim_id': vim_account_id}, 'vim_status', status)
-            self.queue.put(status_metric)
+            metrics = collector.collect()
+            for metric in metrics:
+                self.queue.put(metric)
         else:
             log.debug("vimtype %s is not supported.", vim_type)
 

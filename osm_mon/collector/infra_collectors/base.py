@@ -19,7 +19,12 @@
 # For those usages not covered by the Apache License, Version 2.0 please
 # contact: bdiaz@whitestack.com or glavado@whitestack.com
 ##
+from typing import List
+
+from osm_mon.collector.metric import Metric
 
 
 class BaseInfraCollector:
-    pass
+
+    def collect(self) -> List[Metric]:
+        pass

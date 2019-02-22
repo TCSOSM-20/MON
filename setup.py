@@ -64,6 +64,7 @@ setup(
         "pyvcloud==19.1.1",
         "python-ceilometerclient==2.9.*",
         "peewee-migrate==1.1.*",
+        "python-novaclient==12.0.*",
         "osm-common",
         "n2vc"
     ],

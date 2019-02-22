@@ -32,5 +32,6 @@ pymysql==0.9.*
 pyvcloud==19.1.*
 python-ceilometerclient==2.9.*
 peewee-migrate==1.1.*
+python-novaclient==12.0.*
 git+https://osm.etsi.org/gerrit/osm/common.git@v5.0#egg=osm-common
 git+https://osm.etsi.org/gerrit/osm/N2VC.git@v5.0#egg=n2vc

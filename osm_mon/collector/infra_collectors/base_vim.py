@@ -19,14 +19,11 @@
 # For those usages not covered by the Apache License, Version 2.0 please
 # contact: bdiaz@whitestack.com or glavado@whitestack.com
 ##
-from osm_mon.core.config import Config
-
 from osm_mon.collector.infra_collectors.base import BaseInfraCollector
+
+from osm_mon.core.config import Config
 
 
 class BaseVimInfraCollector(BaseInfraCollector):
     def __init__(self, config: Config, vim_account_id: str):
-        pass
-
-    def is_vim_ok(self) -> bool:
         pass

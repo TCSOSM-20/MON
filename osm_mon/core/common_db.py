@@ -41,12 +41,18 @@ class CommonDbClient:
                                       {"nsr-id-ref": nsr_id, "member-vnf-index-ref": str(member_index)})
         return vnfr
 
-    def get_vnfrs(self, nsr_id: str = None):
+    def get_vnfrs(self, nsr_id: str = None, vim_account_id: str = None):
+        if nsr_id and vim_account_id:
+            raise NotImplementedError("Only one filter is currently supported")
         if nsr_id:
-            return [self.get_vnfr(nsr_id, member['member-vnf-index']) for member in
-                    self.get_nsr(nsr_id)['nsd']['constituent-vnfd']]
+            vnfrs = [self.get_vnfr(nsr_id, member['member-vnf-index']) for member in
+                     self.get_nsr(nsr_id)['nsd']['constituent-vnfd']]
+        elif vim_account_id:
+            vnfrs = self.common_db.get_list("vnfrs",
+                                            {"vim-account-id": vim_account_id})
         else:
-            return self.common_db.get_list('vnfrs')
+            vnfrs = self.common_db.get_list('vnfrs')
+        return vnfrs
 
     def get_vnfd(self, vnfd_id: str):
         vnfr = self.common_db.get_one("vnfds",
