@@ -53,7 +53,7 @@ class VimCredentials(BaseModel):
     user = CharField()
     password = CharField()
     tenant_name = CharField()
-    config = TextField(default='{}')
+    config = TextField()
 
 
 class Alarm(BaseModel):

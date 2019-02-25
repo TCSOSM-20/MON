@@ -65,6 +65,7 @@ setup(
         "python-ceilometerclient==2.9.*",
         "peewee-migrate==1.1.*",
         "python-novaclient==12.0.*",
+        "pymysql==0.9.*",
         "osm-common",
         "n2vc"
     ],

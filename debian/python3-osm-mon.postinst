@@ -37,4 +37,5 @@ pip3 install pyvcloud==19.1.1
 pip3 install python-ceilometerclient==2.9.*
 pip3 install peewee-migrate==1.1.*
 pip3 install python-novaclient==12.0.*
+pip3 install pymysql==0.9.*
 echo "Installation of python dependencies finished"

@@ -63,7 +63,7 @@ def migrate(migrator, database, fake=False, **kwargs):
         user = pw.CharField(max_length=255)
         password = pw.CharField(max_length=255)
         tenant_name = pw.CharField(max_length=255)
-        config = pw.TextField(constraints=[SQL("DEFAULT '{}'")])
+        config = pw.TextField()
 
         class Meta:
             table_name = "vimcredentials"

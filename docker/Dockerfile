@@ -25,7 +25,7 @@ FROM ubuntu:16.04
 LABEL authors="Benjamín Díaz"
 
 RUN apt-get --yes update \
- && apt-get --yes install git python3 python3-pip libmysqlclient-dev libssl-dev libffi-dev \
+ && apt-get --yes install git python3 python3-pip libmysqlclient-dev libssl-dev libffi-dev mysql-client \
  && pip3 install pip==9.0.3
 
 COPY requirements.txt /mon/requirements.txt
@@ -60,4 +60,4 @@ EXPOSE 8000
 HEALTHCHECK --interval=5s --timeout=2s --retries=12 \
   CMD osm-mon-healthcheck || exit 1
 
-CMD /bin/bash mon/docker/scripts/runInstall.sh
+CMD /bin/bash mon/docker/scripts/start.sh
