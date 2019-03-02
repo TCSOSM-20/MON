@@ -31,6 +31,7 @@ from osm_mon.collector.infra_collectors.openstack import OpenstackInfraCollector
 from osm_mon.collector.vnf_collectors.juju import VCACollector
 from osm_mon.collector.vnf_collectors.openstack import OpenstackCollector
 from osm_mon.collector.vnf_collectors.vmware import VMwareCollector
+from osm_mon.collector.vnf_collectors.vio import VIOCollector
 from osm_mon.core.common_db import CommonDbClient
 from osm_mon.core.config import Config
 from osm_mon.core.database import DatabaseManager
@@ -39,7 +40,8 @@ log = logging.getLogger(__name__)
 
 VIM_COLLECTORS = {
     "openstack": OpenstackCollector,
-    "vmware": VMwareCollector
+    "vmware": VMwareCollector,
+    "vio": VIOCollector
 }
 VIM_INFRA_COLLECTORS = {
     "openstack": OpenstackInfraCollector
@@ -72,7 +74,7 @@ class Collector:
                 log.exception("Error collecting metrics")
 
     def _collect_vim_metrics(self, vnfr: dict, vim_account_id: str):
-        # TODO(diazb) Add support for vrops and aws
+        # TODO(diazb) Add support for aws
         database_manager = DatabaseManager(self.conf)
         vim_type = database_manager.get_vim_type(vim_account_id)
         if vim_type in VIM_COLLECTORS:

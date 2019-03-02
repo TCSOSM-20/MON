@@ -25,6 +25,7 @@
 import logging
 import os
 import uuid
+import json
 
 from peewee import CharField, TextField, FloatField, Model, AutoField, Proxy
 from peewee_migrate import Router
@@ -126,5 +127,11 @@ class DatabaseManager:
 
     def get_vim_type(self, vim_account_id) -> str:
         """Get the vim type that is required by the message."""
+        vim_type = None
         credentials = self.get_credentials(vim_account_id)
-        return str(credentials.type)
+        config = json.loads(credentials.config)
+        if 'vim_type' in config:
+            vim_type = config['vim_type']
+            return str(vim_type.lower())
+        else:
+            return str(credentials.type)
