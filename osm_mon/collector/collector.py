@@ -27,6 +27,7 @@ import time
 import peewee
 
 from osm_mon.collector.backends.prometheus import PrometheusBackend
+from osm_mon.collector.infra_collectors.onos import OnosInfraCollector
 from osm_mon.collector.infra_collectors.openstack import OpenstackInfraCollector
 from osm_mon.collector.vnf_collectors.juju import VCACollector
 from osm_mon.collector.vnf_collectors.openstack import OpenstackCollector
@@ -45,6 +46,9 @@ VIM_COLLECTORS = {
 }
 VIM_INFRA_COLLECTORS = {
     "openstack": OpenstackInfraCollector
+}
+SDN_INFRA_COLLECTORS = {
+    "onos": OnosInfraCollector
 }
 METRIC_BACKENDS = [
     PrometheusBackend
@@ -96,6 +100,17 @@ class Collector:
         else:
             log.debug("vimtype %s is not supported.", vim_type)
 
+    def _collect_sdnc_infra_metrics(self, sdnc_id: str):
+        common_db = CommonDbClient(self.conf)
+        sdn_type = common_db.get_sdnc(sdnc_id)['type']
+        if sdn_type in SDN_INFRA_COLLECTORS:
+            collector = SDN_INFRA_COLLECTORS[sdn_type](self.conf, sdnc_id)
+            metrics = collector.collect()
+            for metric in metrics:
+                self.queue.put(metric)
+        else:
+            log.debug("sdn_type %s is not supported.", sdn_type)
+
     def _collect_vca_metrics(self, vnfr: dict):
         log.debug('_collect_vca_metrics')
         log.debug('vnfr: %s', vnfr)
@@ -123,6 +138,12 @@ class Collector:
         for vim in vims:
             p = multiprocessing.Process(target=self._collect_vim_infra_metrics,
                                         args=(vim['_id'],))
+            processes.append(p)
+            p.start()
+        sdncs = self.common_db.get_sdncs()
+        for sdnc in sdncs:
+            p = multiprocessing.Process(target=self._collect_sdnc_infra_metrics,
+                                        args=(sdnc['_id'],))
             processes.append(p)
             p.start()
         for process in processes:

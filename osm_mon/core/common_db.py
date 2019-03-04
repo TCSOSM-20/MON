@@ -80,9 +80,18 @@ class CommonDbClient:
     def decrypt_vim_password(self, vim_password: str, schema_version: str, vim_id: str):
         return self.common_db.decrypt(vim_password, schema_version, vim_id)
 
+    def decrypt_sdnc_password(self, sdnc_password: str, schema_version: str, sdnc_id: str):
+        return self.common_db.decrypt(sdnc_password, schema_version, sdnc_id)
+
     def get_vim_account_id(self, nsr_id: str, vnf_member_index: int) -> str:
         vnfr = self.get_vnfr(nsr_id, vnf_member_index)
         return vnfr['vim-account-id']
 
     def get_vim_accounts(self):
         return self.common_db.get_list('vim_accounts')
+
+    def get_sdncs(self):
+        return self.common_db.get_list('sdns')
+
+    def get_sdnc(self, sdnc_id: str):
+        return self.common_db.get_one('sdns', {'_id': sdnc_id})
