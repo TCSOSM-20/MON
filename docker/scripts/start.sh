@@ -37,11 +37,11 @@ function is_db_created() {
 }
 
 if [[ $OSMMON_SQL_DATABASE_URI == *'mysql'* ]]; then
-    DB_HOST=$(echo $OSMMON_SQL_DATABASE_URI | sed -r 's|^\w+://.+:.+@(.+):.*$|\1|')
-    DB_PORT=$(echo $OSMMON_SQL_DATABASE_URI | sed -r 's|^\w+://.*:([0-9]+).*$|\1|')
-    DB_USER=$(echo $OSMMON_SQL_DATABASE_URI | sed -r 's|^\w+://(.+):.+@.+$|\1|')
+    DB_HOST=$(echo $OSMMON_SQL_DATABASE_URI | sed -r 's|^.+://.+:.+@(.+):.*$|\1|')
+    DB_PORT=$(echo $OSMMON_SQL_DATABASE_URI | sed -r 's|^.+://.*:([0-9]+).*$|\1|')
+    DB_USER=$(echo $OSMMON_SQL_DATABASE_URI | sed -r 's|^.+://(.+):.+@.+$|\1|')
     DB_PASSWORD=$(echo $OSMMON_SQL_DATABASE_URI | sed -r 's|^.+://.+:(.+)@.*$|\1|')
-    DB_NAME=$(echo $OSMMON_SQL_DATABASE_URI | sed -r 's|^\w+://.+:.+@.+:.*/(.+)$|\1|')
+    DB_NAME=$(echo $OSMMON_SQL_DATABASE_URI | sed -r 's|^.+://.+:.+@.+:.*/(\w+)(\?.*)?$|\1|')
     
     wait_db "$DB_HOST" "$DB_PORT" || exit 1
 
