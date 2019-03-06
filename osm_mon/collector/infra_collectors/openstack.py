@@ -57,8 +57,6 @@ class OpenstackInfraCollector(BaseVimInfraCollector):
             vnf_member_index = vnfr['member-vnf-index-ref']
             for vdur in vnfr['vdur']:
                 resource_uuid = vdur['vim-id']
-                vm = self.nova.servers.get(resource_uuid)
-                vm_status = (1 if vm.status == 'ACTIVE' else 0)
                 tags = {
                     'vim_account_id': self.vim_account_id,
                     'resource_uuid': resource_uuid,
@@ -66,7 +64,13 @@ class OpenstackInfraCollector(BaseVimInfraCollector):
                     'vnf_member_index': vnf_member_index,
                     'vdur_name': vdur['name']
                 }
-                vm_status_metric = Metric(tags, 'vm_status', vm_status)
+                try:
+                    vm = self.nova.servers.get(resource_uuid)
+                    vm_status = (1 if vm.status == 'ACTIVE' else 0)
+                    vm_status_metric = Metric(tags, 'vm_status', vm_status)
+                except Exception:
+                    log.exception("VM status is not OK!")
+                    vm_status_metric = Metric(tags, 'vm_status', 0)
                 metrics.append(vm_status_metric)
 
         return metrics
