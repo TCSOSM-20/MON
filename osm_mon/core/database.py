@@ -22,10 +22,10 @@
 # contact: bdiaz@whitestack.com or glavado@whitestack.com
 ##
 
+import json
 import logging
 import os
 import uuid
-import json
 
 from peewee import CharField, TextField, FloatField, Model, AutoField, Proxy
 from peewee_migrate import Router
@@ -83,51 +83,59 @@ class DatabaseManager:
 
     def get_credentials(self, vim_uuid: str = None) -> VimCredentials:
         db.connect()
-        with db.atomic():
-            vim_credentials = VimCredentials.get_or_none(VimCredentials.uuid == vim_uuid)
-        db.close()
-        return vim_credentials
+        try:
+            with db.atomic():
+                vim_credentials = VimCredentials.get_or_none(VimCredentials.uuid == vim_uuid)
+                return vim_credentials
+        finally:
+            db.close()
 
     def save_credentials(self, vim_credentials) -> VimCredentials:
         """Saves vim credentials. If a record with same uuid exists, overwrite it."""
         db.connect()
-        with db.atomic():
-            exists = VimCredentials.get_or_none(VimCredentials.uuid == vim_credentials.uuid)
-            if exists:
-                vim_credentials.id = exists.id
-            vim_credentials.save()
-        db.close()
-        return vim_credentials
+        try:
+            with db.atomic():
+                exists = VimCredentials.get_or_none(VimCredentials.uuid == vim_credentials.uuid)
+                if exists:
+                    vim_credentials.id = exists.id
+                vim_credentials.save()
+                return vim_credentials
+        finally:
+            db.close()
 
     def get_alarm(self, alarm_id) -> Alarm:
         db.connect()
-        with db.atomic():
-            alarm = (Alarm.select()
-                     .where(Alarm.alarm_id == alarm_id)
-                     .get())
-        db.close()
-        return alarm
+        try:
+            with db.atomic():
+                alarm = (Alarm.select()
+                         .where(Alarm.alarm_id == alarm_id)
+                         .get())
+                return alarm
+        finally:
+            db.close()
 
     def save_alarm(self, name, threshold, operation, severity, statistic, metric_name, vdur_name,
                    vnf_member_index, nsr_id) -> Alarm:
         """Saves alarm."""
         # TODO: Add uuid optional param and check if exists to handle updates (see self.save_credentials)
         db.connect()
-        with db.atomic():
-            alarm = Alarm()
-            alarm.uuid = str(uuid.uuid4())
-            alarm.name = name
-            alarm.threshold = threshold
-            alarm.operation = operation
-            alarm.severity = severity
-            alarm.statistic = statistic
-            alarm.monitoring_param = metric_name
-            alarm.vdur_name = vdur_name
-            alarm.vnf_member_index = vnf_member_index
-            alarm.nsr_id = nsr_id
-            alarm.save()
-        db.close()
-        return alarm
+        try:
+            with db.atomic():
+                alarm = Alarm()
+                alarm.uuid = str(uuid.uuid4())
+                alarm.name = name
+                alarm.threshold = threshold
+                alarm.operation = operation
+                alarm.severity = severity
+                alarm.statistic = statistic
+                alarm.monitoring_param = metric_name
+                alarm.vdur_name = vdur_name
+                alarm.vnf_member_index = vnf_member_index
+                alarm.nsr_id = nsr_id
+                alarm.save()
+                return alarm
+        finally:
+            db.close()
 
     def delete_alarm(self, alarm_uuid) -> None:
         db.connect()
@@ -140,7 +148,6 @@ class DatabaseManager:
 
     def get_vim_type(self, vim_account_id) -> str:
         """Get the vim type that is required by the message."""
-        vim_type = None
         credentials = self.get_credentials(vim_account_id)
         config = json.loads(credentials.config)
         if 'vim_type' in config:

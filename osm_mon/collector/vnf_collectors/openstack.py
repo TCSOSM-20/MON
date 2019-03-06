@@ -115,7 +115,14 @@ class OpenstackCollector(BaseVimCollector):
                 for param in vdu['monitoring-param']:
                     metric_name = param['nfvi-metric']
                     openstack_metric_name = METRIC_MAPPINGS[metric_name]
-                    resource_id = self._get_resource_uuid(nsr_id, vnf_member_index, vdur['name'])
+                    try:
+                        resource_id = self._get_resource_uuid(nsr_id, vnf_member_index, vdur['name'])
+                    except ValueError:
+                        log.warning(
+                            "Could not find resource_uuid for vdur %s, vnf_member_index %s, nsr_id %s. "
+                            "Was it recently deleted?".format(
+                                vdur['name'], vnf_member_index, nsr_id))
+                        continue
                     if self.backend == 'ceilometer':
                         measures = self.client.samples.list(meter_name=openstack_metric_name, limit=1, q=[
                             {'field': 'resource_id', 'op': 'eq', 'value': resource_id}])

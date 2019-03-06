@@ -24,6 +24,7 @@ import asyncio
 import logging
 import multiprocessing
 import time
+from enum import Enum
 
 import peewee
 import requests
@@ -39,7 +40,14 @@ from osm_mon.core.response import ResponseBuilder
 log = logging.getLogger(__name__)
 
 
+class AlarmStatus(Enum):
+    ALARM = 'alarm'
+    OK = 'ok'
+    INSUFFICIENT = 'insufficient-data'
+
+
 class Evaluator:
+
     def __init__(self, config: Config, loop=None):
         self.conf = config
         if not loop:
@@ -74,12 +82,18 @@ class Evaluator:
                     log.info("Metric value: %s", metric_value)
                     if alarm.operation.upper() == 'GT':
                         if metric_value > alarm.threshold:
-                            self.queue.put(alarm)
+                            self.queue.put((alarm, AlarmStatus.ALARM))
+                        else:
+                            self.queue.put((alarm, AlarmStatus.OK))
                     elif alarm.operation.upper() == 'LT':
                         if metric_value < alarm.threshold:
-                            self.queue.put(alarm)
+                            self.queue.put((alarm, AlarmStatus.ALARM))
+                        else:
+                            self.queue.put((alarm, AlarmStatus.OK))
                 else:
                     log.warning("No metric result for alarm %s", alarm.id)
+                    self.queue.put((alarm, AlarmStatus.INSUFFICIENT))
+
             else:
                 log.warning("Prometheus response is not success. Got status %s", json_response['status'])
         else:
@@ -155,20 +169,24 @@ class Evaluator:
 
         for process in processes:
             process.join(timeout=10)
-        triggered_alarms = []
+        alarms_tuples = []
         while not self.queue.empty():
-            triggered_alarms.append(self.queue.get())
-        for alarm in triggered_alarms:
+            alarms_tuples.append(self.queue.get())
+        for alarm, status in alarms_tuples:
             p = multiprocessing.Process(target=self.notify_alarm,
-                                        args=(alarm,))
+                                        args=(alarm, status))
             p.start()
 
-    def notify_alarm(self, alarm: Alarm):
+    def notify_alarm(self, alarm: Alarm, status: AlarmStatus):
         log.debug("notify_alarm")
+        resp_message = self._build_alarm_response(alarm, status)
+        log.info("Sent alarm notification: %s", resp_message)
+        self.loop.run_until_complete(self.msg_bus.aiowrite('alarm_response', 'notify_alarm', resp_message))
+
+    def _build_alarm_response(self, alarm: Alarm, status: AlarmStatus):
         response = ResponseBuilder()
         now = time.strftime("%d-%m-%Y") + " " + time.strftime("%X")
-        # Generate and send response
-        resp_message = response.generate_response(
+        return response.generate_response(
             'notify_alarm',
             alarm_id=alarm.uuid,
             vdu_name=alarm.vdur_name,
@@ -178,7 +196,5 @@ class Evaluator:
             operation=alarm.operation,
             threshold_value=alarm.threshold,
             sev=alarm.severity,
-            status='alarm',
+            status=status.value,
             date=now)
-        self.loop.run_until_complete(self.msg_bus.aiowrite('alarm_response', 'notify_alarm', resp_message))
-        log.info("Sent alarm notification: %s", resp_message)
