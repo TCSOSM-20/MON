@@ -23,10 +23,12 @@ from osm_mon.collector.metric import Metric
 
 
 class VnfMetric(Metric):
-    def __init__(self, nsr_id, vnf_member_index, vdur_name, name, value):
+    def __init__(self, nsr_id, vnf_member_index, vdur_name, name, value, extra_tags: dict = None):
         tags = {
             'ns_id': nsr_id,
             'vnf_member_index': vnf_member_index,
             'vdu_name': vdur_name
         }
+        if extra_tags:
+            tags.update(extra_tags)
         super().__init__(tags, name, value)

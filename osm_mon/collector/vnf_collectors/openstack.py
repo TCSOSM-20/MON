@@ -42,15 +42,18 @@ log = logging.getLogger(__name__)
 
 METRIC_MAPPINGS = {
     "average_memory_utilization": "memory.usage",
-    "disk_read_ops": "disk.read.requests",
-    "disk_write_ops": "disk.write.requests",
-    "disk_read_bytes": "disk.read.bytes",
-    "disk_write_bytes": "disk.write.bytes",
-    "packets_dropped": "interface.if_dropped",
-    "packets_received": "interface.if_packets",
-    "packets_sent": "interface.if_packets",
+    "disk_read_ops": "disk.read.requests.rate",
+    "disk_write_ops": "disk.write.requests.rate",
+    "disk_read_bytes": "disk.read.bytes.rate",
+    "disk_write_bytes": "disk.write.bytes.rate",
+    "packets_in_dropped": "network.outgoing.packets.drop",
+    "packets_out_dropped": "network.incoming.packets.drop",
+    "packets_received": "network.incoming.packets.rate",
+    "packets_sent": "network.outgoing.packets.rate",
     "cpu_utilization": "cpu_util",
 }
+
+INTERFACE_METRICS = ['packets_in_dropped', 'packets_out_dropped', 'packets_received', 'packets_sent']
 
 
 class OpenstackCollector(BaseVimCollector):
@@ -133,17 +136,39 @@ class OpenstackCollector(BaseVimCollector):
                     elif self.backend == 'gnocchi':
                         delta = 10 * self.granularity
                         start_date = datetime.datetime.now() - datetime.timedelta(seconds=delta)
-                        try:
-                            measures = self.client.metric.get_measures(openstack_metric_name,
-                                                                       start=start_date,
-                                                                       resource_id=resource_id,
-                                                                       granularity=self.granularity)
-                            if len(measures):
-                                metric = VnfMetric(nsr_id, vnf_member_index, vdur['name'], metric_name, measures[-1][2])
-                                metrics.append(metric)
-                        except gnocchiclient.exceptions.NotFound as e:
-                            log.debug("No metric found: %s", e)
-                            pass
+                        if metric_name in INTERFACE_METRICS:
+                            total_measure = 0.0
+                            interfaces = self.client.resource.search(resource_type='instance_network_interface',
+                                                                     query={'=': {'instance_id': resource_id}})
+                            for interface in interfaces:
+                                try:
+                                    measures = self.client.metric.get_measures(openstack_metric_name,
+                                                                               start=start_date,
+                                                                               resource_id=interface['id'],
+                                                                               granularity=self.granularity)
+                                    if len(measures):
+                                        total_measure += measures[-1][2]
+
+                                except gnocchiclient.exceptions.NotFound as e:
+                                    log.debug("No metric %s found for interface %s: %s", openstack_metric_name,
+                                              interface['id'], e)
+                            metric = VnfMetric(nsr_id, vnf_member_index, vdur['name'], metric_name,
+                                               total_measure)
+                            metrics.append(metric)
+                        else:
+                            try:
+                                measures = self.client.metric.get_measures(openstack_metric_name,
+                                                                           start=start_date,
+                                                                           resource_id=resource_id,
+                                                                           granularity=self.granularity)
+                                if len(measures):
+                                    metric = VnfMetric(nsr_id, vnf_member_index, vdur['name'], metric_name,
+                                                       measures[-1][2])
+                                    metrics.append(metric)
+                            except gnocchiclient.exceptions.NotFound as e:
+                                log.debug("No metric %s found for instance %s: %s", openstack_metric_name, resource_id,
+                                          e)
+
                     else:
                         raise Exception('Unknown metric backend: %s', self.backend)
         return metrics
