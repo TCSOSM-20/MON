@@ -25,16 +25,16 @@ import logging
 from typing import List
 
 import gnocchiclient.exceptions
-from gnocchiclient.v1 import client as gnocchi_client
 from ceilometerclient.v2 import client as ceilometer_client
+from gnocchiclient.v1 import client as gnocchi_client
 from keystoneauth1 import session
 from keystoneauth1.exceptions import EndpointNotFound
 from keystoneauth1.identity import v3
 
 from osm_mon.collector.metric import Metric
+from osm_mon.collector.utils import CollectorUtils
 from osm_mon.collector.vnf_collectors.base_vim import BaseVimCollector
 from osm_mon.collector.vnf_metric import VnfMetric
-from osm_mon.core.auth import AuthManager
 from osm_mon.core.common_db import CommonDbClient
 from osm_mon.core.config import Config
 
@@ -61,18 +61,17 @@ class OpenstackCollector(BaseVimCollector):
         super().__init__(config, vim_account_id)
         self.conf = config
         self.common_db = CommonDbClient(config)
-        self.auth_manager = AuthManager(config)
-        self.granularity = self._get_granularity(vim_account_id)
         self.backend = self._get_backend(vim_account_id)
         self.client = self._build_client(vim_account_id)
+        self.granularity = self._get_granularity(vim_account_id)
 
     def _get_resource_uuid(self, nsr_id, vnf_member_index, vdur_name) -> str:
         vdur = self.common_db.get_vdur(nsr_id, vnf_member_index, vdur_name)
         return vdur['vim-id']
 
     def _build_gnocchi_client(self, vim_account_id: str) -> gnocchi_client.Client:
-        creds = self.auth_manager.get_credentials(vim_account_id)
-        verify_ssl = self.auth_manager.is_verify_ssl(vim_account_id)
+        creds = CollectorUtils.get_credentials(vim_account_id)
+        verify_ssl = CollectorUtils.is_verify_ssl(creds)
         auth = v3.Password(auth_url=creds.url,
                            username=creds.user,
                            password=creds.password,
@@ -83,8 +82,8 @@ class OpenstackCollector(BaseVimCollector):
         return gnocchi_client.Client(session=sess)
 
     def _build_ceilometer_client(self, vim_account_id: str) -> ceilometer_client.Client:
-        creds = self.auth_manager.get_credentials(vim_account_id)
-        verify_ssl = self.auth_manager.is_verify_ssl(vim_account_id)
+        creds = CollectorUtils.get_credentials(vim_account_id)
+        verify_ssl = CollectorUtils.is_verify_ssl(creds)
         auth = v3.Password(auth_url=creds.url,
                            username=creds.user,
                            password=creds.password,
@@ -94,8 +93,8 @@ class OpenstackCollector(BaseVimCollector):
         sess = session.Session(auth=auth, verify=verify_ssl)
         return ceilometer_client.Client(session=sess)
 
-    def _get_granularity(self, vim_account_id: str):
-        creds = self.auth_manager.get_credentials(vim_account_id)
+    def _get_granularity(self, vim_account_id):
+        creds = CollectorUtils.get_credentials(vim_account_id)
         vim_config = json.loads(creds.config)
         if 'granularity' in vim_config:
             return int(vim_config['granularity'])
@@ -133,11 +132,11 @@ class OpenstackCollector(BaseVimCollector):
                             metric = VnfMetric(nsr_id, vnf_member_index, vdur['name'], metric_name,
                                                measures[0].counter_volume)
                             metrics.append(metric)
-                    elif self.backend == 'gnocchi':
+                    if self.backend == 'gnocchi':
                         delta = 10 * self.granularity
                         start_date = datetime.datetime.now() - datetime.timedelta(seconds=delta)
                         if metric_name in INTERFACE_METRICS:
-                            total_measure = 0.0
+                            total_measure = None
                             interfaces = self.client.resource.search(resource_type='instance_network_interface',
                                                                      query={'=': {'instance_id': resource_id}})
                             for interface in interfaces:
@@ -147,14 +146,17 @@ class OpenstackCollector(BaseVimCollector):
                                                                                resource_id=interface['id'],
                                                                                granularity=self.granularity)
                                     if measures:
+                                        if not total_measure:
+                                            total_measure = 0.0
                                         total_measure += measures[-1][2]
 
                                 except gnocchiclient.exceptions.NotFound as e:
                                     log.debug("No metric %s found for interface %s: %s", openstack_metric_name,
                                               interface['id'], e)
-                            metric = VnfMetric(nsr_id, vnf_member_index, vdur['name'], metric_name,
-                                               total_measure)
-                            metrics.append(metric)
+                            if total_measure:
+                                metric = VnfMetric(nsr_id, vnf_member_index, vdur['name'], metric_name,
+                                                   total_measure)
+                                metrics.append(metric)
                         else:
                             try:
                                 measures = self.client.metric.get_measures(openstack_metric_name,
@@ -170,7 +172,7 @@ class OpenstackCollector(BaseVimCollector):
                                           e)
 
                     else:
-                        raise Exception('Unknown metric backend: %s', self.backend)
+                        raise Exception('Unknown client class: %s', self.client)
         return metrics
 
     def _build_client(self, vim_account_id):

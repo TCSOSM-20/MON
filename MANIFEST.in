@@ -20,7 +20,7 @@
 # contact: prithiv.mohan@intel.com or adrian.hoban@intel.com.
 
 include requirements.txt
+include test-requirements.txt
 include README.rst
 recursive-include osm_mon *.py *.xml *.sh *.yaml
 recursive-include devops-stages *
-recursive-include test *.py

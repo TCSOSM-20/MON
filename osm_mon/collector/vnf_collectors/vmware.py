@@ -32,9 +32,9 @@ import six
 from pyvcloud.vcd.client import BasicLoginCredentials
 from pyvcloud.vcd.client import Client
 
+from osm_mon.collector.utils import CollectorUtils
 from osm_mon.collector.vnf_collectors.base_vim import BaseVimCollector
 from osm_mon.collector.vnf_metric import VnfMetric
-from osm_mon.core.auth import AuthManager
 from osm_mon.core.common_db import CommonDbClient
 from osm_mon.core.config import Config
 
@@ -67,7 +67,6 @@ class VMwareCollector(BaseVimCollector):
     def __init__(self, config: Config, vim_account_id: str):
         super().__init__(config, vim_account_id)
         self.common_db = CommonDbClient(config)
-        self.auth_manager = AuthManager(config)
         vim_account = self.get_vim_account(vim_account_id)
         self.vrops_site = vim_account['vrops_site']
         self.vrops_user = vim_account['vrops_user']
@@ -113,7 +112,7 @@ class VMwareCollector(BaseVimCollector):
            return - dict with vim account details
         """
         vim_account = {}
-        vim_account_info = self.auth_manager.get_credentials(vim_account_id)
+        vim_account_info = CollectorUtils.get_credentials(vim_account_id)
 
         vim_account['name'] = vim_account_info.name
         vim_account['vim_tenant_name'] = vim_account_info.tenant_name

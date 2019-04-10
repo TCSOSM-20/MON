@@ -23,21 +23,22 @@
 
 import json
 import logging
+import re
+import time
+import traceback
 
+import requests
+import six
 from keystoneauth1 import session
 from keystoneauth1.identity import v3
 from novaclient import client as nClient
-import re
-import requests
-import time
-import traceback
-import six
 
+from osm_mon.collector.utils import CollectorUtils
 from osm_mon.collector.vnf_collectors.base_vim import BaseVimCollector
 from osm_mon.collector.vnf_metric import VnfMetric
-from osm_mon.core.auth import AuthManager
 from osm_mon.core.common_db import CommonDbClient
 from osm_mon.core.config import Config
+from osm_mon.core.database import VimCredentialsRepository, VimCredentials
 
 log = logging.getLogger(__name__)
 
@@ -66,8 +67,7 @@ class VIOCollector(BaseVimCollector):
     def __init__(self, config: Config, vim_account_id: str):
         super().__init__(config, vim_account_id)
         self.common_db = CommonDbClient(config)
-        self.auth_manager = AuthManager(config)
-        vim_account_info = self.auth_manager.get_credentials(vim_account_id)
+        vim_account_info = CollectorUtils.get_credentials(vim_account_id)
         cfg = json.loads(vim_account_info.config)
         self.vrops_site = cfg['vrops_site']
         self.vrops_user = cfg['vrops_user']
@@ -75,8 +75,8 @@ class VIOCollector(BaseVimCollector):
         self.client = self.connect_client(vim_account_id)
 
     def connect_client(self, vim_account_id: str):
-        vim_account_details = self.auth_manager.get_credentials(vim_account_id)
-        verify_ssl = self.auth_manager.is_verify_ssl(vim_account_id)
+        vim_account_details = VimCredentialsRepository.get(VimCredentials.uuid == vim_account_id)
+        verify_ssl = CollectorUtils.is_verify_ssl(vim_account_details)
         auth = v3.Password(auth_url=vim_account_details.url,
                            username=vim_account_details.user,
                            password=vim_account_details.password,
@@ -166,7 +166,7 @@ class VIOCollector(BaseVimCollector):
                         begin_time = end_time - time_diff
 
                         api_url = "/suite-api/api/resources/{}/stats?statKey={}&begin={}&end={}".format(
-                                  resource_id, vrops_metric_name, str(begin_time), str(end_time))
+                            resource_id, vrops_metric_name, str(begin_time), str(end_time))
 
                         headers = {'Accept': 'application/json'}
 

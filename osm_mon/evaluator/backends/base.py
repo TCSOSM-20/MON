@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # Copyright 2018 Whitestack, LLC
 # *************************************************************
 
@@ -17,34 +15,16 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+
 # For those usages not covered by the Apache License, Version 2.0 please
 # contact: bdiaz@whitestack.com or glavado@whitestack.com
 ##
-import unittest
-from unittest import mock
-
 from osm_mon.core.config import Config
 
-from osm_mon.core.database import VimCredentials, DatabaseManager
 
+class BaseBackend:
+    def __init__(self, config: Config):
+        pass
 
-class DatabaseManagerTest(unittest.TestCase):
-    def setUp(self):
-        super().setUp()
-        self.config = Config()
-
-    @mock.patch.object(DatabaseManager, "get_credentials")
-    def test_get_vim_type(self, get_credentials):
-        mock_creds = VimCredentials()
-        mock_creds.id = 'test_id'
-        mock_creds.user = 'user'
-        mock_creds.url = 'url'
-        mock_creds.password = 'password'
-        mock_creds.tenant_name = 'tenant_name'
-        mock_creds.type = 'openstack'
-        mock_creds.config = '{}'
-
-        get_credentials.return_value = mock_creds
-        database_manager = DatabaseManager(self.config)
-        vim_type = database_manager.get_vim_type('test_id')
-        self.assertEqual(vim_type, 'openstack')
+    def get_metric_value(self, metric_name, nsr_id, vdur_name, vnf_member_index):
+        pass

@@ -1,8 +1,11 @@
-# Copyright 2018 Whitestack, LLC
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# Copyright 2017 Intel Research and Development Ireland Limited
 # *************************************************************
 
 # This file is part of OSM Monitoring module
-# All Rights Reserved to Whitestack, LLC
+# All Rights Reserved to Intel Corporation
 
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -17,42 +20,4 @@
 # under the License.
 
 # For those usages not covered by the Apache License, Version 2.0 please
-# contact: bdiaz@whitestack.com or glavado@whitestack.com
-##
-
-global:
-  loglevel: INFO
-  request_timeout: 10
-
-database:
-  driver: mongo
-  uri: mongodb://mongo:27017
-  name: osm
-  commonkey: changeme
-
-message:
-  driver: kafka
-  host: kafka
-  port: 9092
-  group_id: mon-consumer
-
-sql:
-  database_uri: sqlite:///mon_sqlite.db
-
-collector:
-  interval: 30
-
-evaluator:
-  interval: 30
-  backend: prometheus
-
-prometheus:
-  url: http://prometheus:9090
-
-vca:
-  host: localhost
-  secret: secret
-  user: admin
-
-openstack:
-  default_granularity: 300
+# contact: prithiv.mohan@intel.com or adrian.hoban@intel.com

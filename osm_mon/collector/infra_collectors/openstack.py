@@ -30,7 +30,7 @@ from novaclient import v2 as nova_client_v2
 
 from osm_mon.collector.infra_collectors.base_vim import BaseVimInfraCollector
 from osm_mon.collector.metric import Metric
-from osm_mon.core.auth import AuthManager
+from osm_mon.collector.utils import CollectorUtils
 from osm_mon.core.common_db import CommonDbClient
 from osm_mon.core.config import Config
 
@@ -40,7 +40,6 @@ log = logging.getLogger(__name__)
 class OpenstackInfraCollector(BaseVimInfraCollector):
     def __init__(self, config: Config, vim_account_id: str):
         super().__init__(config, vim_account_id)
-        self.auth_manager = AuthManager(config)
         self.keystone = self._build_keystone_client(vim_account_id)
         self.nova = self._build_nova_client(vim_account_id)
         self.vim_account_id = vim_account_id
@@ -91,9 +90,9 @@ class OpenstackInfraCollector(BaseVimInfraCollector):
         sess = self._get_session(vim_account_id)
         return nova_client.Client("2", session=sess)
 
-    def _get_session(self, vim_account_id):
-        creds = self.auth_manager.get_credentials(vim_account_id)
-        verify_ssl = self.auth_manager.is_verify_ssl(vim_account_id)
+    def _get_session(self, vim_account_id: str):
+        creds = CollectorUtils.get_credentials(vim_account_id)
+        verify_ssl = CollectorUtils.is_verify_ssl(creds)
         auth = v3.Password(auth_url=creds.url,
                            username=creds.user,
                            password=creds.password,

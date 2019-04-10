@@ -20,17 +20,17 @@
 # For those usages not covered by the Apache License, Version 2.0 please
 # contact: bdiaz@whitestack.com or glavado@whitestack.com
 ##
-"""A common KafkaConsumer for all MON plugins."""
+"""
+MON component in charge of CRUD operations for vim_accounts and alarms. It uses the message bus to communicate.
+"""
 import asyncio
 import json
 import logging
 
-from osm_mon.core.auth import AuthManager
-from osm_mon.core.common_db import CommonDbClient
 from osm_mon.core.config import Config
-from osm_mon.core.database import DatabaseManager
 from osm_mon.core.message_bus_client import MessageBusClient
 from osm_mon.core.response import ResponseBuilder
+from osm_mon.server.service import ServerService
 
 log = logging.getLogger(__name__)
 
@@ -42,11 +42,8 @@ class Server:
         if not loop:
             loop = asyncio.get_event_loop()
         self.loop = loop
-        self.auth_manager = AuthManager(config)
-        self.database_manager = DatabaseManager(config)
-        self.database_manager.create_tables()
-        self.common_db = CommonDbClient(config)
         self.msg_bus = MessageBusClient(config)
+        self.service = ServerService(config)
 
     def run(self):
         self.loop.run_until_complete(self.start())
@@ -63,21 +60,20 @@ class Server:
         try:
             if topic == "vim_account":
                 if key == "create" or key == "edit":
-                    values['vim_password'] = self.common_db.decrypt_vim_password(values['vim_password'],
-                                                                                 values['schema_version'],
-                                                                                 values['_id'])
-
-                    vim_config_encrypted = ("admin_password", "nsx_password", "vcenter_password")
-                    if 'config' in values:
-                        for key in values['config']:
-                            if key in vim_config_encrypted:
-                                values['config'][key] = self.common_db.decrypt_vim_password(values['config'][key],
-                                                                                            values['schema_version'],
-                                                                                            values['_id'])
-                    self.auth_manager.store_auth_credentials(values)
+                    if 'config' not in values:
+                        values['config'] = {}
+                    self.service.upsert_vim_account(values['_id'],
+                                                    values['name'],
+                                                    values['vim_type'],
+                                                    values['vim_url'],
+                                                    values['vim_user'],
+                                                    values['vim_password'],
+                                                    values['vim_tenant_name'],
+                                                    values['schema_version'],
+                                                    values['config'])
 
                 if key == "delete":
-                    self.auth_manager.delete_auth_credentials(values)
+                    self.service.delete_vim_account(values['_id'])
 
             elif topic == "alarm_request":
                 if key == "create_alarm_request":
@@ -85,7 +81,7 @@ class Server:
                     cor_id = alarm_details['correlation_id']
                     response_builder = ResponseBuilder()
                     try:
-                        alarm = self.database_manager.save_alarm(
+                        alarm = self.service.create_alarm(
                             alarm_details['alarm_name'],
                             alarm_details['threshold_value'],
                             alarm_details['operation'].lower(),
@@ -114,7 +110,7 @@ class Server:
                     response_builder = ResponseBuilder()
                     cor_id = alarm_details['correlation_id']
                     try:
-                        self.database_manager.delete_alarm(alarm_uuid)
+                        self.service.delete_alarm(alarm_uuid)
                         response = response_builder.generate_response('delete_alarm_response',
                                                                       cor_id=cor_id,
                                                                       status=True,
