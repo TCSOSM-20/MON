@@ -123,13 +123,13 @@ class OpenstackCollector(BaseVimCollector):
                     except ValueError:
                         log.warning(
                             "Could not find resource_uuid for vdur %s, vnf_member_index %s, nsr_id %s. "
-                            "Was it recently deleted?".format(
-                                vdur['name'], vnf_member_index, nsr_id))
+                            "Was it recently deleted?",
+                            vdur['name'], vnf_member_index, nsr_id)
                         continue
                     if self.backend == 'ceilometer':
                         measures = self.client.samples.list(meter_name=openstack_metric_name, limit=1, q=[
                             {'field': 'resource_id', 'op': 'eq', 'value': resource_id}])
-                        if len(measures):
+                        if measures:
                             metric = VnfMetric(nsr_id, vnf_member_index, vdur['name'], metric_name,
                                                measures[0].counter_volume)
                             metrics.append(metric)
@@ -146,7 +146,7 @@ class OpenstackCollector(BaseVimCollector):
                                                                                start=start_date,
                                                                                resource_id=interface['id'],
                                                                                granularity=self.granularity)
-                                    if len(measures):
+                                    if measures:
                                         total_measure += measures[-1][2]
 
                                 except gnocchiclient.exceptions.NotFound as e:
@@ -161,7 +161,7 @@ class OpenstackCollector(BaseVimCollector):
                                                                            start=start_date,
                                                                            resource_id=resource_id,
                                                                            granularity=self.granularity)
-                                if len(measures):
+                                if measures:
                                     metric = VnfMetric(nsr_id, vnf_member_index, vdur['name'], metric_name,
                                                        measures[-1][2])
                                     metrics.append(metric)

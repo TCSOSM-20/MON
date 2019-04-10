@@ -77,7 +77,7 @@ class Evaluator:
             json_response = r.json()
             if json_response['status'] == 'success':
                 result = json_response['data']['result']
-                if len(result):
+                if result:
                     metric_value = float(result[0]['value'][1])
                     log.info("Metric value: %s", metric_value)
                     if alarm.operation.upper() == 'GT':

@@ -65,8 +65,8 @@ METRIC_MAPPINGS = {
 class VIOCollector(BaseVimCollector):
     def __init__(self, config: Config, vim_account_id: str):
         super().__init__(config, vim_account_id)
-        self.common_db = CommonDbClient()
-        self.auth_manager = AuthManager()
+        self.common_db = CommonDbClient(config)
+        self.auth_manager = AuthManager(config)
         vim_account_info = self.auth_manager.get_credentials(vim_account_id)
         cfg = json.loads(vim_account_info.config)
         self.vrops_site = cfg['vrops_site']

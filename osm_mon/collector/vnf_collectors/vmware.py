@@ -62,9 +62,6 @@ METRIC_MAPPINGS = {
     "packets_sent": "net:Aggregate of all instances|packetsTxPerSec",
 }
 
-# Disable warnings from self-signed certificates.
-requests.packages.urllib3.disable_warnings()
-
 
 class VMwareCollector(BaseVimCollector):
     def __init__(self, config: Config, vim_account_id: str):
