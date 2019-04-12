@@ -55,15 +55,17 @@ class EvaluatorService:
 
     def _get_metric_value(self,
                           nsr_id: str,
-                          vnf_member_index: int,
+                          vnf_member_index: str,
                           vdur_name: str,
                           metric_name: str):
-        return BACKENDS[self.conf.get('evaluator', 'backend')]().get_metric_value(metric_name, nsr_id, vdur_name,
-                                                                                  vnf_member_index)
+        return BACKENDS[self.conf.get('evaluator', 'backend')](self.conf).get_metric_value(metric_name,
+                                                                                           nsr_id,
+                                                                                           vdur_name,
+                                                                                           vnf_member_index)
 
     def _evaluate_metric(self,
                          nsr_id: str,
-                         vnf_member_index: int,
+                         vnf_member_index: str,
                          vdur_name: str,
                          metric_name: str,
                          alarm: Alarm):
