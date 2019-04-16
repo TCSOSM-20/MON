@@ -53,8 +53,6 @@ setup(
     install_requires=[
         "aiokafka==0.4.*",
         "requests==2.18.*",
-        "jsmin==2.2.*",
-        "jsonschema==2.6.*",
         "python-keystoneclient==3.15.*",
         "six==1.11.*",
         "peewee==3.8.*",
@@ -66,6 +64,7 @@ setup(
         "peewee-migrate==1.1.*",
         "python-novaclient==12.0.*",
         "pymysql==0.9.*",
+        "python-neutronclient==5.1.*",
         "osm-common",
         "n2vc"
     ],
@@ -79,7 +78,8 @@ setup(
         ]
     },
     dependency_links=[
-        'git+https://osm.etsi.org/gerrit/osm/common.git#egg=osm-common'
+        'git+https://osm.etsi.org/gerrit/osm/common.git#egg=osm-common@v5.0',
+        'git+https://osm.etsi.org/gerrit/osm/common.git#egg=n2vc@v5.0'
     ],
     setup_requires=['setuptools-version-command']
 )

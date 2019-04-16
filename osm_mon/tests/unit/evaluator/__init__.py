@@ -1,11 +1,8 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-# Copyright 2017 Intel Research and Development Ireland Limited
+# Copyright 2018 Whitestack, LLC
 # *************************************************************
 
 # This file is part of OSM Monitoring module
-# All Rights Reserved to Intel Corporation
+# All Rights Reserved to Whitestack, LLC
 
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -20,4 +17,5 @@
 # under the License.
 
 # For those usages not covered by the Apache License, Version 2.0 please
-# contact: prithiv.mohan@intel.com or adrian.hoban@intel.com
+# contact: bdiaz@whitestack.com or glavado@whitestack.com
+##
