@@ -4,6 +4,7 @@ from typing import List
 
 from osm_mon.collector.infra_collectors.onos import OnosInfraCollector
 from osm_mon.collector.infra_collectors.openstack import OpenstackInfraCollector
+from osm_mon.collector.infra_collectors.vmware import VMwareInfraCollector
 from osm_mon.collector.metric import Metric
 from osm_mon.collector.utils import CollectorUtils
 from osm_mon.collector.vnf_collectors.juju import VCACollector
@@ -21,7 +22,8 @@ VIM_COLLECTORS = {
     "vio": VIOCollector
 }
 VIM_INFRA_COLLECTORS = {
-    "openstack": OpenstackInfraCollector
+    "openstack": OpenstackInfraCollector,
+    "vmware": VMwareInfraCollector
 }
 SDN_INFRA_COLLECTORS = {
     "onos": OnosInfraCollector
