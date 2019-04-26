@@ -31,27 +31,81 @@ Components
 
 MON module has the following components:
 
- - MON Central: Handles vim accounts registration and alarms CRUD operations, through messages in the Kafka bus.
- - MON Collector: Collects metrics from VIMs and VNFs and then exports them to a TSDB. It uses a plugin model both for collectors and for backends.
- - MON Evaluator: Evaluates alarms and sends notifications through the Kafka bus when they trigger.
+* MON Central: Handles vim accounts registration and alarms CRUD operations, through messages in the Kafka bus.
+* MON Collector: Collects metrics from VIMs and VNFs and then exports them to a TSDB. It uses a plugin model both for collectors and for backends.
+* MON Evaluator: Evaluates alarms and sends notifications through the Kafka bus when they trigger.
 
 
 Supported Collector Plugins
 ***************************
 
- - OpenStack: Requires Gnocchi to be enabled.
- - VROPS
- - AWS: TBD
+* OpenStack: Support for Gnocchi and legacy Ceilometer telemetry stacks.
+* VROPS: Support for VIO and VCD.
+* AWS: TBD
+
+Configuration
+*************
+
+Configuration is handled by the file [mon.yaml] (osm_mon/core/mon.yaml). You can pass a personalized configuration file
+through the `--config-file` flag.
+
+Example:
+
+    osm-mon-server --config-file your-config.yaml
+
+Configuration variables can also be overridden through environment variables by following the convention:
+OSMMON_<SECTION>_<VARIABLE>=<VALUE>
+
+Example:
+
+    OSMMON_GLOBAL_LOGLEVEL=DEBUG
+
+OSM NFVI Metrics
+****************
+
+The supported OSM NFVI metrics are the following:
+
+* average_memory_utilization
+* disk_read_ops
+* disk_write_ops
+* disk_read_bytes
+* disk_write_bytes
+* packets_in_dropped
+* packets_out_dropped
+* packets_received
+* packets_sent
+* cpu_utilization
+
+Development
+***********
+
+The following is a reference for making changes to the code and testing them in a running OSM deployment.
+
+::
+
+    git clone https://osm.etsi.org/gerrit/osm/MON.git
+    cd MON
+    # Make your changes here
+    # Build the image
+    docker build -t opensourcemano/mon:develop -f docker/Dockerfile .
+    # Deploy that image in a running OSM deployment
+    docker service update --force --image opensourcemano/mon:develop osm_mon
+    # Change a specific env variable
+    docker service update --force --env-add VARIABLE_NAME=new_value osm_mon
+    # View logs
+    docker logs $(docker ps -qf name=osm_mon.1)
+
 
 Developers
 **********
 
-  - Benjamín Díaz, Whitestack, Argentina
+* Benjamín Díaz <bdiaz@whitestack.com>, Whitestack, Argentina
+* Prakash Kasar <pkasar@vmware.com>, VMWare
 
 Maintainers
 ***********
 
- - Gianpietro Lavado, Whitestack, Peru
+* Benjamín Díaz, Whitestack, Argentina
 
 Contributions
 *************
