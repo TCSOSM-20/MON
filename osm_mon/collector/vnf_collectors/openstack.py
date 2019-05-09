@@ -113,10 +113,14 @@ class OpenstackCollector(BaseVimCollector):
                             "Was it recently deleted?",
                             vdur['name'], vnf_member_index, nsr_id)
                         continue
-                    value = self.backend.collect_metric(metric_type, openstack_metric_name, resource_id, interface_name)
-                    if value is not None:
-                        metric = VnfMetric(nsr_id, vnf_member_index, vdur['name'], metric_name, value)
-                        metrics.append(metric)
+                    try:
+                        value = self.backend.collect_metric(metric_type, openstack_metric_name, resource_id,
+                                                            interface_name)
+                        if value is not None:
+                            metric = VnfMetric(nsr_id, vnf_member_index, vdur['name'], metric_name, value)
+                            metrics.append(metric)
+                    except Exception:
+                        log.exception("Error collecting metric %s for vdu %s" % (metric_name, vdur['name']))
         return metrics
 
     def _get_backend(self, vim_account_id: str):
