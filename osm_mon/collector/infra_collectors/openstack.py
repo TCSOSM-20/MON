@@ -27,4 +27,4 @@ from osm_mon.core.config import Config
 
 class OpenstackInfraCollector(BaseOpenStackInfraCollector):
     def __init__(self, config: Config, vim_account_id: str):
-        pass
+        super(OpenstackInfraCollector, self).__init__(config, vim_account_id)

@@ -28,4 +28,4 @@ from osm_mon.core.config import Config
 
 class VIOInfraCollector(BaseOpenStackInfraCollector):
     def __init__(self, config: Config, vim_account_id: str):
-        pass
+        super(VIOInfraCollector, self).__init__(config, vim_account_id)
