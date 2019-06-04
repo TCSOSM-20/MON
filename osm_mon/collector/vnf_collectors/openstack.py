@@ -29,6 +29,7 @@ import gnocchiclient.exceptions
 from ceilometerclient.v2 import client as ceilometer_client
 from gnocchiclient.v1 import client as gnocchi_client
 from keystoneauth1 import session
+from keystoneauth1.exceptions.catalog import EndpointNotFound
 from keystoneauth1.identity import v3
 from keystoneclient.v3 import client as keystone_client
 from neutronclient.v2_0 import client as neutron_client
@@ -127,12 +128,15 @@ class OpenstackCollector(BaseVimCollector):
         return metrics
 
     def _get_backend(self, vim_account_id: str):
-        keystone = self._build_keystone_client(vim_account_id)
-        if keystone.services.list('gnocchi'):
+        try:
+            ceilometer = CeilometerBackend(vim_account_id)
+            ceilometer.client.capabilities.get()
+            return ceilometer
+        except EndpointNotFound:
             granularity = self._get_granularity(vim_account_id)
-            return GnocchiBackend(vim_account_id, granularity)
-        elif keystone.services.list('ceilometer'):
-            return CeilometerBackend(vim_account_id)
+            gnocchi = GnocchiBackend(vim_account_id, granularity)
+            gnocchi.client.status.get()
+            return gnocchi
 
     def _get_metric_type(self, metric_name: str, interface_name: str) -> MetricType:
         if metric_name not in INTERFACE_METRICS:
