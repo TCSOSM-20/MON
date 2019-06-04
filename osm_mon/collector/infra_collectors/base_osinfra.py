@@ -76,7 +76,7 @@ class BaseOpenStackInfraCollector(BaseVimInfraCollector):
 
     def is_vim_ok(self) -> bool:
         try:
-            self.keystone.projects.list()
+            self.nova.servers.list()
             return True
         except Exception:
             log.exception("VIM status is not OK!")
