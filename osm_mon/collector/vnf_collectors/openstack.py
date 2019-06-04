@@ -117,7 +117,10 @@ class OpenstackCollector(BaseVimCollector):
                         value = self.backend.collect_metric(metric_type, openstack_metric_name, resource_id,
                                                             interface_name)
                         if value is not None:
-                            metric = VnfMetric(nsr_id, vnf_member_index, vdur['name'], metric_name, value)
+                            tags = {}
+                            if interface_name:
+                                tags['interface'] = interface_name
+                            metric = VnfMetric(nsr_id, vnf_member_index, vdur['name'], metric_name, value, tags)
                             metrics.append(metric)
                     except Exception:
                         log.exception("Error collecting metric %s for vdu %s" % (metric_name, vdur['name']))
