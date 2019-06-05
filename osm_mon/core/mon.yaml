@@ -53,6 +53,3 @@ vca:
   host: localhost
   secret: secret
   user: admin
-
-openstack:
-  default_granularity: 300

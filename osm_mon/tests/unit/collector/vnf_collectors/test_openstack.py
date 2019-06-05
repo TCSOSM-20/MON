@@ -49,11 +49,12 @@ class CollectorTest(TestCase):
                                                                                        '+00:00')), 60.0, 0.0333070363)]
         build_gnocchi_client.return_value = mock_gnocchi_client
 
-        backend = GnocchiBackend('test_uuid', 60)
+        backend = GnocchiBackend('test_uuid')
         value = backend._collect_instance_metric('cpu_utilization', 'test_resource_id')
         self.assertEqual(value, 0.0333070363)
-        mock_gnocchi_client.metric.get_measures.assert_called_once_with('cpu_utilization', granularity=60,
-                                                                        resource_id='test_resource_id', start=mock.ANY)
+        mock_gnocchi_client.metric.get_measures.assert_called_once_with('cpu_utilization',
+                                                                        limit=1,
+                                                                        resource_id='test_resource_id')
 
     @mock.patch.object(GnocchiBackend, '_build_neutron_client')
     @mock.patch.object(GnocchiBackend, '_build_gnocchi_client')
@@ -86,11 +87,11 @@ class CollectorTest(TestCase):
         build_gnocchi_client.return_value = mock_gnocchi_client
         build_neutron_client.return_value = mock_neutron_client
 
-        backend = GnocchiBackend('test_uuid', 60)
+        backend = GnocchiBackend('test_uuid')
         value = backend._collect_interface_one_metric('packets_received', 'test_resource_id', 'eth0')
         self.assertEqual(value, 0.0333070363)
-        mock_gnocchi_client.metric.get_measures.assert_called_once_with('packets_received', granularity=60,
-                                                                        resource_id='test_id', start=mock.ANY)
+        mock_gnocchi_client.metric.get_measures.assert_called_once_with('packets_received', resource_id='test_id',
+                                                                        limit=1)
         mock_neutron_client.list_ports.assert_called_once_with(device_id='test_resource_id', name='eth0')
 
     @mock.patch.object(GnocchiBackend, '_build_neutron_client')
@@ -109,10 +110,10 @@ class CollectorTest(TestCase):
 
         build_gnocchi_client.return_value = mock_gnocchi_client
 
-        backend = GnocchiBackend('test_uuid', 60)
+        backend = GnocchiBackend('test_uuid')
         value = backend._collect_interface_all_metric('packets_received', 'test_resource_id')
         self.assertEqual(value, 0.0666140726)
-        mock_gnocchi_client.metric.get_measures.assert_any_call('packets_received', granularity=60,
-                                                                resource_id='test_id_1', start=mock.ANY)
-        mock_gnocchi_client.metric.get_measures.assert_any_call('packets_received', granularity=60,
-                                                                resource_id='test_id_2', start=mock.ANY)
+        mock_gnocchi_client.metric.get_measures.assert_any_call('packets_received', resource_id='test_id_1',
+                                                                limit=1)
+        mock_gnocchi_client.metric.get_measures.assert_any_call('packets_received', resource_id='test_id_2',
+                                                                limit=1)

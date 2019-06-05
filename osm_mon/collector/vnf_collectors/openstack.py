@@ -19,8 +19,6 @@
 # For those usages not covered by the Apache License, Version 2.0 please
 # contact: bdiaz@whitestack.com or glavado@whitestack.com
 ##
-import datetime
-import json
 import logging
 from enum import Enum
 from typing import List
@@ -80,14 +78,6 @@ class OpenstackCollector(BaseVimCollector):
         vdur = self.common_db.get_vdur(nsr_id, vnf_member_index, vdur_name)
         return vdur['vim-id']
 
-    def _get_granularity(self, vim_account_id: str):
-        creds = CollectorUtils.get_credentials(vim_account_id)
-        vim_config = json.loads(creds.config)
-        if 'granularity' in vim_config:
-            return int(vim_config['granularity'])
-        else:
-            return int(self.conf.get('openstack', 'default_granularity'))
-
     def collect(self, vnfr: dict) -> List[Metric]:
         nsr_id = vnfr['nsr-id-ref']
         vnf_member_index = vnfr['member-vnf-index-ref']
@@ -133,8 +123,7 @@ class OpenstackCollector(BaseVimCollector):
             ceilometer.client.capabilities.get()
             return ceilometer
         except EndpointNotFound:
-            granularity = self._get_granularity(vim_account_id)
-            gnocchi = GnocchiBackend(vim_account_id, granularity)
+            gnocchi = GnocchiBackend(vim_account_id)
             gnocchi.client.status.get()
             return gnocchi
 
@@ -166,10 +155,9 @@ class OpenstackBackend:
 
 class GnocchiBackend(OpenstackBackend):
 
-    def __init__(self, vim_account_id: str, granularity: int):
+    def __init__(self, vim_account_id: str):
         self.client = self._build_gnocchi_client(vim_account_id)
         self.neutron = self._build_neutron_client(vim_account_id)
-        self.granularity = granularity
 
     def _build_gnocchi_client(self, vim_account_id: str) -> gnocchi_client.Client:
         sess = OpenstackBackend.get_session(vim_account_id)
@@ -193,8 +181,6 @@ class GnocchiBackend(OpenstackBackend):
             raise Exception('Unknown metric type %s' % metric_type.value)
 
     def _collect_interface_one_metric(self, metric_name, resource_id, interface_name):
-        delta = 10 * self.granularity
-        start_date = datetime.datetime.now() - datetime.timedelta(seconds=delta)
         ports = self.neutron.list_ports(name=interface_name, device_id=resource_id)
         if not ports or not ports['ports']:
             raise Exception(
@@ -205,23 +191,19 @@ class GnocchiBackend(OpenstackBackend):
         interfaces = self.client.resource.search(resource_type='instance_network_interface',
                                                  query={'=': {'name': tap_name}})
         measures = self.client.metric.get_measures(metric_name,
-                                                   start=start_date,
                                                    resource_id=interfaces[0]['id'],
-                                                   granularity=self.granularity)
+                                                   limit=1)
         return measures[-1][2] if measures else None
 
     def _collect_interface_all_metric(self, openstack_metric_name, resource_id):
-        delta = 10 * self.granularity
-        start_date = datetime.datetime.now() - datetime.timedelta(seconds=delta)
         total_measure = None
         interfaces = self.client.resource.search(resource_type='instance_network_interface',
                                                  query={'=': {'instance_id': resource_id}})
         for interface in interfaces:
             try:
                 measures = self.client.metric.get_measures(openstack_metric_name,
-                                                           start=start_date,
                                                            resource_id=interface['id'],
-                                                           granularity=self.granularity)
+                                                           limit=1)
                 if measures:
                     if not total_measure:
                         total_measure = 0.0
@@ -233,14 +215,11 @@ class GnocchiBackend(OpenstackBackend):
         return total_measure
 
     def _collect_instance_metric(self, openstack_metric_name, resource_id):
-        delta = 10 * self.granularity
-        start_date = datetime.datetime.now() - datetime.timedelta(seconds=delta)
         value = None
         try:
             measures = self.client.metric.get_measures(openstack_metric_name,
-                                                       start=start_date,
                                                        resource_id=resource_id,
-                                                       granularity=self.granularity)
+                                                       limit=1)
             if measures:
                 value = measures[-1][2]
         except gnocchiclient.exceptions.NotFound as e:
