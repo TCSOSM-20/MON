@@ -57,8 +57,10 @@ class VCACollector(BaseCollector):
             )
             if 'vdu-configuration' in vdu and 'metrics' in vdu['vdu-configuration']:
                 try:
-                    vca_deployment_info = self.get_vca_deployment_info(nsr_id, vnf_member_index, vdur['name'])
-                except VcaDeploymentInfoNotFound:
+                    vca_deployment_info = self.get_vca_deployment_info(nsr_id, vnf_member_index, vdur['vdu-id-ref'],
+                                                                       vdur['count-index'])
+                except VcaDeploymentInfoNotFound as e:
+                    log.warning(repr(e))
                     continue
                 measures = self.loop.run_until_complete(self.n2vc.GetMetrics(vca_deployment_info['model'],
                                                                              vca_deployment_info['application']))
@@ -71,8 +73,9 @@ class VCACollector(BaseCollector):
                         metrics.append(metric)
         if 'vnf-configuration' in vnfd and 'metrics' in vnfd['vnf-configuration']:
             try:
-                vca_deployment_info = self.get_vca_deployment_info(nsr_id, vnf_member_index, None)
-            except VcaDeploymentInfoNotFound:
+                vca_deployment_info = self.get_vca_deployment_info(nsr_id, vnf_member_index)
+            except VcaDeploymentInfoNotFound as e:
+                log.warning(repr(e))
                 return metrics
             measures = self.loop.run_until_complete(self.n2vc.GetMetrics(vca_deployment_info['model'],
                                                                          vca_deployment_info['application']))
@@ -84,11 +87,20 @@ class VCACollector(BaseCollector):
                     metrics.append(metric)
         return metrics
 
-    def get_vca_deployment_info(self, nsr_id, vnf_member_index, vdur_name):
+    def get_vca_deployment_info(self, nsr_id, vnf_member_index, vdu_id=None, vdu_count=0):
         nsr = self.common_db.get_nsr(nsr_id)
         for vca_deployment in nsr["_admin"]["deployed"]["VCA"]:
             if vca_deployment:
-                if vca_deployment['member-vnf-index'] == vnf_member_index and vca_deployment['vdu_name'] == vdur_name:
-                    return vca_deployment
-        raise VcaDeploymentInfoNotFound("VCA deployment info for nsr_id {}, index {} and vdur_name {} not found."
-                                        .format(nsr_id, vnf_member_index, vdur_name))
+                if vdu_id is None:
+                    if vca_deployment['member-vnf-index'] == vnf_member_index and vca_deployment['vdu_id'] is None:
+                        return vca_deployment
+                else:
+                    if vca_deployment['member-vnf-index'] == vnf_member_index and \
+                            vca_deployment['vdu_id'] == vdu_id and vca_deployment['vdu_count_index'] == vdu_count:
+                        return vca_deployment
+        raise VcaDeploymentInfoNotFound(
+            "VCA deployment info for nsr_id {}, index {}, vdu_id {} and vdu_count_index {} not found.".format(
+                nsr_id,
+                vnf_member_index,
+                vdu_id,
+                vdu_count))
