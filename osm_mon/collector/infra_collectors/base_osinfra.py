@@ -55,6 +55,9 @@ class BaseOpenStackInfraCollector(BaseVimInfraCollector):
             nsr_id = vnfr['nsr-id-ref']
             vnf_member_index = vnfr['member-vnf-index-ref']
             for vdur in vnfr['vdur']:
+                if 'vim-id' not in vdur:
+                    log.debug("Field vim-id is not present in vdur")
+                    continue
                 resource_uuid = vdur['vim-id']
                 tags = {
                     'vim_account_id': self.vim_account_id,
@@ -67,8 +70,8 @@ class BaseOpenStackInfraCollector(BaseVimInfraCollector):
                     vm = self.nova.servers.get(resource_uuid)
                     vm_status = (1 if vm.status == 'ACTIVE' else 0)
                     vm_status_metric = Metric(tags, 'vm_status', vm_status)
-                except Exception:
-                    log.exception("VM status is not OK!")
+                except Exception as e:
+                    log.warning("VM status is not OK: %s" % e)
                     vm_status_metric = Metric(tags, 'vm_status', 0)
                 metrics.append(vm_status_metric)
 
@@ -78,8 +81,8 @@ class BaseOpenStackInfraCollector(BaseVimInfraCollector):
         try:
             self.nova.servers.list()
             return True
-        except Exception:
-            log.exception("VIM status is not OK!")
+        except Exception as e:
+            log.warning("VIM status is not OK: %s" % e)
             return False
 
     def _build_keystone_client(self, vim_account_id) -> keystone_client.Client:
