@@ -32,5 +32,5 @@ python-ceilometerclient==2.9.*
 peewee-migrate==1.1.*
 python-novaclient==12.0.*
 python-neutronclient==5.1.*
-git+https://osm.etsi.org/gerrit/osm/common.git@v5.0#egg=osm-common
-git+https://osm.etsi.org/gerrit/osm/N2VC.git@v5.0#egg=n2vc
+git+https://osm.etsi.org/gerrit/osm/common.git#egg=osm-common
+git+https://osm.etsi.org/gerrit/osm/N2VC.git#egg=n2vc
