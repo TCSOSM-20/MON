@@ -40,7 +40,7 @@ from osm_mon.core.config import Config
 
 log = logging.getLogger(__name__)
 
-API_VERSION = '5.9'
+API_VERSION = '27.0'
 
 PERIOD_MSEC = {'HR': 3600000,
                'DAY': 86400000,

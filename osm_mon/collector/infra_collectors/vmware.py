@@ -37,7 +37,7 @@ import requests
 import json
 
 log = logging.getLogger(__name__)
-API_VERSION = '30.0'
+API_VERSION = '27.0'
 
 
 class VMwareInfraCollector(BaseVimInfraCollector):
