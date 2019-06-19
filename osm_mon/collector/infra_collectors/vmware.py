@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ##
-# Copyright 2016-2017 VMware Inc.
+# Copyright 2016-2019 VMware Inc.
 # This file is part of ETSI OSM
 # All Rights Reserved.
 #
@@ -41,6 +41,7 @@ API_VERSION = '27.0'
 
 
 class VMwareInfraCollector(BaseVimInfraCollector):
+
     def __init__(self, config: Config, vim_account_id: str):
         super().__init__(config, vim_account_id)
         self.vim_account_id = vim_account_id
@@ -70,6 +71,7 @@ class VMwareInfraCollector(BaseVimInfraCollector):
             admin_passwd = self.admin_password
             org = 'System'
             client = Client(host, verify_ssl_certs=False)
+            client.set_highest_supported_version()
             client.set_credentials(BasicLoginCredentials(admin_user, org,
                                                          admin_passwd))
             return client

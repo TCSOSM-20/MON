@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ##
-# Copyright 2016-2017 VMware Inc.
+# Copyright 2016-2019 VMware Inc.
 # This file is part of ETSI OSM
 # All Rights Reserved.
 #
@@ -94,6 +94,7 @@ class VMwareCollector(BaseVimCollector):
             admin_passwd = self.admin_password
             org = 'System'
             client = Client(host, verify_ssl_certs=False)
+            client.set_highest_supported_version()
             client.set_credentials(BasicLoginCredentials(admin_user, org,
                                                          admin_passwd))
             return client
