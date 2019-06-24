@@ -1,0 +1,52 @@
+{
+	"_admin": {
+		"created": 1561569715.5365124,
+		"modified": 1561569715.5365124,
+		"projects_read": [
+			"admin"
+		],
+		"projects_write": [
+			"admin"
+		]
+	},
+	"_id": "c222366b-4e67-47e8-a3a5-d602ef9f953f",
+	"additionalParamsForVnf": null,
+	"connection-point": [
+		{
+			"connection-point-id": null,
+			"id": null,
+			"name": "eth0"
+		}
+	],
+	"created-time": 1561569715.5344007,
+	"id": "c222366b-4e67-47e8-a3a5-d602ef9f953f",
+	"ip-address": "172.21.6.212",
+	"member-vnf-index-ref": "1",
+	"nsr-id-ref": "66300531-3fb2-43e2-a988-51a1afd9a8f2",
+	"vdur": [
+		{
+			"_id": "ddb46f3c-d586-4a8e-80c3-87a74d0a3b37",
+			"count-index": 0,
+			"interfaces": [
+				{
+					"ip-address": "172.21.6.212",
+					"mac-address": "00:50:56:03:01:79",
+					"mgmt-vnf": true,
+					"name": "eth0",
+					"ns-vld-id": "cirros_nsd_vld1"
+				}
+			],
+			"internal-connection-point": [
+			],
+			"ip-address": "172.21.6.212",
+			"name": "mb-cirros-1-cirros_vnfd-VM-1",
+			"status": "ACTIVE",
+			"status-detailed": "ACTIVE",
+			"vdu-id-ref": "cirros_vnfd-VM",
+			"vim-id": "962e29e7-e0b0-4253-b3ef-88df7971f12e"
+		}
+	],
+	"vim-account-id": "43d176fd-dc6d-4fb0-acf3-faf03b1d2589",
+	"vnfd-id": "9d116df6-6fa7-4a5b-b284-a67f554c1261",
+	"vnfd-ref": "cirros_vdu_alarm_vnf"
+}
