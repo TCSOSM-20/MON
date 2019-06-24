@@ -71,7 +71,7 @@ class EvaluatorService:
                          alarm: Alarm):
         log.debug("_evaluate_metric")
         metric_value = self._get_metric_value(nsr_id, vnf_member_index, vdur_name, metric_name)
-        if not metric_value:
+        if metric_value is None:
             log.warning("No metric result for alarm %s", alarm.id)
             self.queue.put((alarm, AlarmStatus.INSUFFICIENT))
         else:
