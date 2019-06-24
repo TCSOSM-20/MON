@@ -1,0 +1,251 @@
+{
+	"values": [
+		{
+			"resourceId": "a761f4ae-40a3-4696-ae37-ee447ed421c3",
+			"stat-list": {
+				"stat": [
+					{
+						"data": [
+							0.0,
+							0.0,
+							0.0,
+							0.0
+						],
+						"intervalUnit": {
+							"quantifier": 1
+						},
+						"statKey": {
+							"key": "virtualDisk:aggregate of all instances|totalReadLatency_average"
+						},
+						"timestamps": [
+							1561744712552,
+							1561744772549,
+							1561744832548,
+							1561744892557
+						]
+					},
+					{
+						"data": [
+							1.1373332738876343,
+							1.1440000534057617,
+							1.1239999532699585,
+							100.0
+						],
+						"intervalUnit": {
+							"quantifier": 1
+						},
+						"statKey": {
+							"key": "cpu|usage_average"
+						},
+						"timestamps": [
+							1561744712552,
+							1561744772549,
+							1561744832548,
+							1561744892557
+						]
+					},
+					{
+						"data": [
+							6.0,
+							6.066666603088379,
+							6.133333206176758,
+							6.066666603088379
+						],
+						"intervalUnit": {
+							"quantifier": 1
+						},
+						"statKey": {
+							"key": "virtualDisk:aggregate of all instances|numberWriteAveraged_average"
+						},
+						"timestamps": [
+							1561744712552,
+							1561744772549,
+							1561744832548,
+							1561744892557
+						]
+					},
+					{
+						"data": [
+							0.0,
+							0.0,
+							0.0,
+							0.0
+						],
+						"intervalUnit": {
+							"quantifier": 1
+						},
+						"statKey": {
+							"key": "virtualDisk:aggregate of all instances|numberReadAveraged_average"
+						},
+						"timestamps": [
+							1561744712552,
+							1561744772549,
+							1561744832548,
+							1561744892557
+						]
+					},
+					{
+						"data": [
+							0.0,
+							0.0,
+							0.0,
+							0.0
+						],
+						"intervalUnit": {
+							"quantifier": 1
+						},
+						"statKey": {
+							"key": "net|droppedTx_summation"
+						},
+						"timestamps": [
+							1561744712552,
+							1561744772549,
+							1561744832548,
+							1561744892557
+						]
+					},
+					{
+						"data": [
+							0.20000000298023224,
+							0.20000000298023224,
+							0.20000000298023224,
+							10.0
+						],
+						"intervalUnit": {
+							"quantifier": 1
+						},
+						"statKey": {
+							"key": "virtualDisk|read_average"
+						},
+						"timestamps": [
+							1561744712552,
+							1561744772549,
+							1561744832548,
+							1561744892557
+						]
+					},
+					{
+						"data": [
+							0.0,
+							0.0,
+							0.0,
+							0.0
+						],
+						"intervalUnit": {
+							"quantifier": 1
+						},
+						"statKey": {
+							"key": "net|transmitted_average"
+						},
+						"timestamps": [
+							1561744712552,
+							1561744772549,
+							1561744832548,
+							1561744892557
+						]
+					},
+					{
+						"data": [
+							20.491540908813477,
+							20.505388259887695,
+							20.517423629760742,
+							20.515941619873047
+						],
+						"intervalUnit": {
+							"quantifier": 1
+						},
+						"statKey": {
+							"key": "mem|usage_average"
+						},
+						"timestamps": [
+							1561744712552,
+							1561744772549,
+							1561744832548,
+							1561744892557
+						]
+					},
+					{
+						"data": [
+							0.0,
+							0.0,
+							0.0,
+							0.0
+						],
+						"intervalUnit": {
+							"quantifier": 1
+						},
+						"statKey": {
+							"key": "virtualDisk:aggregate of all instances|totalWriteLatency_average"
+						},
+						"timestamps": [
+							1561744712552,
+							1561744772549,
+							1561744832548,
+							1561744892557
+						]
+					},
+					{
+						"data": [
+							46.266666412353516,
+							46.599998474121094,
+							46.93333435058594,
+							46.86666488647461
+						],
+						"intervalUnit": {
+							"quantifier": 1
+						},
+						"statKey": {
+							"key": "virtualDisk|write_average"
+						},
+						"timestamps": [
+							1561744712552,
+							1561744772549,
+							1561744832548,
+							1561744892557
+						]
+					},
+					{
+						"data": [
+							0.0,
+							0.0,
+							0.0,
+							0.0
+						],
+						"intervalUnit": {
+							"quantifier": 1
+						},
+						"statKey": {
+							"key": "net|received_average"
+						},
+						"timestamps": [
+							1561744712552,
+							1561744772549,
+							1561744832548,
+							1561744892557
+						]
+					},
+					{
+						"data": [
+							0.0,
+							0.0,
+							0.0,
+							0.0
+						],
+						"intervalUnit": {
+							"quantifier": 1
+						},
+						"statKey": {
+							"key": "net:vmnic5|transmitted_average"
+						},
+						"timestamps": [
+							1561744712552,
+							1561744772549,
+							1561744832548,
+							1561744892557
+						]
+					}
+				]
+			}
+		}
+	]
+}
