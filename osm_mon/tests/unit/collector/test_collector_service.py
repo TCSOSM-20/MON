@@ -23,7 +23,7 @@
 from unittest import TestCase, mock
 
 from osm_mon.collector.service import CollectorService
-from osm_mon.collector.utils import CollectorUtils
+from osm_mon.collector.utils.collector import CollectorUtils
 from osm_mon.collector.vnf_collectors.openstack import OpenstackCollector
 from osm_mon.core.common_db import CommonDbClient
 from osm_mon.core.config import Config

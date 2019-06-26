@@ -26,14 +26,12 @@ from typing import List
 import gnocchiclient.exceptions
 from ceilometerclient.v2 import client as ceilometer_client
 from gnocchiclient.v1 import client as gnocchi_client
-from keystoneauth1 import session
 from keystoneauth1.exceptions.catalog import EndpointNotFound
-from keystoneauth1.identity import v3
 from keystoneclient.v3 import client as keystone_client
 from neutronclient.v2_0 import client as neutron_client
 
 from osm_mon.collector.metric import Metric
-from osm_mon.collector.utils import CollectorUtils
+from osm_mon.collector.utils.openstack import OpenstackUtils
 from osm_mon.collector.vnf_collectors.base_vim import BaseVimCollector
 from osm_mon.collector.vnf_metric import VnfMetric
 from osm_mon.core.common_db import CommonDbClient
@@ -71,7 +69,7 @@ class OpenstackCollector(BaseVimCollector):
         self.backend = self._get_backend(vim_account_id)
 
     def _build_keystone_client(self, vim_account_id: str) -> keystone_client.Client:
-        sess = OpenstackBackend.get_session(vim_account_id)
+        sess = OpenstackUtils.get_session(vim_account_id)
         return keystone_client.Client(session=sess)
 
     def _get_resource_uuid(self, nsr_id: str, vnf_member_index: str, vdur_name: str) -> str:
@@ -140,18 +138,6 @@ class OpenstackBackend:
     def collect_metric(self, metric_type: MetricType, metric_name: str, resource_id: str, interface_name: str):
         pass
 
-    @staticmethod
-    def get_session(vim_account_id: str):
-        creds = CollectorUtils.get_credentials(vim_account_id)
-        verify_ssl = CollectorUtils.is_verify_ssl(creds)
-        auth = v3.Password(auth_url=creds.url,
-                           username=creds.user,
-                           password=creds.password,
-                           project_name=creds.tenant_name,
-                           project_domain_id='default',
-                           user_domain_id='default')
-        return session.Session(auth=auth, verify=verify_ssl)
-
 
 class GnocchiBackend(OpenstackBackend):
 
@@ -160,11 +146,11 @@ class GnocchiBackend(OpenstackBackend):
         self.neutron = self._build_neutron_client(vim_account_id)
 
     def _build_gnocchi_client(self, vim_account_id: str) -> gnocchi_client.Client:
-        sess = OpenstackBackend.get_session(vim_account_id)
+        sess = OpenstackUtils.get_session(vim_account_id)
         return gnocchi_client.Client(session=sess)
 
     def _build_neutron_client(self, vim_account_id: str) -> neutron_client.Client:
-        sess = OpenstackBackend.get_session(vim_account_id)
+        sess = OpenstackUtils.get_session(vim_account_id)
         return neutron_client.Client(session=sess)
 
     def collect_metric(self, metric_type: MetricType, metric_name: str, resource_id: str, interface_name: str):
@@ -233,7 +219,7 @@ class CeilometerBackend(OpenstackBackend):
         self.client = self._build_ceilometer_client(vim_account_id)
 
     def _build_ceilometer_client(self, vim_account_id: str) -> ceilometer_client.Client:
-        sess = OpenstackBackend.get_session(vim_account_id)
+        sess = OpenstackUtils.get_session(vim_account_id)
         return ceilometer_client.Client(session=sess)
 
     def collect_metric(self, metric_type: MetricType, metric_name: str, resource_id: str, interface_name: str):

@@ -33,7 +33,7 @@ from keystoneauth1 import session
 from keystoneauth1.identity import v3
 from novaclient import client as nClient
 
-from osm_mon.collector.utils import CollectorUtils
+from osm_mon.collector.utils.collector import CollectorUtils
 from osm_mon.collector.vnf_collectors.base_vim import BaseVimCollector
 from osm_mon.collector.vnf_metric import VnfMetric
 from osm_mon.core.common_db import CommonDbClient
