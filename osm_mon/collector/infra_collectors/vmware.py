@@ -21,20 +21,20 @@
 # contact:  osslegalrouting@vmware.com
 ##
 
+import json
 import logging
 from typing import List
-
 from xml.etree import ElementTree as XmlElementTree
+
+import requests
 from pyvcloud.vcd.client import BasicLoginCredentials
 from pyvcloud.vcd.client import Client
 
-from osm_mon.collector.utils import CollectorUtils
 from osm_mon.collector.infra_collectors.base_vim import BaseVimInfraCollector
 from osm_mon.collector.metric import Metric
+from osm_mon.collector.utils.collector import CollectorUtils
 from osm_mon.core.common_db import CommonDbClient
 from osm_mon.core.config import Config
-import requests
-import json
 
 log = logging.getLogger(__name__)
 API_VERSION = '27.0'

@@ -22,7 +22,7 @@
 ##
 from unittest import TestCase, mock
 
-from osm_mon.collector.utils import CollectorUtils
+from osm_mon.collector.utils.collector import CollectorUtils
 from osm_mon.core.config import Config
 from osm_mon.core.database import VimCredentialsRepository, VimCredentials
 

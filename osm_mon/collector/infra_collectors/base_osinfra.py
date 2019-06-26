@@ -22,15 +22,13 @@
 import logging
 from typing import List
 
-from keystoneauth1 import session
-from keystoneauth1.identity import v3
 from keystoneclient.v3 import client as keystone_client
 from novaclient import client as nova_client
 from novaclient import v2 as nova_client_v2
 
 from osm_mon.collector.infra_collectors.base_vim import BaseVimInfraCollector
 from osm_mon.collector.metric import Metric
-from osm_mon.collector.utils import CollectorUtils
+from osm_mon.collector.utils.openstack import OpenstackUtils
 from osm_mon.core.common_db import CommonDbClient
 from osm_mon.core.config import Config
 
@@ -86,20 +84,9 @@ class BaseOpenStackInfraCollector(BaseVimInfraCollector):
             return False
 
     def _build_keystone_client(self, vim_account_id) -> keystone_client.Client:
-        sess = self._get_session(vim_account_id)
+        sess = OpenstackUtils.get_session(vim_account_id)
         return keystone_client.Client(session=sess)
 
     def _build_nova_client(self, vim_account_id) -> nova_client_v2.Client:
-        sess = self._get_session(vim_account_id)
+        sess = OpenstackUtils.get_session(vim_account_id)
         return nova_client.Client("2", session=sess)
-
-    def _get_session(self, vim_account_id: str):
-        creds = CollectorUtils.get_credentials(vim_account_id)
-        verify_ssl = CollectorUtils.is_verify_ssl(creds)
-        auth = v3.Password(auth_url=creds.url,
-                           username=creds.user,
-                           password=creds.password,
-                           project_name=creds.tenant_name,
-                           project_domain_id='default',
-                           user_domain_id='default')
-        return session.Session(auth=auth, verify=verify_ssl)
