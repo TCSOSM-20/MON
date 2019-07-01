@@ -1,0 +1,123 @@
+{
+	"_admin": {
+		"created": 1561567611.6193357,
+		"modified": 1561567611.6193357,
+		"onboardingState": "ONBOARDED",
+		"operationalState": "ENABLED",
+		"projects_read": [
+			"admin"
+		],
+		"projects_write": [
+			"admin"
+		],
+		"storage": {
+			"descriptor": "cirros_vnf/cirros_vdu_alarm_vnfd.yaml",
+			"folder": "9d116df6-6fa7-4a5b-b284-a67f554c1261",
+			"fs": "local",
+			"path": "/app/storage/",
+			"pkg-dir": "cirros_vnf",
+			"zipfile": "cirros_vdu_alarm_vnfd.tar.gz"
+		},
+		"type": "vnfd",
+		"usageState": "NOT_IN_USE",
+		"userDefinedData": {
+		}
+	},
+	"_id": "9d116df6-6fa7-4a5b-b284-a67f554c1261",
+	"connection-point": [
+		{
+			"name": "eth0",
+			"type": "VPORT"
+		}
+	],
+	"description": "Simple VNF example with a cirros and a VNF alarm",
+	"id": "cirros_vdu_alarm_vnf",
+	"logo": "cirros-64.png",
+	"mgmt-interface": {
+		"cp": "eth0"
+	},
+	"monitoring-param": [
+		{
+			"aggregation-type": "AVERAGE",
+			"id": "cirros_vnf_cpu_util",
+			"name": "cirros_vnf_cpu_util",
+			"vdu-monitoring-param": {
+				"vdu-monitoring-param-ref": "cirros_vnfd-VM_cpu_util",
+				"vdu-ref": "cirros_vnfd-VM"
+			}
+		},
+		{
+			"aggregation-type": "AVERAGE",
+			"id": "cirros_vnf_average_memory_utilization",
+			"name": "cirros_vnf_average_memory_utilization",
+			"vdu-monitoring-param": {
+				"vdu-monitoring-param-ref": "cirros_vnfd-VM_average_memory_utilization",
+				"vdu-ref": "cirros_vnfd-VM"
+			}
+		}
+	],
+	"name": "cirros_vdu_alarm_vnf",
+	"short-name": "cirros_vdu_alarm_vnf",
+	"vdu": [
+		{
+			"alarm": [
+				{
+					"actions": {
+						"alarm": [
+							{
+								"url": "https://webhook.site/e65ad8a0-53b5-4d7f-bd50-c1a50b260871"
+							}
+						],
+						"insufficient-data": [
+							{
+								"url": "https://webhook.site/e65ad8a0-53b5-4d7f-bd50-c1a50b260871"
+							}
+						],
+						"ok": [
+							{
+								"url": "https://webhook.site/e65ad8a0-53b5-4d7f-bd50-c1a50b260871"
+							}
+						]
+					},
+					"alarm-id": "alarm-1",
+					"operation": "LT",
+					"value": "20.0000",
+					"vnf-monitoring-param-ref": "cirros_vnf_cpu_util"
+				}
+			],
+			"count": "1",
+			"description": "cirros_vnfd-VM",
+			"id": "cirros_vnfd-VM",
+			"image": "ubuntu",
+			"interface": [
+				{
+					"external-connection-point-ref": "eth0",
+					"name": "eth0",
+					"virtual-interface": {
+						"bandwidth": "0",
+						"type": "VIRTIO",
+						"vpci": "0000:00:0a.0"
+					}
+				}
+			],
+			"monitoring-param": [
+				{
+					"id": "cirros_vnfd-VM_cpu_util",
+					"nfvi-metric": "cpu_utilization"
+				},
+				{
+					"id": "cirros_vnfd-VM_average_memory_utilization",
+					"nfvi-metric": "average_memory_utilization"
+				}
+			],
+			"name": "cirros_vnfd-VM",
+			"vm-flavor": {
+				"memory-mb": "256",
+				"storage-gb": "2",
+				"vcpu-count": 1
+			}
+		}
+	],
+	"vendor": "OSM",
+	"version": "1.0"
+}

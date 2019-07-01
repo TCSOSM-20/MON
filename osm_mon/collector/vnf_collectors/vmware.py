@@ -28,7 +28,6 @@ import traceback
 from xml.etree import ElementTree as XmlElementTree
 
 import requests
-import six
 from pyvcloud.vcd.client import BasicLoginCredentials
 from pyvcloud.vcd.client import Client
 
@@ -42,24 +41,83 @@ log = logging.getLogger(__name__)
 
 API_VERSION = '27.0'
 
-PERIOD_MSEC = {'HR': 3600000,
-               'DAY': 86400000,
-               'WEEK': 604800000,
-               'MONTH': 2678400000,
-               'YEAR': 31536000000}
+TEN_MINUTES = 600000
+
+# Ref: https://docs.vmware.com/en/vRealize-Operations-Manager/7.0/vrealize-operations-manager-70-reference-guide.pdf
+# Potential metrics of interest
+# "cpu|capacity_contentionPct"
+# "cpu|corecount_provisioned"
+# "cpu|costopPct"
+# "cpu|demandmhz"
+# "cpu|demandPct"
+# "cpu|effective_limit"
+# "cpu|iowaitPct"
+# "cpu|readyPct"
+# "cpu|swapwaitPct"
+# "cpu|usage_average"
+# "cpu|usagemhz_average"
+# "cpu|usagemhz_average_mtd"
+# "cpu|vm_capacity_provisioned"
+# "cpu|workload"
+# "guestfilesystem|percentage_total"
+# "guestfilesystem|usage_total"
+# "mem|consumedPct"
+# "mem|guest_usage"
+# "mem|host_contentionPct"
+# "mem|reservation_used"
+# "mem|swapinRate_average"
+# "mem|swapoutRate_average"
+# "mem|swapped_average"
+# "mem|usage_average"
+# "net:Aggregate of all instances|droppedPct"
+# "net|broadcastTx_summation"
+# "net|droppedTx_summation"
+# "net|multicastTx_summation"
+# "net|pnicBytesRx_average"
+# "net|pnicBytesTx_average"
+# "net|received_average"
+# "net|transmitted_average"
+# "net|usage_average"
+# "virtualDisk:Aggregate of all instances|commandsAveraged_average"
+# "virtualDisk:Aggregate of all instances|numberReadAveraged_average"
+# "virtualDisk:Aggregate of all instances|numberWriteAveraged_average"
+# "virtualDisk:Aggregate of all instances|totalLatency"
+# "virtualDisk:Aggregate of all instances|totalReadLatency_average"
+# "virtualDisk:Aggregate of all instances|totalWriteLatency_average"
+# "virtualDisk:Aggregate of all instances|usage"
+# "virtualDisk:Aggregate of all instances|vDiskOIO"
+# "virtualDisk|read_average"
+# "virtualDisk|write_average"
 
 METRIC_MAPPINGS = {
+    # Percent guest operating system active memory
     "average_memory_utilization": "mem|usage_average",
+    # Percentage of CPU that was used out of all the CPU that was allocated
     "cpu_utilization": "cpu|usage_average",
-    "read_latency_0": "virtualDisk:scsi0:0|totalReadLatency_average",
-    "write_latency_0": "virtualDisk:scsi0:0|totalWriteLatency_average",
-    "read_latency_1": "virtualDisk:scsi0:1|totalReadLatency_average",
-    "write_latency_1": "virtualDisk:scsi0:1|totalWriteLatency_average",
-    "packets_dropped_0": "net:4000|dropped",
-    "packets_dropped_1": "net:4001|dropped",
-    "packets_dropped_2": "net:4002|dropped",
-    "packets_received": "net:Aggregate of all instances|packetsRxPerSec",
-    "packets_sent": "net:Aggregate of all instances|packetsTxPerSec",
+    # KB/s of data read in the performance interval
+    "disk_read_bytes": "virtualDisk|read_average",
+    # Average of read commands per second during the collection interval.
+    "disk_read_ops": "virtualDisk:aggregate of all instances|numberReadAveraged_average",
+    # KB/s  of data written in the performance interval
+    "disk_write_bytes": "virtualDisk|write_average",
+    # Average of write commands per second during the collection interval.
+    "disk_write_ops": "virtualDisk:aggregate of all instances|numberWriteAveraged_average",
+    # "packets_in_dropped": "net|droppedRx_summation",  # Not supported by vROPS
+    # Transmitted packets dropped in the collection interval
+    "packets_out_dropped": "net|droppedTx_summation",
+    # Bytes received in the performance interval
+    "packets_received": "net|received_average",
+    # Packets transmitted in the performance interval
+    "packets_sent": "net|transmitted_average",
+}
+
+# If the unit from vROPS does not align with the expected value. multiply by the specified amount to ensure
+# the correct unit is returned.
+METRIC_MULTIPLIERS = {
+    "disk_read_bytes": 1024,
+    "disk_write_bytes": 1024,
+    "net_bytes_received": 1024,
+    "net_bytes_sent": 1024
 }
 
 
@@ -175,7 +233,6 @@ class VMwareCollector(BaseVimCollector):
         Returns - VM MOref ID or return None
         """
         parsed_respond = {}
-        vca = None
 
         if vapp_uuid is None:
             return parsed_respond
@@ -282,69 +339,76 @@ class VMwareCollector(BaseVimCollector):
                 filter(lambda vdu: vdu['id'] == vdur['vdu-id-ref'], vnfd['vdu'])
 
             )
-            if 'monitoring-param' in vdu:
-                for param in vdu['monitoring-param']:
-                    metric_name = param['nfvi-metric']
-                    vrops_metric_name = METRIC_MAPPINGS[metric_name]
-                    resource_uuid = self._get_resource_uuid(nsr_id, vnf_member_index, vdur['name'])
 
-                    # Find vm_moref_id from vApp uuid in vCD
-                    vm_moref_id = self.get_vm_moref_id(resource_uuid)
-                    if vm_moref_id is None:
-                        log.debug("Failed to find vm morefid for vApp in vCD: {}".format(resource_uuid))
-                        return
+            if 'monitoring-param' not in vdu:
+                continue
 
-                    # Based on vm_moref_id, find VM's corresponding resource_id in vROPs
-                    resource_id = self.get_vm_resource_id(vm_moref_id)
-                    if resource_id is None:
-                        log.debug("Failed to find resource in vROPs: {}".format(resource_uuid))
-                        return
-                    try:
-                        end_time = int(round(time.time() * 1000))
-                        time_diff = PERIOD_MSEC['YEAR']
-                        begin_time = end_time - time_diff
+            resource_uuid = self._get_resource_uuid(nsr_id, vnf_member_index, vdur['name'])
 
-                        api_url = "/suite-api/api/resources/{}/stats?statKey={}&begin={}&end={}".format(
-                            resource_id, vrops_metric_name, str(begin_time), str(end_time))
+            # Find vm_moref_id from vApp uuid in vCD
+            vm_moref_id = self.get_vm_moref_id(resource_uuid)
+            if vm_moref_id is None:
+                log.debug("Failed to find vm morefid for vApp in vCD: {}".format(resource_uuid))
+                continue
 
-                        headers = {'Accept': 'application/json'}
+            # Based on vm_moref_id, find VM's corresponding resource_id in vROPs
+            resource_id = self.get_vm_resource_id(vm_moref_id)
+            if resource_id is None:
+                log.debug("Failed to find resource in vROPs: {}".format(resource_uuid))
+                continue
 
-                        resp = requests.get(self.vrops_site + api_url,
-                                            auth=(self.vrops_user, self.vrops_password), verify=False, headers=headers
-                                            )
+            stat_key = ""
+            monitoring_params = []
+            for metric_entry in vdu['monitoring-param']:
+                metric_name = metric_entry['nfvi-metric']
+                if metric_name not in METRIC_MAPPINGS:
+                    log.debug("Metric {} not supported, ignoring".format(metric_name))
+                    continue
+                monitoring_params.append(metric_name)
+                vrops_metric_name = METRIC_MAPPINGS[metric_name]
+                stat_key = "{}&statKey={}".format(stat_key, vrops_metric_name)
 
-                        if resp.status_code != 200:
-                            log.info("Failed to get Metrics data from vROPS for {} {} {}".format(vrops_metric_name,
-                                                                                                 resp.status_code,
-                                                                                                 resp.content))
-                            return
+            try:
+                end_time = int(round(time.time() * 1000))
+                begin_time = end_time - TEN_MINUTES
 
-                        metrics_data = {}
-                        m_data = json.loads(resp.content.decode('utf-8'))
+                api_url = "/suite-api/api/resources/stats?resourceId={}&begin={}&end={}{}".format(
+                    resource_id, str(begin_time), str(end_time), stat_key)
+                headers = {'Accept': 'application/json'}
 
-                        for resp_key, resp_val in six.iteritems(m_data):
-                            if resp_key == 'values':
-                                data = m_data['values'][0]
-                                for data_k, data_v in six.iteritems(data):
-                                    if data_k == 'stat-list':
-                                        stat_list = data_v
-                                        for stat_list_k, stat_list_v in six.iteritems(stat_list):
-                                            for stat_keys, stat_vals in six.iteritems(stat_list_v[0]):
-                                                if stat_keys == 'timestamps':
-                                                    metrics_data['time_series'] = stat_list_v[0]['timestamps']
-                                                if stat_keys == 'data':
-                                                    metrics_data['metrics_series'] = stat_list_v[0]['data']
+                resp = requests.get(self.vrops_site + api_url,
+                                    auth=(self.vrops_user, self.vrops_password), verify=False, headers=headers
+                                    )
 
-                        if metrics_data:
-                            metric = VnfMetric(nsr_id,
-                                               vnf_member_index,
-                                               vdur['name'],
-                                               metric_name,
-                                               metrics_data['metrics_series'][-1])
+                if resp.status_code != 200:
+                    log.info("Failed to get Metrics data from vROPS for {} {} {}".format(vdur.name,
+                                                                                         resp.status_code,
+                                                                                         resp.content))
+                    continue
 
-                            metrics.append(metric)
+                m_data = json.loads(resp.content.decode('utf-8'))
 
-                    except Exception as e:
-                        log.debug("No metric found: %s", e)
-                        pass
+                stat_list = m_data['values'][0]['stat-list']['stat']
+                for item in stat_list:
+                    reported_metric = item['statKey']['key']
+                    if reported_metric not in METRIC_MAPPINGS.values():
+                        continue
+
+                    metric_name = list(METRIC_MAPPINGS.keys())[list(METRIC_MAPPINGS.values()).
+                                                               index(reported_metric)]
+                    if metric_name in monitoring_params:
+                        metric_value = item['data'][-1]
+                        if metric_name in METRIC_MULTIPLIERS:
+                            metric_value *= METRIC_MULTIPLIERS[metric_name]
+                        metric = VnfMetric(nsr_id,
+                                           vnf_member_index,
+                                           vdur['name'],
+                                           metric_name,
+                                           metric_value)
+
+                        metrics.append(metric)
+
+            except Exception as e:
+                log.debug("No metric found for {}: %s".format(vdur['name']), e)
+                pass
         return metrics
