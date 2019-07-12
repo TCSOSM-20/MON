@@ -22,3 +22,5 @@
 flake8<3.0
 mock
 requests-mock
+coverage==4.5.3
+stestr>=1.0.0
