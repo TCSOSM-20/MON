@@ -20,15 +20,11 @@
 # contact: bdiaz@whitestack.com or glavado@whitestack.com
 ##
 import argparse
-import asyncio
 import logging
 import subprocess
 import sys
 
 import requests
-from aiokafka import AIOKafkaConsumer
-
-from osm_mon.core.config import Config
 
 log = logging.getLogger(__name__)
 
@@ -36,12 +32,10 @@ log = logging.getLogger(__name__)
 def main():
     parser = argparse.ArgumentParser(prog='osm-mon-healthcheck')
     parser.add_argument('--config-file', nargs='?', help='MON configuration file')
-    args = parser.parse_args()
-    cfg = Config(args.config_file)
+    # args = parser.parse_args()
+    # cfg = Config(args.config_file)
 
     if not _processes_running():
-        sys.exit(1)
-    if not _is_kafka_ok(cfg.get('message', 'host'), cfg.get('message', 'port')):
         sys.exit(1)
     if not _is_prometheus_exporter_ok():
         sys.exit(1)
@@ -60,6 +54,7 @@ def _processes_running():
     processes_running = ps.decode().split('\n')
     for p in processes_to_check:
         if not _contains_process(processes_running, p):
+            log.error("Process %s not running!" % p)
             return False
     return True
 
@@ -71,23 +66,6 @@ def _is_prometheus_exporter_ok():
         return True
     except Exception:
         log.exception("MON Prometheus exporter is not running")
-        return False
-
-
-def _is_kafka_ok(host, port):
-    async def _test_kafka(loop):
-        consumer = AIOKafkaConsumer(
-            'healthcheck',
-            loop=loop, bootstrap_servers='{}:{}'.format(host, port))
-        await consumer.start()
-        await consumer.stop()
-
-    try:
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(_test_kafka(loop))
-        return True
-    except Exception:
-        log.exception("MON can not connect to Kafka")
         return False
 
 
