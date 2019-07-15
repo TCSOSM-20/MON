@@ -116,8 +116,8 @@ METRIC_MAPPINGS = {
 METRIC_MULTIPLIERS = {
     "disk_read_bytes": 1024,
     "disk_write_bytes": 1024,
-    "net_bytes_received": 1024,
-    "net_bytes_sent": 1024
+    "packets_received": 1024,
+    "packets_sent": 1024
 }
 
 
