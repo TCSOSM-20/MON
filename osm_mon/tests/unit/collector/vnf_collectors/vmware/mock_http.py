@@ -24,11 +24,15 @@ import os
 import re
 
 
-def mock_vdc_response(mocker, method='GET', site='https://vrops', url_pattern='', response_file='OK'):
+def mock_http_response(mocker, method='GET', site='https://vrops', url_pattern='', response_file='OK',
+                       status_code=200, exception=None):
     '''Helper function to load a canned response from a file.'''
-    with open(os.path.join(os.path.dirname(__file__), 'vcd_mocks',
+    with open(os.path.join(os.path.dirname(__file__), 'vmware_mocks',
                            '%s' % response_file), 'r') as f:
         response = f.read()
 
     matcher = re.compile(site + url_pattern)
-    mocker.register_uri(method, matcher, text=response)
+    if exception is None:
+        mocker.register_uri(method, matcher, text=response, status_code=status_code)
+    else:
+        mocker.register_uri(method, matcher, exc=exception)

@@ -1,0 +1,447 @@
+{
+	"_copyright_comment": "Copyright 2016-2019 VMware Inc.  This file is part of ETSI OSM  All Rights Reserved. Licensed under the Apache License, Version 2.0 (the 'License'); you may  not use this file except in compliance with the License. You may obtain a copy of the License at   http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License. For those usages not covered by the Apache License, Version 2.0 please contact:  osslegalrouting@vmware.com",
+	"links": [
+		{
+			"href": "/suite-api/api/resources?resourceKind=VirtualMachine&amp;page=0&amp;pageSize=1000",
+			"name": "current",
+			"rel": "SELF"
+		},
+		{
+			"href": "/suite-api/api/resources?resourceKind=VirtualMachine&amp;page=0&amp;pageSize=1000",
+			"name": "first",
+			"rel": "RELATED"
+		},
+		{
+			"href": "/suite-api/api/resources?resourceKind=VirtualMachine&amp;page=0&amp;pageSize=1000",
+			"name": "last",
+			"rel": "RELATED"
+		}
+	],
+	"pageInfo": {
+		"page": 0,
+		"pageSize": 1000,
+		"totalCount": 130
+	},
+	"resourceList": [
+		{
+			"badges": [
+				{
+					"color": "GREEN",
+					"score": 0.0,
+					"type": "RISK"
+				},
+				{
+					"color": "GREEN",
+					"score": 100.0,
+					"type": "CAPACITY_REMAINING"
+				},
+				{
+					"color": "GREEN",
+					"score": 100.0,
+					"type": "EFFICIENCY"
+				},
+				{
+					"color": "GREEN",
+					"score": 0.0,
+					"type": "WORKLOAD"
+				},
+				{
+					"color": "GREEN",
+					"score": 366.0,
+					"type": "TIME_REMAINING"
+				},
+				{
+					"color": "GREY",
+					"score": -1.0,
+					"type": "COMPLIANCE"
+				},
+				{
+					"color": "GREEN",
+					"score": 100.0,
+					"type": "HEALTH"
+				}
+			],
+			"creationTime": 1559557138756,
+			"dtEnabled": true,
+			"identifier": "VROPS-UUID-1",
+			"links": [
+				{
+					"href": "/suite-api/api/resources/01ffd926-f8eb-4153-bb59-4d3da4ce7982",
+					"name": "linkToSelf",
+					"rel": "SELF"
+				},
+				{
+					"href": "/suite-api/api/resources/01ffd926-f8eb-4153-bb59-4d3da4ce7982/relationships",
+					"name": "relationsOfResource",
+					"rel": "RELATED"
+				},
+				{
+					"href": "/suite-api/api/resources/01ffd926-f8eb-4153-bb59-4d3da4ce7982/properties",
+					"name": "propertiesOfResource",
+					"rel": "RELATED"
+				},
+				{
+					"href": "/suite-api/api/alerts?resourceId=01ffd926-f8eb-4153-bb59-4d3da4ce7982",
+					"name": "alertsOfResource",
+					"rel": "RELATED"
+				},
+				{
+					"href": "/suite-api/api/symptoms?resourceId=01ffd926-f8eb-4153-bb59-4d3da4ce7982",
+					"name": "symptomsOfResource",
+					"rel": "RELATED"
+				},
+				{
+					"href": "/suite-api/api/resources/01ffd926-f8eb-4153-bb59-4d3da4ce7982/statkeys",
+					"name": "statKeysOfResource",
+					"rel": "RELATED"
+				},
+				{
+					"href": "/suite-api/api/resources/01ffd926-f8eb-4153-bb59-4d3da4ce7982/stats/latest",
+					"name": "latestStatsOfResource",
+					"rel": "RELATED"
+				},
+				{
+					"href": "/suite-api/api/resources/01ffd926-f8eb-4153-bb59-4d3da4ce7982/properties",
+					"name": "latestPropertiesOfResource",
+					"rel": "RELATED"
+				},
+				{
+					"href": "/suite-api/api/credentials/",
+					"name": "credentialsOfResource",
+					"rel": "RELATED"
+				}
+			],
+			"relatedResources": [
+			],
+			"resourceHealth": "GREEN",
+			"resourceHealthValue": 100.0,
+			"resourceKey": {
+				"adapterKindKey": "VMWARE",
+				"name": "52a28e3c-4e5b-4408-b8e3-7755a4222774-vc-HNILML",
+				"resourceIdentifiers": [
+					{
+						"identifierType": {
+							"dataType": "STRING",
+							"isPartOfUniqueness": false,
+							"name": "VMEntityInstanceUUID"
+						},
+						"value": "VMWARE-UUID-VM-1"
+					},
+					{
+						"identifierType": {
+							"dataType": "STRING",
+							"isPartOfUniqueness": false,
+							"name": "VMEntityName"
+						},
+						"value": "52a28e3c-4e5b-4408-b8e3-7755a4222774-vc-HNILML"
+					},
+					{
+						"identifierType": {
+							"dataType": "STRING",
+							"isPartOfUniqueness": true,
+							"name": "VMEntityObjectID"
+						},
+						"value": "VMWARE-OID-VM-1"
+					},
+					{
+						"identifierType": {
+							"dataType": "STRING",
+							"isPartOfUniqueness": true,
+							"name": "VMEntityVCID"
+						},
+						"value": "1ec8501f-dce7-4e0b-8f8b-19ba7060d33c"
+					}
+				],
+				"resourceKindKey": "VirtualMachine"
+			},
+			"resourceStatusStates": [
+				{
+					"adapterInstanceId": "fcf7ba35-72f0-4d36-a12d-45a0c4065e17",
+					"resourceState": "STARTED",
+					"resourceStatus": "DATA_RECEIVING",
+					"statusMessage": ""
+				}
+			]
+		},
+		{
+			"badges": [
+				{
+					"color": "GREEN",
+					"score": 0.0,
+					"type": "RISK"
+				},
+				{
+					"color": "GREEN",
+					"score": 100.0,
+					"type": "CAPACITY_REMAINING"
+				},
+				{
+					"color": "GREEN",
+					"score": 100.0,
+					"type": "EFFICIENCY"
+				},
+				{
+					"color": "GREEN",
+					"score": 0.0,
+					"type": "WORKLOAD"
+				},
+				{
+					"color": "GREEN",
+					"score": 366.0,
+					"type": "TIME_REMAINING"
+				},
+				{
+					"color": "GREY",
+					"score": -1.0,
+					"type": "COMPLIANCE"
+				},
+				{
+					"color": "GREEN",
+					"score": 100.0,
+					"type": "HEALTH"
+				}
+			],
+			"creationTime": 1559557138756,
+			"dtEnabled": true,
+			"identifier": "VROPS-UUID-2",
+			"links": [
+				{
+					"href": "/suite-api/api/resources/01ffd926-f8eb-4153-bb59-4d3da4ce7982",
+					"name": "linkToSelf",
+					"rel": "SELF"
+				},
+				{
+					"href": "/suite-api/api/resources/01ffd926-f8eb-4153-bb59-4d3da4ce7982/relationships",
+					"name": "relationsOfResource",
+					"rel": "RELATED"
+				},
+				{
+					"href": "/suite-api/api/resources/01ffd926-f8eb-4153-bb59-4d3da4ce7982/properties",
+					"name": "propertiesOfResource",
+					"rel": "RELATED"
+				},
+				{
+					"href": "/suite-api/api/alerts?resourceId=01ffd926-f8eb-4153-bb59-4d3da4ce7982",
+					"name": "alertsOfResource",
+					"rel": "RELATED"
+				},
+				{
+					"href": "/suite-api/api/symptoms?resourceId=01ffd926-f8eb-4153-bb59-4d3da4ce7982",
+					"name": "symptomsOfResource",
+					"rel": "RELATED"
+				},
+				{
+					"href": "/suite-api/api/resources/01ffd926-f8eb-4153-bb59-4d3da4ce7982/statkeys",
+					"name": "statKeysOfResource",
+					"rel": "RELATED"
+				},
+				{
+					"href": "/suite-api/api/resources/01ffd926-f8eb-4153-bb59-4d3da4ce7982/stats/latest",
+					"name": "latestStatsOfResource",
+					"rel": "RELATED"
+				},
+				{
+					"href": "/suite-api/api/resources/01ffd926-f8eb-4153-bb59-4d3da4ce7982/properties",
+					"name": "latestPropertiesOfResource",
+					"rel": "RELATED"
+				},
+				{
+					"href": "/suite-api/api/credentials/",
+					"name": "credentialsOfResource",
+					"rel": "RELATED"
+				}
+			],
+			"relatedResources": [
+			],
+			"resourceHealth": "GREEN",
+			"resourceHealthValue": 100.0,
+			"resourceKey": {
+				"adapterKindKey": "VMWARE",
+				"name": "52a28e3c-4e5b-4408-b8e3-7755a4222774-vc-HNILML",
+				"resourceIdentifiers": [
+					{
+						"identifierType": {
+							"dataType": "STRING",
+							"isPartOfUniqueness": false,
+							"name": "VMEntityInstanceUUID"
+						},
+						"value": "VMWARE-UUID-VM-2"
+					},
+					{
+						"identifierType": {
+							"dataType": "STRING",
+							"isPartOfUniqueness": false,
+							"name": "VMEntityName"
+						},
+						"value": "52a28e3c-4e5b-4408-b8e3-7755a4222774-vc-HNILML"
+					},
+					{
+						"identifierType": {
+							"dataType": "STRING",
+							"isPartOfUniqueness": true,
+							"name": "VMEntityObjectID"
+						},
+						"value": "VMWARE-OID-VM-2"
+					},
+					{
+						"identifierType": {
+							"dataType": "STRING",
+							"isPartOfUniqueness": true,
+							"name": "VMEntityVCID"
+						},
+						"value": "1ec8501f-dce7-4e0b-8f8b-19ba7060d33c"
+					}
+				],
+				"resourceKindKey": "VirtualMachine"
+			},
+			"resourceStatusStates": [
+				{
+					"adapterInstanceId": "fcf7ba35-72f0-4d36-a12d-45a0c4065e17",
+					"resourceState": "STARTED",
+					"resourceStatus": "DATA_RECEIVING",
+					"statusMessage": ""
+				}
+			]
+		},
+		{
+			"badges": [
+				{
+					"color": "GREEN",
+					"score": 0.0,
+					"type": "RISK"
+				},
+				{
+					"color": "GREEN",
+					"score": 100.0,
+					"type": "CAPACITY_REMAINING"
+				},
+				{
+					"color": "GREEN",
+					"score": 100.0,
+					"type": "EFFICIENCY"
+				},
+				{
+					"color": "GREEN",
+					"score": 0.0,
+					"type": "WORKLOAD"
+				},
+				{
+					"color": "GREEN",
+					"score": 366.0,
+					"type": "TIME_REMAINING"
+				},
+				{
+					"color": "GREY",
+					"score": -1.0,
+					"type": "COMPLIANCE"
+				},
+				{
+					"color": "GREEN",
+					"score": 100.0,
+					"type": "HEALTH"
+				}
+			],
+			"creationTime": 1559557138756,
+			"dtEnabled": true,
+			"identifier": "VROPS-UUID-3",
+			"links": [
+				{
+					"href": "/suite-api/api/resources/01ffd926-f8eb-4153-bb59-4d3da4ce7982",
+					"name": "linkToSelf",
+					"rel": "SELF"
+				},
+				{
+					"href": "/suite-api/api/resources/01ffd926-f8eb-4153-bb59-4d3da4ce7982/relationships",
+					"name": "relationsOfResource",
+					"rel": "RELATED"
+				},
+				{
+					"href": "/suite-api/api/resources/01ffd926-f8eb-4153-bb59-4d3da4ce7982/properties",
+					"name": "propertiesOfResource",
+					"rel": "RELATED"
+				},
+				{
+					"href": "/suite-api/api/alerts?resourceId=01ffd926-f8eb-4153-bb59-4d3da4ce7982",
+					"name": "alertsOfResource",
+					"rel": "RELATED"
+				},
+				{
+					"href": "/suite-api/api/symptoms?resourceId=01ffd926-f8eb-4153-bb59-4d3da4ce7982",
+					"name": "symptomsOfResource",
+					"rel": "RELATED"
+				},
+				{
+					"href": "/suite-api/api/resources/01ffd926-f8eb-4153-bb59-4d3da4ce7982/statkeys",
+					"name": "statKeysOfResource",
+					"rel": "RELATED"
+				},
+				{
+					"href": "/suite-api/api/resources/01ffd926-f8eb-4153-bb59-4d3da4ce7982/stats/latest",
+					"name": "latestStatsOfResource",
+					"rel": "RELATED"
+				},
+				{
+					"href": "/suite-api/api/resources/01ffd926-f8eb-4153-bb59-4d3da4ce7982/properties",
+					"name": "latestPropertiesOfResource",
+					"rel": "RELATED"
+				},
+				{
+					"href": "/suite-api/api/credentials/",
+					"name": "credentialsOfResource",
+					"rel": "RELATED"
+				}
+			],
+			"relatedResources": [
+			],
+			"resourceHealth": "GREEN",
+			"resourceHealthValue": 100.0,
+			"resourceKey": {
+				"adapterKindKey": "VMWARE",
+				"name": "52a28e3c-4e5b-4408-b8e3-7755a4222774-vc-HNILML",
+				"resourceIdentifiers": [
+					{
+						"identifierType": {
+							"dataType": "STRING",
+							"isPartOfUniqueness": false,
+							"name": "VMEntityInstanceUUID"
+						},
+						"value": "VMWARE-UUID-VM-3"
+					},
+					{
+						"identifierType": {
+							"dataType": "STRING",
+							"isPartOfUniqueness": false,
+							"name": "VMEntityName"
+						},
+						"value": "52a28e3c-4e5b-4408-b8e3-7755a4222774-vc-HNILML"
+					},
+					{
+						"identifierType": {
+							"dataType": "STRING",
+							"isPartOfUniqueness": true,
+							"name": "VMEntityObjectID"
+						},
+						"value": "VMWARE-OID-VM-3"
+					},
+					{
+						"identifierType": {
+							"dataType": "STRING",
+							"isPartOfUniqueness": true,
+							"name": "VMEntityVCID"
+						},
+						"value": "1ec8501f-dce7-4e0b-8f8b-19ba7060d33c"
+					}
+				],
+				"resourceKindKey": "VirtualMachine"
+			},
+			"resourceStatusStates": [
+				{
+					"adapterInstanceId": "fcf7ba35-72f0-4d36-a12d-45a0c4065e17",
+					"resourceState": "STARTED",
+					"resourceStatus": "DATA_RECEIVING",
+					"statusMessage": ""
+				}
+			]
+		}
+	]
+}
