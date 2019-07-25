@@ -1,15 +1,16 @@
 {
+	"_copyright_comment": "Copyright 2016-2019 VMware Inc.  This file is part of ETSI OSM  All Rights Reserved. Licensed under the Apache License, Version 2.0 (the 'License'); you may  not use this file except in compliance with the License. You may obtain a copy of the License at   http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License. For those usages not covered by the Apache License, Version 2.0 please contact:  osslegalrouting@vmware.com",
 	"_admin": {
-		"created": 1561569715.5365124,
-		"modified": 1561569715.5365124,
+		"created": 1563297813.7205596,
+		"modified": 1563297813.7205596,
 		"projects_read": [
-			"admin"
+			"775be778-0f51-495a-b865-a23ab20a080f"
 		],
 		"projects_write": [
-			"admin"
+			"775be778-0f51-495a-b865-a23ab20a080f"
 		]
 	},
-	"_id": "c222366b-4e67-47e8-a3a5-d602ef9f953f",
+	"_id": "a3ec20d6-a47d-4459-ac17-65391424856b",
 	"additionalParamsForVnf": null,
 	"connection-point": [
 		{
@@ -18,35 +19,56 @@
 			"name": "eth0"
 		}
 	],
-	"created-time": 1561569715.5344007,
-	"id": "c222366b-4e67-47e8-a3a5-d602ef9f953f",
-	"ip-address": "172.21.6.212",
+	"created-time": 1563297813.7185328,
+	"id": "a3ec20d6-a47d-4459-ac17-65391424856b",
+	"ip-address": "172.21.6.152",
 	"member-vnf-index-ref": "1",
-	"nsr-id-ref": "66300531-3fb2-43e2-a988-51a1afd9a8f2",
+	"nsr-id-ref": "5915fddf-519a-4235-b18a-41997d76bca0",
 	"vdur": [
 		{
-			"_id": "ddb46f3c-d586-4a8e-80c3-87a74d0a3b37",
+			"_id": "66f70869-8c11-48b6-bd48-95312832ea67",
 			"count-index": 0,
 			"interfaces": [
 				{
-					"ip-address": "172.21.6.212",
-					"mac-address": "00:50:56:03:01:79",
+					"ip-address": "172.21.6.152",
+					"mac-address": "fa:16:3e:d2:22:5d",
 					"mgmt-vnf": true,
 					"name": "eth0",
-					"ns-vld-id": "cirros_nsd_vld1"
+					"ns-vld-id": "ubuntu_nsd_vld1"
 				}
 			],
 			"internal-connection-point": [
 			],
-			"ip-address": "172.21.6.212",
-			"name": "mb-cirros-1-cirros_vnfd-VM-1",
+			"ip-address": "172.21.6.152",
+			"name": "vmware-scaling-1-ubuntu_vnfd-VM-1",
 			"status": "ACTIVE",
-			"status-detailed": "ACTIVE",
-			"vdu-id-ref": "cirros_vnfd-VM",
-			"vim-id": "962e29e7-e0b0-4253-b3ef-88df7971f12e"
+			"status-detailed": null,
+			"vdu-id-ref": "ubuntu_vnfd-VM",
+			"vim-id": "VMWARE-UUID-VM-1"
+		},
+		{
+			"_id": "a1e81bfc-5ded-4a72-9e26-6e1a5f91902a",
+			"count-index": 1,
+			"interfaces": [
+				{
+					"ip-address": "172.21.6.163",
+					"mac-address": "fa:16:3e:b8:9e:7c",
+					"mgmt-vnf": true,
+					"name": "eth0",
+					"ns-vld-id": "ubuntu_nsd_vld1"
+				}
+			],
+			"internal-connection-point": [
+			],
+			"ip-address": "172.21.6.163",
+			"name": "vmware-scaling-1-ubuntu_vnfd-VM-2",
+			"status": "ACTIVE",
+			"status-detailed": null,
+			"vdu-id-ref": "ubuntu_vnfd-VM",
+			"vim-id": "VMWARE-UUID-VM-2"
 		}
 	],
-	"vim-account-id": "43d176fd-dc6d-4fb0-acf3-faf03b1d2589",
-	"vnfd-id": "9d116df6-6fa7-4a5b-b284-a67f554c1261",
-	"vnfd-ref": "cirros_vdu_alarm_vnf"
+	"vim-account-id": "1fc05d6c-2b8b-483e-8d59-f65d658ccfc1",
+	"vnfd-id": "cb0da948-7bce-474d-bbcb-6bfce545d397",
+	"vnfd-ref": "ubuntu_vdu_alarm_vnf"
 }
