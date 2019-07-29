@@ -64,12 +64,12 @@ class MetricType(Enum):
 class OpenstackCollector(BaseVimCollector):
     def __init__(self, config: Config, vim_account_id: str):
         super().__init__(config, vim_account_id)
-        self.conf = config
         self.common_db = CommonDbClient(config)
-        self.backend = self._get_backend(vim_account_id)
+        vim_account = self.common_db.get_vim_account(vim_account_id)
+        self.backend = self._get_backend(vim_account)
 
-    def _build_keystone_client(self, vim_account_id: str) -> keystone_client.Client:
-        sess = OpenstackUtils.get_session(vim_account_id)
+    def _build_keystone_client(self, vim_account: dict) -> keystone_client.Client:
+        sess = OpenstackUtils.get_session(vim_account)
         return keystone_client.Client(session=sess)
 
     def _get_resource_uuid(self, nsr_id: str, vnf_member_index: str, vdur_name: str) -> str:
@@ -115,13 +115,13 @@ class OpenstackCollector(BaseVimCollector):
                         log.exception("Error collecting metric %s for vdu %s" % (metric_name, vdur['name']))
         return metrics
 
-    def _get_backend(self, vim_account_id: str):
+    def _get_backend(self, vim_account: dict):
         try:
-            ceilometer = CeilometerBackend(vim_account_id)
+            ceilometer = CeilometerBackend(vim_account)
             ceilometer.client.capabilities.get()
             return ceilometer
         except EndpointNotFound:
-            gnocchi = GnocchiBackend(vim_account_id)
+            gnocchi = GnocchiBackend(vim_account)
             gnocchi.client.status.get()
             return gnocchi
 
@@ -141,16 +141,16 @@ class OpenstackBackend:
 
 class GnocchiBackend(OpenstackBackend):
 
-    def __init__(self, vim_account_id: str):
-        self.client = self._build_gnocchi_client(vim_account_id)
-        self.neutron = self._build_neutron_client(vim_account_id)
+    def __init__(self, vim_account: dict):
+        self.client = self._build_gnocchi_client(vim_account)
+        self.neutron = self._build_neutron_client(vim_account)
 
-    def _build_gnocchi_client(self, vim_account_id: str) -> gnocchi_client.Client:
-        sess = OpenstackUtils.get_session(vim_account_id)
+    def _build_gnocchi_client(self, vim_account: dict) -> gnocchi_client.Client:
+        sess = OpenstackUtils.get_session(vim_account)
         return gnocchi_client.Client(session=sess)
 
-    def _build_neutron_client(self, vim_account_id: str) -> neutron_client.Client:
-        sess = OpenstackUtils.get_session(vim_account_id)
+    def _build_neutron_client(self, vim_account: dict) -> neutron_client.Client:
+        sess = OpenstackUtils.get_session(vim_account)
         return neutron_client.Client(session=sess)
 
     def collect_metric(self, metric_type: MetricType, metric_name: str, resource_id: str, interface_name: str):
@@ -215,11 +215,11 @@ class GnocchiBackend(OpenstackBackend):
 
 
 class CeilometerBackend(OpenstackBackend):
-    def __init__(self, vim_account_id: str):
-        self.client = self._build_ceilometer_client(vim_account_id)
+    def __init__(self, vim_account: dict):
+        self.client = self._build_ceilometer_client(vim_account)
 
-    def _build_ceilometer_client(self, vim_account_id: str) -> ceilometer_client.Client:
-        sess = OpenstackUtils.get_session(vim_account_id)
+    def _build_ceilometer_client(self, vim_account: dict) -> ceilometer_client.Client:
+        sess = OpenstackUtils.get_session(vim_account)
         return ceilometer_client.Client(session=sess)
 
     def collect_metric(self, metric_type: MetricType, metric_name: str, resource_id: str, interface_name: str):

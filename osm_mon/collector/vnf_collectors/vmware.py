@@ -21,7 +21,6 @@
 # contact:  osslegalrouting@vmware.com
 ##
 
-import json
 import logging
 import traceback
 from xml.etree import ElementTree as XmlElementTree
@@ -30,11 +29,10 @@ import requests
 from pyvcloud.vcd.client import BasicLoginCredentials
 from pyvcloud.vcd.client import Client
 
-from osm_mon.collector.utils.collector import CollectorUtils
 from osm_mon.collector.vnf_collectors.base_vim import BaseVimCollector
+from osm_mon.collector.vnf_collectors.vrops.vrops_helper import vROPS_Helper
 from osm_mon.core.common_db import CommonDbClient
 from osm_mon.core.config import Config
-from osm_mon.collector.vnf_collectors.vrops.vrops_helper import vROPS_Helper
 
 log = logging.getLogger(__name__)
 
@@ -86,16 +84,20 @@ class VMwareCollector(BaseVimCollector):
            return - dict with vim account details
         """
         vim_account = {}
-        vim_account_info = CollectorUtils.get_credentials(vim_account_id)
+        vim_account_info = self.common_db.get_vim_account(vim_account_id)
 
-        vim_account['vim_url'] = vim_account_info.url
+        vim_account['vim_url'] = vim_account_info['vim_url']
 
-        vim_config = json.loads(vim_account_info.config)
+        vim_config = vim_account_info['config']
         vim_account['admin_username'] = vim_config['admin_username']
-        vim_account['admin_password'] = vim_config['admin_password']
+        vim_account['admin_password'] = self.common_db.decrypt_vim_password(vim_config['admin_password'],
+                                                                            vim_account_info['schema_version'],
+                                                                            vim_account_id)
         vim_account['vrops_site'] = vim_config['vrops_site']
         vim_account['vrops_user'] = vim_config['vrops_user']
-        vim_account['vrops_password'] = vim_config['vrops_password']
+        vim_account['vrops_password'] = self.common_db.decrypt_vim_password(vim_config['vrops_password'],
+                                                                            vim_account_info['schema_version'],
+                                                                            vim_account_id)
 
         return vim_account
 

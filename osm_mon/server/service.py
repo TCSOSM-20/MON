@@ -20,14 +20,13 @@
 # For those usages not covered by the Apache License, Version 2.0 please
 # contact: bdiaz@whitestack.com or glavado@whitestack.com
 ##
-import json
 import logging
 import uuid
 
 from osm_mon.core import database
 from osm_mon.core.common_db import CommonDbClient
 from osm_mon.core.config import Config
-from osm_mon.core.database import VimCredentialsRepository, VimCredentials, AlarmRepository, Alarm
+from osm_mon.core.database import AlarmRepository, Alarm
 
 log = logging.getLogger(__name__)
 
@@ -36,51 +35,6 @@ class ServerService:
 
     def __init__(self, config: Config):
         self.common_db = CommonDbClient(config)
-
-    def upsert_vim_account(self,
-                           vim_uuid: str,
-                           name: str,
-                           vim_type: str,
-                           url: str,
-                           user: str,
-                           password: str,
-                           tenant_name: str,
-                           schema_version: str,
-                           config: dict) -> VimCredentials:
-        decrypted_vim_password = self.common_db.decrypt_vim_password(password,
-                                                                     schema_version,
-                                                                     vim_uuid)
-
-        vim_config_encrypted = ("admin_password", "nsx_password", "vcenter_password")
-        for key in config:
-            if key in vim_config_encrypted:
-                config[key] = self.common_db.decrypt_vim_password(config[key],
-                                                                  schema_version,
-                                                                  vim_uuid)
-        database.db.connect()
-        try:
-            with database.db.atomic():
-                return VimCredentialsRepository.upsert(
-                    uuid=vim_uuid,
-                    name=name,
-                    type=vim_type,
-                    url=url,
-                    user=user,
-                    password=decrypted_vim_password,
-                    tenant_name=tenant_name,
-                    config=json.dumps(config)
-                )
-        finally:
-            database.db.close()
-
-    def delete_vim_account(self, vim_uuid: str) -> None:
-        database.db.connect()
-        try:
-            with database.db.atomic():
-                vim_credentials = VimCredentialsRepository.get(VimCredentials.uuid == vim_uuid)
-                vim_credentials.delete_instance()
-        finally:
-            database.db.close()
 
     def create_alarm(self,
                      name: str,

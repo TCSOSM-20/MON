@@ -26,7 +26,7 @@ import logging
 import os
 from typing import Iterable
 
-from peewee import CharField, TextField, FloatField, Model, AutoField, Proxy
+from peewee import CharField, FloatField, Model, AutoField, Proxy
 from peewee_migrate import Router
 from playhouse.db_url import connect
 
@@ -43,17 +43,6 @@ class BaseModel(Model):
 
     class Meta:
         database = db
-
-
-class VimCredentials(BaseModel):
-    uuid = CharField(unique=True)
-    name = CharField()
-    type = CharField()
-    url = CharField()
-    user = CharField()
-    password = CharField()
-    tenant_name = CharField()
-    config = TextField()
 
 
 class Alarm(BaseModel):
@@ -79,20 +68,6 @@ class DatabaseManager:
             router = Router(db, os.path.dirname(migrations.__file__))
             router.run()
         db.close()
-
-
-class VimCredentialsRepository:
-    @staticmethod
-    def upsert(**query) -> VimCredentials:
-        vim_credentials = VimCredentials.get_or_none(**query)
-        if vim_credentials:
-            query.update({'id': vim_credentials.id})
-        vim_id = VimCredentials.insert(**query).on_conflict_replace().execute()
-        return VimCredentials.get(id=vim_id)
-
-    @staticmethod
-    def get(*expressions) -> VimCredentials:
-        return VimCredentials.select().where(*expressions).get()
 
 
 class AlarmRepository:

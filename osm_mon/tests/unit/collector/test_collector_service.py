@@ -23,7 +23,6 @@
 from unittest import TestCase, mock
 
 from osm_mon.collector.service import CollectorService
-from osm_mon.collector.utils.collector import CollectorUtils
 from osm_mon.collector.vnf_collectors.openstack import OpenstackCollector
 from osm_mon.core.common_db import CommonDbClient
 from osm_mon.core.config import Config
@@ -37,17 +36,17 @@ class CollectorServiceTest(TestCase):
 
     @mock.patch.object(OpenstackCollector, "__init__", lambda *args, **kwargs: None)
     @mock.patch.object(OpenstackCollector, "collect")
-    @mock.patch.object(CollectorUtils, "get_vim_type")
-    def test_init_vim_collector_and_collect_openstack(self, _get_vim_type, collect):
-        _get_vim_type.return_value = 'openstack'
+    @mock.patch.object(CommonDbClient, "get_vim_account")
+    def test_init_vim_collector_and_collect_openstack(self, _get_vim_account, collect):
+        _get_vim_account.return_value = {'vim_type': 'openstack'}
         collector = CollectorService(self.config)
         collector._collect_vim_metrics({}, 'test_vim_account_id')
         collect.assert_called_once_with({})
 
     @mock.patch.object(OpenstackCollector, "collect")
-    @mock.patch.object(CollectorUtils, "get_vim_type")
-    def test_init_vim_collector_and_collect_unknown(self, _get_vim_type, openstack_collect):
-        _get_vim_type.return_value = 'unknown'
+    @mock.patch.object(CommonDbClient, "get_vim_account")
+    def test_init_vim_collector_and_collect_unknown(self, _get_vim_account, openstack_collect):
+        _get_vim_account.return_value = {'vim_type': 'unknown'}
         collector = CollectorService(self.config)
         collector._collect_vim_metrics({}, 'test_vim_account_id')
         openstack_collect.assert_not_called()

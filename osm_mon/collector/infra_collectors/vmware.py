@@ -21,7 +21,6 @@
 # contact:  osslegalrouting@vmware.com
 ##
 
-import json
 import logging
 from typing import List
 from xml.etree import ElementTree as XmlElementTree
@@ -32,7 +31,6 @@ from pyvcloud.vcd.client import Client
 
 from osm_mon.collector.infra_collectors.base_vim import BaseVimInfraCollector
 from osm_mon.collector.metric import Metric
-from osm_mon.collector.utils.collector import CollectorUtils
 from osm_mon.core.common_db import CommonDbClient
 from osm_mon.core.config import Config
 
@@ -86,19 +84,23 @@ class VMwareInfraCollector(BaseVimInfraCollector):
            return - dict with vim account details
         """
         vim_account = {}
-        vim_account_info = CollectorUtils.get_credentials(vim_account_id)
+        vim_account_info = self.common_db.get_vim_account(vim_account_id)
 
-        vim_account['name'] = vim_account_info.name
-        vim_account['vim_tenant_name'] = vim_account_info.tenant_name
-        vim_account['vim_type'] = vim_account_info.type
-        vim_account['vim_url'] = vim_account_info.url
-        vim_account['org_user'] = vim_account_info.user
-        vim_account['org_password'] = vim_account_info.password
-        vim_account['vim_uuid'] = vim_account_info.uuid
+        vim_account['name'] = vim_account_info['name']
+        vim_account['vim_tenant_name'] = vim_account_info['vim_tenant_name']
+        vim_account['vim_type'] = vim_account_info['vim_type']
+        vim_account['vim_url'] = vim_account_info['vim_url']
+        vim_account['org_user'] = vim_account_info['vim_user']
+        vim_account['org_password'] = self.common_db.decrypt_vim_password(vim_account_info['vim_password'],
+                                                                          vim_account_info['schema_version'],
+                                                                          vim_account_id)
+        vim_account['vim_uuid'] = vim_account_info['_id']
 
-        vim_config = json.loads(vim_account_info.config)
+        vim_config = vim_account_info['config']
         vim_account['admin_username'] = vim_config['admin_username']
-        vim_account['admin_password'] = vim_config['admin_password']
+        vim_account['admin_password'] = self.common_db.decrypt_vim_password(vim_config['admin_password'],
+                                                                            vim_account_info['schema_version'],
+                                                                            vim_account_id)
 
         if vim_config['orgname'] is not None:
             vim_account['orgname'] = vim_config['orgname']
