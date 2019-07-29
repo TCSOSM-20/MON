@@ -21,14 +21,12 @@
 # contact:  osslegalrouting@vmware.com
 ##
 
-import json
 import logging
 
-from osm_mon.collector.utils.collector import CollectorUtils
 from osm_mon.collector.vnf_collectors.base_vim import BaseVimCollector
+from osm_mon.collector.vnf_collectors.vrops.vrops_helper import vROPS_Helper
 from osm_mon.core.common_db import CommonDbClient
 from osm_mon.core.config import Config
-from osm_mon.collector.vnf_collectors.vrops.vrops_helper import vROPS_Helper
 
 log = logging.getLogger(__name__)
 
@@ -43,8 +41,8 @@ class VIOCollector(BaseVimCollector):
                                   vrops_password=cfg['vrops_password'])
 
     def get_vim_account(self, vim_account_id: str):
-        vim_account_info = CollectorUtils.get_credentials(vim_account_id)
-        return json.loads(vim_account_info.config)
+        vim_account_info = self.common_db.get_vim_account(vim_account_id)
+        return vim_account_info['config']
 
     def collect(self, vnfr: dict):
         vnfd = self.common_db.get_vnfd(vnfr['vnfd-id'])

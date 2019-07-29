@@ -75,7 +75,7 @@ class CommonDbClient:
             if vdur['name'] == vdur_name:
                 return vdur
         raise ValueError('vdur not found for nsr-id {}, member_index {} and vdur_name {}'.format(nsr_id, member_index,
-                         vdur_name))
+                                                                                                 vdur_name))
 
     def decrypt_vim_password(self, vim_password: str, schema_version: str, vim_id: str):
         return self.common_db.decrypt(vim_password, schema_version, vim_id)
@@ -89,6 +89,19 @@ class CommonDbClient:
 
     def get_vim_accounts(self):
         return self.common_db.get_list('vim_accounts')
+
+    def get_vim_account(self, vim_account_id: str) -> dict:
+        vim_account = self.common_db.get_one('vim_accounts', {"_id": vim_account_id})
+        vim_account['vim_password'] = self.decrypt_vim_password(vim_account['vim_password'],
+                                                                vim_account['schema_version'],
+                                                                vim_account_id)
+        vim_config_encrypted = ("admin_password", "nsx_password", "vcenter_password")
+        for key in vim_account['config']:
+            if key in vim_config_encrypted:
+                vim_account['config'][key] = self.decrypt_vim_password(vim_account['config'][key],
+                                                                       vim_account['schema_version'],
+                                                                       vim_account_id)
+        return vim_account
 
     def get_sdncs(self):
         return self.common_db.get_list('sdns')

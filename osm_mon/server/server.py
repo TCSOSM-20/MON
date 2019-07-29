@@ -50,7 +50,6 @@ class Server:
 
     async def start(self):
         topics = [
-            "vim_account",
             "alarm_request"
         ]
         await self.msg_bus.aioread(topics, self._process_msg)
@@ -58,24 +57,8 @@ class Server:
     async def _process_msg(self, topic, key, values):
         log.info("Message arrived: %s", values)
         try:
-            if topic == "vim_account":
-                if key == "create" or key == "edit":
-                    if 'config' not in values:
-                        values['config'] = {}
-                    self.service.upsert_vim_account(values['_id'],
-                                                    values['name'],
-                                                    values['vim_type'],
-                                                    values['vim_url'],
-                                                    values['vim_user'],
-                                                    values['vim_password'],
-                                                    values['vim_tenant_name'],
-                                                    values['schema_version'],
-                                                    values['config'])
 
-                if key == "delete":
-                    self.service.delete_vim_account(values['_id'])
-
-            elif topic == "alarm_request":
+            if topic == "alarm_request":
                 if key == "create_alarm_request":
                     alarm_details = values['alarm_create_request']
                     cor_id = alarm_details['correlation_id']

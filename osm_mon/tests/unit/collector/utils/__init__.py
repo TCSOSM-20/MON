@@ -19,19 +19,4 @@
 # under the License.
 # For those usages not covered by the Apache License, Version 2.0 please
 # contact: bdiaz@whitestack.com or glavado@whitestack.com
-##
-from unittest import TestCase, mock
-
-from osm_mon.core.common_db import CommonDbClient
-from osm_mon.core.config import Config
-
-
-@mock.patch.object(CommonDbClient, "__init__", lambda *args, **kwargs: None)
-class ServerServiceTest(TestCase):
-    def setUp(self):
-        super().setUp()
-        self.config = Config()
-
-    def test_create_alarm(self):
-        # TODO
-        pass
+# #

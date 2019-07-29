@@ -21,31 +21,27 @@
 # For those usages not covered by the Apache License, Version 2.0 please
 # contact: bdiaz@whitestack.com or glavado@whitestack.com
 ##
-import json
 
 from keystoneauth1 import session
 from keystoneauth1.identity import v3
-
-from osm_mon.collector.utils.collector import CollectorUtils
 
 
 class OpenstackUtils:
 
     @staticmethod
-    def get_session(vim_account_id: str):
-        creds = CollectorUtils.get_credentials(vim_account_id)
-        verify_ssl = CollectorUtils.is_verify_ssl(creds)
-        vim_config = json.loads(creds.config)
+    def get_session(creds: dict):
+        verify_ssl = False if 'insecure' in creds['config'] and creds['config']['insecure'] else True
+        vim_config = creds['config']
         project_domain_name = 'Default'
         user_domain_name = 'Default'
         if 'project_domain_name' in vim_config:
             project_domain_name = vim_config['project_domain_name']
         if 'user_domain_name' in vim_config:
             user_domain_name = vim_config['user_domain_name']
-        auth = v3.Password(auth_url=creds.url,
-                           username=creds.user,
-                           password=creds.password,
-                           project_name=creds.tenant_name,
+        auth = v3.Password(auth_url=creds['vim_url'],
+                           username=creds['vim_user'],
+                           password=creds['vim_password'],
+                           project_name=creds['vim_tenant_name'],
                            project_domain_name=project_domain_name,
                            user_domain_name=user_domain_name)
         return session.Session(auth=auth, verify=verify_ssl)

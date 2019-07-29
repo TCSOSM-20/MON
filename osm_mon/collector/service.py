@@ -1,13 +1,34 @@
+# -*- coding: utf-8 -*-
+
+# Copyright 2018 Whitestack, LLC
+# *************************************************************
+
+# This file is part of OSM Monitoring module
+# All Rights Reserved to Whitestack, LLC
+
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+
+#         http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+# For those usages not covered by the Apache License, Version 2.0 please
+# contact: bdiaz@whitestack.com or glavado@whitestack.com
+##
 import logging
 import multiprocessing
 from typing import List
 
 from osm_mon.collector.infra_collectors.onos import OnosInfraCollector
 from osm_mon.collector.infra_collectors.openstack import OpenstackInfraCollector
-from osm_mon.collector.infra_collectors.vmware import VMwareInfraCollector
 from osm_mon.collector.infra_collectors.vio import VIOInfraCollector
+from osm_mon.collector.infra_collectors.vmware import VMwareInfraCollector
 from osm_mon.collector.metric import Metric
-from osm_mon.collector.utils.collector import CollectorUtils
 from osm_mon.collector.vnf_collectors.juju import VCACollector
 from osm_mon.collector.vnf_collectors.openstack import OpenstackCollector
 from osm_mon.collector.vnf_collectors.vio import VIOCollector
@@ -40,7 +61,8 @@ class CollectorService:
 
     def _collect_vim_metrics(self, vnfr: dict, vim_account_id: str):
         # TODO(diazb) Add support for aws
-        vim_type = CollectorUtils.get_vim_type(vim_account_id)
+        common_db = CommonDbClient(self.conf)
+        vim_type = common_db.get_vim_account(vim_account_id)['vim_type']
         if vim_type in VIM_COLLECTORS:
             collector = VIM_COLLECTORS[vim_type](self.conf, vim_account_id)
             metrics = collector.collect(vnfr)
@@ -50,7 +72,8 @@ class CollectorService:
             log.debug("vimtype %s is not supported.", vim_type)
 
     def _collect_vim_infra_metrics(self, vim_account_id: str):
-        vim_type = CollectorUtils.get_vim_type(vim_account_id)
+        common_db = CommonDbClient(self.conf)
+        vim_type = common_db.get_vim_account(vim_account_id)['vim_type']
         if vim_type in VIM_INFRA_COLLECTORS:
             collector = VIM_INFRA_COLLECTORS[vim_type](self.conf, vim_account_id)
             metrics = collector.collect()

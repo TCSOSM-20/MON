@@ -38,17 +38,18 @@ log = logging.getLogger(__name__)
 class BaseOpenStackInfraCollector(BaseVimInfraCollector):
     def __init__(self, config: Config, vim_account_id: str):
         super().__init__(config, vim_account_id)
-        self.keystone = self._build_keystone_client(vim_account_id)
-        self.nova = self._build_nova_client(vim_account_id)
-        self.vim_account_id = vim_account_id
+        self.conf = config
         self.common_db = CommonDbClient(config)
+        self.vim_account = self.common_db.get_vim_account(vim_account_id)
+        self.keystone = self._build_keystone_client(self.vim_account)
+        self.nova = self._build_nova_client(self.vim_account)
 
     def collect(self) -> List[Metric]:
         metrics = []
         vim_status = self.is_vim_ok()
-        vim_status_metric = Metric({'vim_account_id': self.vim_account_id}, 'vim_status', vim_status)
+        vim_status_metric = Metric({'vim_account_id': self.vim_account['_id']}, 'vim_status', vim_status)
         metrics.append(vim_status_metric)
-        vnfrs = self.common_db.get_vnfrs(vim_account_id=self.vim_account_id)
+        vnfrs = self.common_db.get_vnfrs(vim_account_id=self.vim_account['_id'])
         for vnfr in vnfrs:
             nsr_id = vnfr['nsr-id-ref']
             vnf_member_index = vnfr['member-vnf-index-ref']
@@ -58,7 +59,7 @@ class BaseOpenStackInfraCollector(BaseVimInfraCollector):
                     continue
                 resource_uuid = vdur['vim-id']
                 tags = {
-                    'vim_account_id': self.vim_account_id,
+                    'vim_account_id': self.vim_account['_id'],
                     'resource_uuid': resource_uuid,
                     'nsr_id': nsr_id,
                     'vnf_member_index': vnf_member_index,
@@ -83,10 +84,10 @@ class BaseOpenStackInfraCollector(BaseVimInfraCollector):
             log.warning("VIM status is not OK: %s" % e)
             return False
 
-    def _build_keystone_client(self, vim_account_id) -> keystone_client.Client:
-        sess = OpenstackUtils.get_session(vim_account_id)
+    def _build_keystone_client(self, vim_account: dict) -> keystone_client.Client:
+        sess = OpenstackUtils.get_session(vim_account)
         return keystone_client.Client(session=sess)
 
-    def _build_nova_client(self, vim_account_id) -> nova_client_v2.Client:
-        sess = OpenstackUtils.get_session(vim_account_id)
+    def _build_nova_client(self, vim_account: dict) -> nova_client_v2.Client:
+        sess = OpenstackUtils.get_session(vim_account)
         return nova_client.Client("2", session=sess)
