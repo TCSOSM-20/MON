@@ -95,7 +95,13 @@ class CommonDbClient:
         vim_account['vim_password'] = self.decrypt_vim_password(vim_account['vim_password'],
                                                                 vim_account['schema_version'],
                                                                 vim_account_id)
-        vim_config_encrypted = ("admin_password", "nsx_password", "vcenter_password")
+        vim_config_encrypted_dict = {
+            "1.1": ("admin_password", "nsx_password", "vcenter_password"),
+            "default": ("admin_password", "nsx_password", "vcenter_password", "vrops_password")
+        }
+        vim_config_encrypted = vim_config_encrypted_dict['default']
+        if vim_account['schema_version'] in vim_config_encrypted_dict.keys():
+            vim_config_encrypted = vim_config_encrypted_dict[vim_account['schema_version']]
         for key in vim_account['config']:
             if key in vim_config_encrypted:
                 vim_account['config'][key] = self.decrypt_vim_password(vim_account['config'][key],
