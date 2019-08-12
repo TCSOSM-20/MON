@@ -97,3 +97,52 @@ class CommonDbClientTest(unittest.TestCase):
         }
 
         self.assertDictEqual(vdur, expected_vdur)
+
+    @mock.patch.object(dbmongo.DbMongo, "db_connect", mock.Mock())
+    @mock.patch.object(dbmongo.DbMongo, "get_one")
+    @mock.patch.object(CommonDbClient, "decrypt_vim_password")
+    def test_get_vim_account_default_schema(self, decrypt_vim_password, get_one):
+        schema_version = '10.0'
+        vim_id = '1'
+        get_one.return_value = {
+            '_id': vim_id,
+            'vim_password': 'vim_password',
+            'schema_version': schema_version,
+            'config': {
+                'admin_password': 'admin_password',
+                'vrops_password': 'vrops_password',
+                'nsx_password': 'nsx_password',
+                'vcenter_password': 'vcenter_password'
+            }
+        }
+
+        common_db_client = CommonDbClient(self.config)
+        common_db_client.get_vim_account('1')
+
+        decrypt_vim_password.assert_any_call('vim_password', schema_version, vim_id)
+        decrypt_vim_password.assert_any_call('vrops_password', schema_version, vim_id)
+        decrypt_vim_password.assert_any_call('admin_password', schema_version, vim_id)
+        decrypt_vim_password.assert_any_call('nsx_password', schema_version, vim_id)
+        decrypt_vim_password.assert_any_call('vcenter_password', schema_version, vim_id)
+
+    @mock.patch.object(dbmongo.DbMongo, "db_connect", mock.Mock())
+    @mock.patch.object(dbmongo.DbMongo, "get_one")
+    @mock.patch.object(CommonDbClient, "decrypt_vim_password")
+    def test_get_vim_account_1_1_schema(self, decrypt_vim_password, get_one):
+        schema_version = '1.1'
+        vim_id = '1'
+        get_one.return_value = {
+            '_id': vim_id,
+            'vim_password': 'vim_password',
+            'schema_version': schema_version,
+            'config': {
+                'vrops_password': 'vrops_password'
+            }
+        }
+
+        common_db_client = CommonDbClient(self.config)
+        common_db_client.get_vim_account('1')
+
+        decrypt_vim_password.assert_any_call('vim_password', schema_version, vim_id)
+        self.assertRaises(AssertionError, decrypt_vim_password.assert_any_call, 'vrops_password', schema_version,
+                          vim_id)
