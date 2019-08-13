@@ -30,14 +30,16 @@ class OpenstackUtils:
 
     @staticmethod
     def get_session(creds: dict):
-        verify_ssl = False if 'insecure' in creds['config'] and creds['config']['insecure'] else True
-        vim_config = creds['config']
+        verify_ssl = True
         project_domain_name = 'Default'
         user_domain_name = 'Default'
-        if 'project_domain_name' in vim_config:
-            project_domain_name = vim_config['project_domain_name']
-        if 'user_domain_name' in vim_config:
-            user_domain_name = vim_config['user_domain_name']
+        if 'config' in creds:
+            vim_config = creds['config']
+            verify_ssl = False if 'insecure' in vim_config and vim_config['insecure'] else True
+            if 'project_domain_name' in vim_config:
+                project_domain_name = vim_config['project_domain_name']
+            if 'user_domain_name' in vim_config:
+                user_domain_name = vim_config['user_domain_name']
         auth = v3.Password(auth_url=creds['vim_url'],
                            username=creds['vim_user'],
                            password=creds['vim_password'],

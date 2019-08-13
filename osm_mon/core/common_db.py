@@ -102,11 +102,12 @@ class CommonDbClient:
         vim_config_encrypted = vim_config_encrypted_dict['default']
         if vim_account['schema_version'] in vim_config_encrypted_dict.keys():
             vim_config_encrypted = vim_config_encrypted_dict[vim_account['schema_version']]
-        for key in vim_account['config']:
-            if key in vim_config_encrypted:
-                vim_account['config'][key] = self.decrypt_vim_password(vim_account['config'][key],
-                                                                       vim_account['schema_version'],
-                                                                       vim_account_id)
+        if 'config' in vim_account:
+            for key in vim_account['config']:
+                if key in vim_config_encrypted:
+                    vim_account['config'][key] = self.decrypt_vim_password(vim_account['config'][key],
+                                                                           vim_account['schema_version'],
+                                                                           vim_account_id)
         return vim_account
 
     def get_sdncs(self):
