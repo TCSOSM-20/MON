@@ -61,8 +61,7 @@ class CollectorService:
 
     def _collect_vim_metrics(self, vnfr: dict, vim_account_id: str):
         # TODO(diazb) Add support for aws
-        common_db = CommonDbClient(self.conf)
-        vim_type = common_db.get_vim_account(vim_account_id)['vim_type']
+        vim_type = self._get_vim_type(vim_account_id)
         if vim_type in VIM_COLLECTORS:
             collector = VIM_COLLECTORS[vim_type](self.conf, vim_account_id)
             metrics = collector.collect(vnfr)
@@ -72,8 +71,7 @@ class CollectorService:
             log.debug("vimtype %s is not supported.", vim_type)
 
     def _collect_vim_infra_metrics(self, vim_account_id: str):
-        common_db = CommonDbClient(self.conf)
-        vim_type = common_db.get_vim_account(vim_account_id)['vim_type']
+        vim_type = self._get_vim_type(vim_account_id)
         if vim_type in VIM_INFRA_COLLECTORS:
             collector = VIM_INFRA_COLLECTORS[vim_type](self.conf, vim_account_id)
             metrics = collector.collect()
@@ -134,3 +132,11 @@ class CollectorService:
         while not self.queue.empty():
             metrics.append(self.queue.get())
         return metrics
+
+    def _get_vim_type(self, vim_account_id: str) -> str:
+        common_db = CommonDbClient(self.conf)
+        vim_account = common_db.get_vim_account(vim_account_id)
+        vim_type = vim_account['vim_type']
+        if 'config' in vim_account and 'vim_type' in vim_account['config']:
+            vim_type = vim_account['config']['vim_type'].lower()
+        return vim_type
