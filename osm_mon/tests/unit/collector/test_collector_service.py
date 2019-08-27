@@ -24,6 +24,7 @@ from unittest import TestCase, mock
 
 from osm_mon.collector.service import CollectorService
 from osm_mon.collector.vnf_collectors.openstack import OpenstackCollector
+from osm_mon.collector.vnf_collectors.vio import VIOCollector
 from osm_mon.core.common_db import CommonDbClient
 from osm_mon.core.config import Config
 
@@ -50,6 +51,15 @@ class CollectorServiceTest(TestCase):
         collector = CollectorService(self.config)
         collector._collect_vim_metrics({}, 'test_vim_account_id')
         openstack_collect.assert_not_called()
+
+    @mock.patch.object(VIOCollector, "__init__", lambda *args, **kwargs: None)
+    @mock.patch.object(VIOCollector, "collect")
+    @mock.patch.object(CommonDbClient, "get_vim_account")
+    def test_init_vim_collector_and_collect_vio(self, _get_vim_account, vio_collect):
+        _get_vim_account.return_value = {'vim_type': 'openstack', 'config': {'vim_type': 'VIO'}}
+        collector = CollectorService(self.config)
+        collector._collect_vim_metrics({}, 'test_vim_account_id')
+        vio_collect.assert_called_once_with({})
 
     @mock.patch("osm_mon.collector.service.VCACollector", autospec=True)
     def test_collect_vca_metrics(self, vca_collector):
