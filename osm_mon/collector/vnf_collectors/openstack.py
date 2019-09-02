@@ -122,7 +122,7 @@ class OpenstackCollector(BaseVimCollector):
             return ceilometer
         except EndpointNotFound:
             gnocchi = GnocchiBackend(vim_account)
-            gnocchi.client.status.get()
+            gnocchi.client.metric.list(limit=1)
             return gnocchi
 
     def _get_metric_type(self, metric_name: str, interface_name: str) -> MetricType:
