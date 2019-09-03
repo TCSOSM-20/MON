@@ -50,7 +50,7 @@ pip-log.txt
 # Unit test / coverage reports
 .coverage
 cover
-.stestr
+coverage.xml
 .tox
 nosetests.xml
 .testrepository
