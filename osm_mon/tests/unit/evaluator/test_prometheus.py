@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # Copyright 2018 Whitestack, LLC
 # *************************************************************
 
@@ -15,17 +17,25 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-
 # For those usages not covered by the Apache License, Version 2.0 please
 # contact: bdiaz@whitestack.com or glavado@whitestack.com
 ##
+import collections
+from unittest import TestCase
 
 from osm_mon.core.config import Config
+from osm_mon.evaluator.backends.prometheus import PrometheusBackend
 
 
-class BaseBackend:
-    def __init__(self, config: Config):
-        pass
+class EvaluatorTest(TestCase):
+    def setUp(self):
+        super().setUp()
+        self.config = Config()
 
-    def get_metric_value(self, metric_name: str, tags: dict):
-        pass
+    def test_build_query(self):
+        prometheus = PrometheusBackend(self.config)
+        alarm_tags = collections.OrderedDict()
+        alarm_tags['tag_1'] = 'value_1'
+        alarm_tags['tag_2'] = 'value_2'
+        query = prometheus._build_query('metric_name', alarm_tags)
+        self.assertEqual(query, 'query=osm_metric_name{tag_1="value_1",tag_2="value_2"}')

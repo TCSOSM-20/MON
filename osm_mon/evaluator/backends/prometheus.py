@@ -38,24 +38,36 @@ class PrometheusBackend(BaseBackend):
         super().__init__(config)
         self.conf = config
 
-    def get_metric_value(self, metric_name, nsr_id, vdur_name, vnf_member_index):
-        query_section = "query={0}{{ns_id=\"{1}\",vdu_name=\"{2}\",vnf_member_index=\"{3}\"}}".format(
-            OSM_METRIC_PREFIX + metric_name, nsr_id, vdur_name, vnf_member_index)
-        request_url = self.conf.get('prometheus', 'url') + "/api/v1/query?" + query_section
+    def get_metric_value(self, metric_name: str, tags: dict):
+        query = self._build_query(metric_name, tags)
+        request_url = self._build_url(query)
         log.info("Querying Prometheus: %s", request_url)
         r = requests.get(request_url, timeout=int(self.conf.get('global', 'request_timeout')))
         if r.status_code == 200:
             json_response = r.json()
             if json_response['status'] == 'success':
-                result = json_response['data']['result']
-                if len(result):
-                    metric_value = float(result[0]['value'][1])
-                    log.info("Metric value: %s", metric_value)
-                    return metric_value
-                else:
-                    return None
+                return self._get_metric_value_from_response(json_response)
             else:
                 log.warning("Prometheus response is not success. Got status %s", json_response['status'])
         else:
             log.warning("Error contacting Prometheus. Got status code %s: %s", r.status_code, r.text)
         return None
+
+    def _build_query(self, metric_name: str, tags: dict) -> str:
+        query_section_tags = []
+        for k, v in tags.items():
+            query_section_tags.append(k + '=\"' + v + '\"')
+        query_section = "query={0}{{{1}}}".format(OSM_METRIC_PREFIX + metric_name, ','.join(query_section_tags))
+        return query_section
+
+    def _build_url(self, query: str):
+        return self.conf.get('prometheus', 'url') + "/api/v1/query?" + query
+
+    def _get_metric_value_from_response(self, json_response):
+        result = json_response['data']['result']
+        if len(result):
+            metric_value = float(result[0]['value'][1])
+            log.info("Metric value: %s", metric_value)
+            return metric_value
+        else:
+            return None

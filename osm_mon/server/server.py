@@ -71,9 +71,7 @@ class Server:
                             alarm_details['severity'].lower(),
                             alarm_details['statistic'].lower(),
                             alarm_details['metric_name'],
-                            alarm_details['vdu_name'],
-                            alarm_details['vnf_member_index'],
-                            alarm_details['ns_id']
+                            alarm_details['tags']
                         )
                         response = response_builder.generate_response('create_alarm_response',
                                                                       cor_id=cor_id,

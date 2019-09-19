@@ -61,10 +61,14 @@ class Evaluator:
     def evaluate(self):
         log.debug('evaluate')
         alarms_tuples = self.service.evaluate_alarms()
+        processes = []
         for alarm, status in alarms_tuples:
             p = multiprocessing.Process(target=self.notify_alarm,
                                         args=(alarm, status))
             p.start()
+            processes.append(p)
+        for process in processes:
+            process.join(timeout=10)
 
     def notify_alarm(self, alarm: Alarm, status: AlarmStatus):
         log.debug("notify_alarm")
@@ -74,16 +78,17 @@ class Evaluator:
 
     def _build_alarm_response(self, alarm: Alarm, status: AlarmStatus):
         response = ResponseBuilder()
+        tags = {}
+        for tag in alarm.tags:
+            tags[tag.name] = tag.value
         now = time.strftime("%d-%m-%Y") + " " + time.strftime("%X")
         return response.generate_response(
             'notify_alarm',
             alarm_id=alarm.uuid,
-            vdu_name=alarm.vdur_name,
-            vnf_member_index=alarm.vnf_member_index,
-            ns_id=alarm.nsr_id,
-            metric_name=alarm.monitoring_param,
+            metric_name=alarm.metric,
             operation=alarm.operation,
             threshold_value=alarm.threshold,
             sev=alarm.severity,
             status=status.value,
-            date=now)
+            date=now,
+            tags=tags)

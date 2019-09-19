@@ -26,7 +26,7 @@ import logging
 import os
 from typing import Iterable
 
-from peewee import CharField, FloatField, Model, AutoField, Proxy
+from peewee import CharField, FloatField, Model, AutoField, Proxy, ForeignKeyField
 from peewee_migrate import Router
 from playhouse.db_url import connect
 
@@ -52,10 +52,13 @@ class Alarm(BaseModel):
     threshold = FloatField()
     operation = CharField()
     statistic = CharField()
-    monitoring_param = CharField()
-    vdur_name = CharField()
-    vnf_member_index = CharField()
-    nsr_id = CharField()
+    metric = CharField()
+
+
+class AlarmTag(BaseModel):
+    name = CharField()
+    value = CharField()
+    alarm = ForeignKeyField(Alarm, related_name='tags', on_delete='CASCADE')
 
 
 class DatabaseManager:
@@ -68,6 +71,12 @@ class DatabaseManager:
             router = Router(db, os.path.dirname(migrations.__file__))
             router.run()
         db.close()
+
+
+class AlarmTagRepository:
+    @staticmethod
+    def create(**query) -> Alarm:
+        return AlarmTag.create(**query)
 
 
 class AlarmRepository:
