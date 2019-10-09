@@ -35,7 +35,10 @@ class OpenstackUtils:
         user_domain_name = 'Default'
         if 'config' in creds:
             vim_config = creds['config']
-            verify_ssl = False if 'insecure' in vim_config and vim_config['insecure'] else True
+            if 'insecure' in vim_config and vim_config['insecure']:
+                verify_ssl = False
+            if 'ca_cert' in vim_config:
+                verify_ssl = vim_config['ca_cert']
             if 'project_domain_name' in vim_config:
                 project_domain_name = vim_config['project_domain_name']
             if 'user_domain_name' in vim_config:

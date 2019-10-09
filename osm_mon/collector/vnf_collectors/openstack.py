@@ -24,9 +24,9 @@ from enum import Enum
 from typing import List
 
 import gnocchiclient.exceptions
-from ceilometerclient.v2 import client as ceilometer_client
+from ceilometerclient import client as ceilometer_client
+from ceilometerclient.exc import HTTPException
 from gnocchiclient.v1 import client as gnocchi_client
-from keystoneauth1.exceptions.catalog import EndpointNotFound
 from keystoneclient.v3 import client as keystone_client
 from neutronclient.v2_0 import client as neutron_client
 
@@ -120,7 +120,7 @@ class OpenstackCollector(BaseVimCollector):
             ceilometer = CeilometerBackend(vim_account)
             ceilometer.client.capabilities.get()
             return ceilometer
-        except EndpointNotFound:
+        except HTTPException:
             gnocchi = GnocchiBackend(vim_account)
             gnocchi.client.metric.list(limit=1)
             return gnocchi
@@ -220,7 +220,7 @@ class CeilometerBackend(OpenstackBackend):
 
     def _build_ceilometer_client(self, vim_account: dict) -> ceilometer_client.Client:
         sess = OpenstackUtils.get_session(vim_account)
-        return ceilometer_client.Client(session=sess)
+        return ceilometer_client.Client("2", session=sess)
 
     def collect_metric(self, metric_type: MetricType, metric_name: str, resource_id: str, interface_name: str):
         if metric_type != MetricType.INSTANCE:
