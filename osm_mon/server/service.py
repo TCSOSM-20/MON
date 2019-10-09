@@ -21,12 +21,10 @@
 # contact: bdiaz@whitestack.com or glavado@whitestack.com
 ##
 import logging
-import uuid
 
-from osm_mon.core import database
 from osm_mon.core.common_db import CommonDbClient
 from osm_mon.core.config import Config
-from osm_mon.core.database import AlarmRepository, Alarm, AlarmTagRepository
+from osm_mon.core.models import Alarm
 
 log = logging.getLogger(__name__)
 
@@ -38,41 +36,16 @@ class ServerService:
 
     def create_alarm(self,
                      name: str,
-                     threshold: str,
+                     threshold: float,
                      operation: str,
                      severity: str,
                      statistic: str,
                      metric_name: str,
                      tags: dict) -> Alarm:
-        database.db.connect()
-        try:
-            with database.db.atomic():
-                alarm = AlarmRepository.create(
-                    uuid=str(uuid.uuid4()),
-                    name=name,
-                    threshold=threshold,
-                    operation=operation.lower(),
-                    severity=severity.lower(),
-                    statistic=statistic.lower(),
-                    metric=metric_name
-                )
-                for k, v in tags.items():
-                    AlarmTagRepository.create(
-                        name=k,
-                        value=v,
-                        alarm=alarm
-                    )
-                return alarm
-
-        finally:
-            database.db.close()
+        alarm = Alarm(name, severity, threshold, operation, statistic, metric_name, tags)
+        self.common_db.create_alarm(alarm)
+        return alarm
 
     def delete_alarm(self,
                      alarm_uuid: str) -> None:
-        database.db.connect()
-        try:
-            with database.db.atomic():
-                alarm = AlarmRepository.get(Alarm.uuid == alarm_uuid)
-                alarm.delete_instance()
-        finally:
-            database.db.close()
+        self.common_db.delete_alarm(alarm_uuid)

@@ -26,13 +26,12 @@ import logging
 import sys
 
 from osm_mon.core.config import Config
-from osm_mon.core.database import DatabaseManager
 from osm_mon.evaluator.evaluator import Evaluator
 
 
 def main():
-    parser = argparse.ArgumentParser(prog='osm-policy-agent')
-    parser.add_argument('--config-file', nargs='?', help='POL configuration file')
+    parser = argparse.ArgumentParser(prog='osm-mon-evaluator')
+    parser.add_argument('--config-file', nargs='?', help='MON configuration file')
     args = parser.parse_args()
     cfg = Config(args.config_file)
 
@@ -48,9 +47,6 @@ def main():
     log.info("Starting MON Evaluator...")
     log.debug("Config: %s", cfg.conf)
     log.info("Initializing database...")
-    db_manager = DatabaseManager(cfg)
-    db_manager.create_tables()
-    log.info("Database initialized correctly.")
     evaluator = Evaluator(cfg)
     evaluator.evaluate_forever()
 
