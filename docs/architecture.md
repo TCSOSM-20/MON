@@ -50,7 +50,7 @@ MON Server subscribes to the message bus and waits for the following messages:
 
 It performs the corresponding action and sends a response through a unique topic made of 'alarm_response_' plus a correlation_id, which is a field contained in the request message.
 
-Alarms are stored in MON database in the OSM MySQL engine.
+Alarms are stored in MON database in the OSM MongoDB engine.
 
 ## MON Collector
 

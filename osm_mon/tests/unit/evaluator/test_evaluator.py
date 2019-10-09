@@ -39,8 +39,7 @@ class EvaluatorTest(TestCase):
     @mock.patch('multiprocessing.Process')
     @mock.patch.object(Evaluator, "notify_alarm")
     @mock.patch.object(EvaluatorService, "evaluate_alarms")
-    @mock.patch('osm_mon.core.database.db')
-    def test_evaluate(self, db, evaluate_alarms, notify_alarm, process):
+    def test_evaluate(self, evaluate_alarms, notify_alarm, process):
         mock_alarm = mock.Mock()
         mock_alarm.operation = 'gt'
         mock_alarm.threshold = 50.0
