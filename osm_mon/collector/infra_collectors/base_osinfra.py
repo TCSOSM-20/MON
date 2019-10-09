@@ -24,7 +24,6 @@ from typing import List
 
 from keystoneclient.v3 import client as keystone_client
 from novaclient import client as nova_client
-from novaclient import v2 as nova_client_v2
 
 from osm_mon.collector.infra_collectors.base_vim import BaseVimInfraCollector
 from osm_mon.collector.metric import Metric
@@ -88,6 +87,6 @@ class BaseOpenStackInfraCollector(BaseVimInfraCollector):
         sess = OpenstackUtils.get_session(vim_account)
         return keystone_client.Client(session=sess)
 
-    def _build_nova_client(self, vim_account: dict) -> nova_client_v2.Client:
+    def _build_nova_client(self, vim_account: dict) -> nova_client.Client:
         sess = OpenstackUtils.get_session(vim_account)
         return nova_client.Client("2", session=sess)
