@@ -27,6 +27,7 @@ import gnocchiclient.exceptions
 from ceilometerclient import client as ceilometer_client
 from ceilometerclient.exc import HTTPException
 from gnocchiclient.v1 import client as gnocchi_client
+from keystoneauth1.exceptions.catalog import EndpointNotFound
 from keystoneclient.v3 import client as keystone_client
 from neutronclient.v2_0 import client as neutron_client
 
@@ -120,7 +121,7 @@ class OpenstackCollector(BaseVimCollector):
             ceilometer = CeilometerBackend(vim_account)
             ceilometer.client.capabilities.get()
             return ceilometer
-        except HTTPException:
+        except (HTTPException, EndpointNotFound):
             gnocchi = GnocchiBackend(vim_account)
             gnocchi.client.status.get()
             return gnocchi
