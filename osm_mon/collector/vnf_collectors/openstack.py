@@ -80,6 +80,12 @@ class OpenstackCollector(BaseVimCollector):
         nsr_id = vnfr['nsr-id-ref']
         vnf_member_index = vnfr['member-vnf-index-ref']
         vnfd = self.common_db.get_vnfd(vnfr['vnfd-id'])
+
+        # Populate extra tags for metrics
+        tags = {}
+        tags['ns_name'] = self.common_db.get_nsr(nsr_id)['name']
+        tags['project_id'] = vnfr['_admin']['projects_read'][0]
+
         metrics = []
         for vdur in vnfr['vdur']:
             # This avoids errors when vdur records have not been completely filled
@@ -106,7 +112,6 @@ class OpenstackCollector(BaseVimCollector):
                         value = self.backend.collect_metric(metric_type, openstack_metric_name, resource_id,
                                                             interface_name)
                         if value is not None:
-                            tags = {}
                             if interface_name:
                                 tags['interface'] = interface_name
                             metric = VnfMetric(nsr_id, vnf_member_index, vdur['name'], metric_name, value, tags)

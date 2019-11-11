@@ -184,6 +184,12 @@ class VMwareCollector(BaseVimCollector):
         vnfd = self.common_db.get_vnfd(vnfr['vnfd-id'])
         vdu_mappings = {}
 
+        # Populate extra tags for metrics
+        nsr_id = vnfr['nsr-id-ref']
+        tags = {}
+        tags['ns_name'] = self.common_db.get_nsr(nsr_id)['name']
+        tags['project_id'] = vnfr['_admin']['projects_read'][0]
+
         # Fetch the list of all known resources from vROPS.
         resource_list = self.vrops.get_vm_resource_list_from_vrops()
 
@@ -218,6 +224,8 @@ class VMwareCollector(BaseVimCollector):
         if len(vdu_mappings) != 0:
             return self.vrops.get_metrics(vdu_mappings=vdu_mappings,
                                           monitoring_params=vdu['monitoring-param'],
-                                          vnfr=vnfr)
+                                          vnfr=vnfr,
+                                          tags=tags
+                                          )
         else:
             return []
