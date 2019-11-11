@@ -56,7 +56,7 @@ setup(
         "python-keystoneclient==3.15.*",
         "six==1.11.*",
         "peewee==3.8.*",
-        "pyyaml==3.*",
+        "pyyaml>=5.1.2",
         "prometheus_client==0.4.*",
         "gnocchiclient==7.0.*",
         "pyvcloud==19.1.1",
