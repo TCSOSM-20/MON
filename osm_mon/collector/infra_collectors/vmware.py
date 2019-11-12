@@ -50,6 +50,7 @@ class VMwareInfraCollector(BaseVimInfraCollector):
         self.admin_password = vim_account['admin_password']
         self.vim_uuid = vim_account['vim_uuid']
         self.org_name = vim_account['orgname']
+        self.vim_project_id = vim_account['project_id']
 
     def connect_vim_as_admin(self):
         """ Method connect as pvdc admin user to vCloud director.
@@ -95,6 +96,7 @@ class VMwareInfraCollector(BaseVimInfraCollector):
                                                                           vim_account_info['schema_version'],
                                                                           vim_account_id)
         vim_account['vim_uuid'] = vim_account_info['_id']
+        vim_account['project_id'] = vim_account_info['_admin']['projects_read'][0]
 
         vim_config = vim_account_info['config']
         vim_account['admin_username'] = vim_config['admin_username']
@@ -171,20 +173,30 @@ class VMwareInfraCollector(BaseVimInfraCollector):
     def collect(self) -> List[Metric]:
         metrics = []
         vim_status = self.check_vim_status()
-        vim_status_metric = Metric({'vim_account_id': self.vim_account_id}, 'vim_status', vim_status)
+        vim_account_id = self.vim_account_id
+        vim_project_id = self.vim_project_id
+        vim_tags = {
+            'vim_account_id': vim_account_id,
+            'project_id': vim_project_id
+        }
+        vim_status_metric = Metric(vim_tags, 'vim_status', vim_status)
         metrics.append(vim_status_metric)
-        vnfrs = self.common_db.get_vnfrs(vim_account_id=self.vim_account_id)
+        vnfrs = self.common_db.get_vnfrs(vim_account_id=vim_account_id)
         for vnfr in vnfrs:
             nsr_id = vnfr['nsr-id-ref']
+            ns_name = self.common_db.get_nsr(nsr_id)['name']
             vnf_member_index = vnfr['member-vnf-index-ref']
+            vnfr_project_id = vnfr['_admin']['projects_read'][0]
             for vdur in vnfr['vdur']:
                 resource_uuid = vdur['vim-id']
                 tags = {
                     'vim_account_id': self.vim_account_id,
                     'resource_uuid': resource_uuid,
                     'nsr_id': nsr_id,
+                    'ns_name': ns_name,
                     'vnf_member_index': vnf_member_index,
-                    'vdur_name': vdur['name']
+                    'vdur_name': vdur['name'],
+                    'project_id': vnfr_project_id
                 }
                 try:
                     vm_list = self.check_vm_status(resource_uuid)

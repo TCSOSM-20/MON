@@ -42,7 +42,12 @@ class OnosInfraCollector(BaseSdncInfraCollector):
     def collect(self) -> List[Metric]:
         metrics = []
         sdnc_status = self.is_sdnc_ok()
-        sdnc_status_metric = Metric({'sdnc_id': self.sdnc['_id']}, 'sdnc_status', sdnc_status)
+        sdnc_project_id = self.sdnc['_admin']['projects_read'][0]
+        sdnc_tags = {
+            'sdnc_id': self.sdnc['_id'],
+            'project_id': sdnc_project_id
+        }
+        sdnc_status_metric = Metric(sdnc_tags, 'sdnc_status', sdnc_status)
         metrics.append(sdnc_status_metric)
 
         return metrics
