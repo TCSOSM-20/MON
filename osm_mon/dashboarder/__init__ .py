@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # Copyright 2018 Whitestack, LLC
 # *************************************************************
 
@@ -17,47 +19,5 @@
 # under the License.
 
 # For those usages not covered by the Apache License, Version 2.0 please
-# contact: bdiaz@whitestack.com or glavado@whitestack.com
+# contact: glavado@whitestack.com
 ##
-
-global:
-  loglevel: INFO
-  request_timeout: 10
-
-database:
-  driver: mongo
-  uri: mongodb://mongo:27017
-  name: osm
-  commonkey: changeme
-
-message:
-  driver: kafka
-  host: kafka
-  port: 9092
-  group_id: mon-consumer
-
-sql:
-  database_uri: sqlite:///mon_sqlite.db
-
-collector:
-  interval: 30
-
-evaluator:
-  interval: 30
-  backend: prometheus
-
-dashboarder:
-  interval: 30
-  backend: grafana
-
-grafana:
-  url: http://grafana:3000
-  token: "Basic YWRtaW46YWRtaW4="
-
-prometheus:
-  url: http://prometheus:9090
-
-vca:
-  host: localhost
-  secret: secret
-  user: admin

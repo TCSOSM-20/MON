@@ -74,6 +74,7 @@ setup(
             "osm-mon-server = osm_mon.cmd.mon_server:main",
             "osm-mon-evaluator = osm_mon.cmd.mon_evaluator:main",
             "osm-mon-collector = osm_mon.cmd.mon_collector:main",
+            "osm-mon-dashboarder = osm_mon.cmd.mon_dashboarder:main",            
             "osm-mon-healthcheck = osm_mon.cmd.mon_healthcheck:main",
         ]
     },

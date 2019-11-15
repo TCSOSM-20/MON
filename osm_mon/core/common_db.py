@@ -55,9 +55,18 @@ class CommonDbClient:
         return vnfrs
 
     def get_vnfd(self, vnfd_id: str):
-        vnfr = self.common_db.get_one("vnfds",
+        vnfd = self.common_db.get_one("vnfds",
                                       {"_id": vnfd_id})
-        return vnfr
+        return vnfd
+
+    def get_vnfd_by_name(self, vnfd_name: str):
+        # TODO: optimize way of getting single VNFD in shared enviroments (RBAC)
+        vnfd = self.common_db.get_list("vnfds",
+                                       {"name": vnfd_name})[0]
+        return vnfd
+
+    def get_nsrs(self):
+        return self.common_db.get_list('nsrs')
 
     def get_nsr(self, nsr_id: str):
         nsr = self.common_db.get_one("nsrs",
@@ -115,3 +124,9 @@ class CommonDbClient:
 
     def get_sdnc(self, sdnc_id: str):
         return self.common_db.get_one('sdns', {'_id': sdnc_id})
+
+    def get_projects(self):
+        return self.common_db.get_list('projects')
+
+    def get_project(self, project_id: str):
+        return self.common_db.get_one('projects', {'_id': project_id})
