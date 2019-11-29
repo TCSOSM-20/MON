@@ -52,7 +52,6 @@ dashboarder:
 
 grafana:
   url: http://grafana:3000
-  token: "Basic YWRtaW46YWRtaW4="
 
 prometheus:
   url: http://prometheus:9090

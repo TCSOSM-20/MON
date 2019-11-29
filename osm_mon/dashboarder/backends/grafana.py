@@ -25,7 +25,7 @@ import requests
 
 log = logging.getLogger(__name__)
 
-# TODO (lavado): migrate to Class, import config variables
+# TODO (lavado): migrate to Class, import config variables to get token
 url = "http://grafana:3000/api/"
 headers = {
     'content-type': "application/json",
@@ -38,7 +38,6 @@ def get_all_dashboard_uids():
     dashboards = response.json()
     dashboard_uids = []
     for dashboard in dashboards:
-        print(dashboard['uid'])
         dashboard_uids.append(dashboard['uid'])
     log.debug("Searching for all dashboard uids: %s", dashboard_uids)
     return dashboard_uids

@@ -61,9 +61,11 @@ class CommonDbClient:
 
     def get_vnfd_by_name(self, vnfd_name: str):
         # TODO: optimize way of getting single VNFD in shared enviroments (RBAC)
-        vnfd = self.common_db.get_list("vnfds",
-                                       {"name": vnfd_name})[0]
-        return vnfd
+        if self.common_db.get_list("vnfds", {"name": vnfd_name}):
+            vnfd = self.common_db.get_list("vnfds", {"name": vnfd_name})[0]
+            return vnfd
+        else:
+            return None
 
     def get_nsrs(self):
         return self.common_db.get_list('nsrs')

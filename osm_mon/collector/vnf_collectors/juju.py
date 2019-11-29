@@ -51,7 +51,10 @@ class VCACollector(BaseCollector):
         # Populate extra tags for metrics
         tags = {}
         tags['ns_name'] = self.common_db.get_nsr(nsr_id)['name']
-        tags['project_id'] = vnfr['_admin']['projects_read'][0]
+        if vnfr['_admin']['projects_read']:
+            tags['project_id'] = vnfr['_admin']['projects_read'][0]
+        else:
+            tags['project_id'] = None
 
         metrics = []
         for vdur in vnfr['vdur']:

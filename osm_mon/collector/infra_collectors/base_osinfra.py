@@ -46,7 +46,10 @@ class BaseOpenStackInfraCollector(BaseVimInfraCollector):
     def collect(self) -> List[Metric]:
         metrics = []
         vim_status = self.is_vim_ok()
-        vim_project_id = self.vim_account['_admin']['projects_read'][0]
+        if self.vim_account['_admin']['projects_read']:
+            vim_project_id = self.vim_account['_admin']['projects_read'][0]
+        else:
+            vim_project_id = None
         vim_tags = {
             'vim_account_id': self.vim_account['_id'],
             'project_id': vim_project_id
@@ -58,7 +61,10 @@ class BaseOpenStackInfraCollector(BaseVimInfraCollector):
             nsr_id = vnfr['nsr-id-ref']
             ns_name = self.common_db.get_nsr(nsr_id)['name']
             vnf_member_index = vnfr['member-vnf-index-ref']
-            vnfr_project_id = vnfr['_admin']['projects_read'][0]
+            if vnfr['_admin']['projects_read']:
+                vnfr_project_id = vnfr['_admin']['projects_read'][0]
+            else:
+                vnfr_project_id = None
             for vdur in vnfr['vdur']:
                 if 'vim-id' not in vdur:
                     log.debug("Field vim-id is not present in vdur")

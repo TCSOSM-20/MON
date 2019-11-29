@@ -52,7 +52,10 @@ class VIOCollector(BaseVimCollector):
         nsr_id = vnfr['nsr-id-ref']
         tags = {}
         tags['ns_name'] = self.common_db.get_nsr(nsr_id)['name']
-        tags['project_id'] = vnfr['_admin']['projects_read'][0]
+        if vnfr['_admin']['projects_read']:
+            tags['project_id'] = vnfr['_admin']['projects_read'][0]
+        else:
+            tags['project_id'] = None
 
         # Fetch the list of all known resources from vROPS.
         resource_list = self.vrops.get_vm_resource_list_from_vrops()
