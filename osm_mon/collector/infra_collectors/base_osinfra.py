@@ -46,12 +46,19 @@ class BaseOpenStackInfraCollector(BaseVimInfraCollector):
     def collect(self) -> List[Metric]:
         metrics = []
         vim_status = self.is_vim_ok()
-        vim_status_metric = Metric({'vim_account_id': self.vim_account['_id']}, 'vim_status', vim_status)
+        vim_project_id = self.vim_account['_admin']['projects_read'][0]
+        vim_tags = {
+            'vim_account_id': self.vim_account['_id'],
+            'project_id': vim_project_id
+        }
+        vim_status_metric = Metric(vim_tags, 'vim_status', vim_status)
         metrics.append(vim_status_metric)
         vnfrs = self.common_db.get_vnfrs(vim_account_id=self.vim_account['_id'])
         for vnfr in vnfrs:
             nsr_id = vnfr['nsr-id-ref']
+            ns_name = self.common_db.get_nsr(nsr_id)['name']
             vnf_member_index = vnfr['member-vnf-index-ref']
+            vnfr_project_id = vnfr['_admin']['projects_read'][0]
             for vdur in vnfr['vdur']:
                 if 'vim-id' not in vdur:
                     log.debug("Field vim-id is not present in vdur")
@@ -61,8 +68,10 @@ class BaseOpenStackInfraCollector(BaseVimInfraCollector):
                     'vim_account_id': self.vim_account['_id'],
                     'resource_uuid': resource_uuid,
                     'nsr_id': nsr_id,
+                    'ns_name': ns_name,
                     'vnf_member_index': vnf_member_index,
-                    'vdur_name': vdur['name']
+                    'vdur_name': vdur['name'],
+                    'project_id': vnfr_project_id
                 }
                 try:
                     vm = self.nova.servers.get(resource_uuid)
