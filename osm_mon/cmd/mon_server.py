@@ -27,12 +27,13 @@ import logging
 import sys
 
 from osm_mon.core.config import Config
+from osm_mon.core.database import DatabaseManager
 from osm_mon.server.server import Server
 
 
 def main():
-    parser = argparse.ArgumentParser(prog='osm-mon-server')
-    parser.add_argument('--config-file', nargs='?', help='MON configuration file')
+    parser = argparse.ArgumentParser(prog='osm-policy-agent')
+    parser.add_argument('--config-file', nargs='?', help='POL configuration file')
     args = parser.parse_args()
     cfg = Config(args.config_file)
 
@@ -48,6 +49,9 @@ def main():
     log.info("Starting MON Server...")
     log.debug("Config: %s", cfg.conf)
     log.info("Initializing database...")
+    db_manager = DatabaseManager(cfg)
+    db_manager.create_tables()
+    log.info("Database initialized correctly.")
     loop = asyncio.get_event_loop()
     server = Server(cfg, loop)
     server.run()

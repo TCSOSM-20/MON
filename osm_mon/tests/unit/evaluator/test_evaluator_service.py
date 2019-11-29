@@ -24,6 +24,7 @@ from unittest import TestCase, mock
 
 from osm_mon.core.common_db import CommonDbClient
 from osm_mon.core.config import Config
+from osm_mon.core.database import AlarmRepository, AlarmTag
 from osm_mon.core.message_bus_client import MessageBusClient
 from osm_mon.evaluator.backends.prometheus import PrometheusBackend
 from osm_mon.evaluator.evaluator import AlarmStatus
@@ -148,7 +149,8 @@ class EvaluatorTest(TestCase):
         self.config = Config()
 
     @mock.patch.object(EvaluatorService, "_get_metric_value")
-    def test_evaluate_metric(self, get_metric_value):
+    @mock.patch('osm_mon.core.database.db')
+    def test_evaluate_metric(self, db, get_metric_value):
         mock_alarm = mock.Mock()
         mock_alarm.operation = 'gt'
         mock_alarm.threshold = 50.0
@@ -157,29 +159,33 @@ class EvaluatorTest(TestCase):
 
         service = EvaluatorService(self.config)
         service.queue = mock.Mock()
-        service._evaluate_metric(mock_alarm)
+        service._evaluate_metric(mock_alarm, {})
         service.queue.put.assert_called_with((mock_alarm, AlarmStatus.ALARM))
         service.queue.reset_mock()
 
         mock_alarm.operation = 'lt'
-        service._evaluate_metric(mock_alarm)
+        service._evaluate_metric(mock_alarm, {})
         service.queue.put.assert_called_with((mock_alarm, AlarmStatus.OK))
         service.queue.reset_mock()
 
         get_metric_value.return_value = None
-        service._evaluate_metric(mock_alarm)
+        service._evaluate_metric(mock_alarm, {})
         service.queue.put.assert_called_with((mock_alarm, AlarmStatus.INSUFFICIENT))
 
     @mock.patch('multiprocessing.Process')
     @mock.patch.object(EvaluatorService, "_evaluate_metric")
     @mock.patch.object(CommonDbClient, "get_vnfd")
     @mock.patch.object(CommonDbClient, "get_vnfr")
-    @mock.patch.object(CommonDbClient, "get_alarms")
-    def test_evaluate_alarms(self, alarm_list, get_vnfr, get_vnfd, evaluate_metric, process):
+    @mock.patch.object(AlarmRepository, "list")
+    @mock.patch('osm_mon.core.database.db')
+    def test_evaluate(self, db, alarm_list, get_vnfr, get_vnfd, evaluate_metric, process):
         mock_alarm = mock.Mock()
         mock_alarm.vdur_name = 'cirros_ns-1-cirros_vnfd-VM-1'
         mock_alarm.monitoring_param = 'cirros_vnf_memory_util'
-        mock_alarm.tags = {'name': 'value'}
+        mock_tag = AlarmTag()
+        mock_tag.name = 'name'
+        mock_tag.value = 'value'
+        mock_alarm.tags = [mock_tag]
         alarm_list.return_value = [mock_alarm]
         get_vnfr.return_value = vnfr_record_mock
         get_vnfd.return_value = vnfd_record_mock
@@ -187,10 +193,11 @@ class EvaluatorTest(TestCase):
         evaluator = EvaluatorService(self.config)
         evaluator.evaluate_alarms()
 
-        process.assert_called_with(target=evaluate_metric, args=(mock_alarm,))
+        process.assert_called_with(target=evaluate_metric, args=(mock_alarm, {'name': 'value'}))
 
     @mock.patch.object(PrometheusBackend, "get_metric_value")
-    def test_get_metric_value_prometheus(self, get_metric_value):
+    @mock.patch('osm_mon.core.database.db')
+    def test_get_metric_value_prometheus(self, db, get_metric_value):
         self.config.set('evaluator', 'backend', 'prometheus')
         evaluator = EvaluatorService(self.config)
         evaluator._get_metric_value('test', {})
