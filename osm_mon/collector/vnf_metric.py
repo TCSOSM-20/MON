@@ -20,6 +20,9 @@
 # contact: bdiaz@whitestack.com or glavado@whitestack.com
 ##
 from osm_mon.collector.metric import Metric
+import logging
+
+log = logging.getLogger(__name__)
 
 
 class VnfMetric(Metric):
@@ -31,4 +34,5 @@ class VnfMetric(Metric):
         }
         if extra_tags:
             tags.update(extra_tags)
+        log.debug('Tags: %s', tags)
         super().__init__(tags, name, value)

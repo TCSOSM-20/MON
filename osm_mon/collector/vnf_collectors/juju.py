@@ -47,6 +47,12 @@ class VCACollector(BaseCollector):
         nsr_id = vnfr['nsr-id-ref']
         vnf_member_index = vnfr['member-vnf-index-ref']
         vnfd = self.common_db.get_vnfd(vnfr['vnfd-id'])
+
+        # Populate extra tags for metrics
+        tags = {}
+        tags['ns_name'] = self.common_db.get_nsr(nsr_id)['name']
+        tags['project_id'] = vnfr['_admin']['projects_read'][0]
+
         metrics = []
         for vdur in vnfr['vdur']:
             # This avoids errors when vdur records have not been completely filled
@@ -69,7 +75,7 @@ class VCACollector(BaseCollector):
                     for measure in measure_list:
                         log.debug("Measure: %s", measure)
                         metric = VnfMetric(nsr_id, vnf_member_index, vdur['name'], measure['key'],
-                                           float(measure['value']))
+                                           float(measure['value'], tags))
                         metrics.append(metric)
         if 'vnf-configuration' in vnfd and 'metrics' in vnfd['vnf-configuration']:
             try:
@@ -83,7 +89,7 @@ class VCACollector(BaseCollector):
             for measure_list in measures.values():
                 for measure in measure_list:
                     log.debug("Measure: %s", measure)
-                    metric = VnfMetric(nsr_id, vnf_member_index, '', measure['key'], float(measure['value']))
+                    metric = VnfMetric(nsr_id, vnf_member_index, '', measure['key'], float(measure['value'], tags))
                     metrics.append(metric)
         return metrics
 

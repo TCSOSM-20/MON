@@ -82,7 +82,8 @@ class vROPS_Helper():
     def get_metrics(self,
                     vdu_mappings={},
                     monitoring_params={},
-                    vnfr=None):
+                    vnfr=None,
+                    tags={}):
 
         monitoring_keys = {}
         # Collect the names of all the metrics we need to query
@@ -155,7 +156,9 @@ class vROPS_Helper():
                                            vnfr['member-vnf-index-ref'],
                                            vdu_name,
                                            metric_name,
-                                           metric_value)
+                                           metric_value,
+                                           tags
+                                           )
 
                         metrics.append(metric)
 
