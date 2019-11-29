@@ -27,6 +27,7 @@ from osm_common import dbmongo
 
 from osm_mon.core.common_db import CommonDbClient
 from osm_mon.core.config import Config
+from osm_mon.core.models import Alarm
 
 
 class CommonDbClientTest(unittest.TestCase):
@@ -146,3 +147,37 @@ class CommonDbClientTest(unittest.TestCase):
         decrypt_vim_password.assert_any_call('vim_password', schema_version, vim_id)
         self.assertRaises(AssertionError, decrypt_vim_password.assert_any_call, 'vrops_password', schema_version,
                           vim_id)
+
+    @mock.patch.object(dbmongo.DbMongo, "db_connect", mock.Mock())
+    @mock.patch.object(dbmongo.DbMongo, "get_list")
+    def test_get_alarms(self, get_list):
+        get_list.return_value = [{
+            'uuid': '1',
+            'name': 'name',
+            'severity': 'severity',
+            'threshold': 50,
+            'operation': 'operation',
+            'statistic': 'statistic',
+            'tags': {},
+        }]
+
+        common_db_client = CommonDbClient(self.config)
+        alarms = common_db_client.get_alarms()
+        self.assertEqual('1', alarms[0].uuid)
+
+    @mock.patch.object(dbmongo.DbMongo, "db_connect", mock.Mock())
+    @mock.patch.object(dbmongo.DbMongo, "create")
+    def test_create_alarm(self, create):
+        alarm = Alarm('name', 'severity', 50.0, 'operation', 'statistic', 'metric', {})
+        alarm.uuid = '1'
+        common_db_client = CommonDbClient(self.config)
+        common_db_client.create_alarm(alarm)
+        create.assert_called_with('alarms', {'tags': {}, 'threshold': 50.0, 'metric': 'metric', 'severity': 'severity',
+                                             'statistic': 'statistic', 'name': 'name', 'uuid': '1'})
+
+    @mock.patch.object(dbmongo.DbMongo, "db_connect", mock.Mock())
+    @mock.patch.object(dbmongo.DbMongo, "del_one")
+    def test_delete_alarm(self, delete):
+        common_db_client = CommonDbClient(self.config)
+        common_db_client.delete_alarm('1')
+        delete.assert_called_with('alarms', {'uuid': '1'})

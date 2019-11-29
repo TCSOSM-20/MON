@@ -21,9 +21,12 @@
 # For those usages not covered by the Apache License, Version 2.0 please
 # contact: bdiaz@whitestack.com or glavado@whitestack.com
 ##
+from typing import List
+
 from osm_common import dbmongo, dbmemory
 
 from osm_mon.core.config import Config
+from osm_mon.core.models import Alarm
 
 
 class CommonDbClient:
@@ -115,3 +118,16 @@ class CommonDbClient:
 
     def get_sdnc(self, sdnc_id: str):
         return self.common_db.get_one('sdns', {'_id': sdnc_id})
+
+    def create_alarm(self, alarm: Alarm):
+        return self.common_db.create('alarms', alarm.to_dict())
+
+    def delete_alarm(self, alarm_uuid: str):
+        return self.common_db.del_one('alarms', {'uuid': alarm_uuid})
+
+    def get_alarms(self) -> List[Alarm]:
+        alarms = []
+        alarm_dicts = self.common_db.get_list('alarms')
+        for alarm_dict in alarm_dicts:
+            alarms.append(Alarm.from_dict(alarm_dict))
+        return alarms
