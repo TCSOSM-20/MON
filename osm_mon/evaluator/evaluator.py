@@ -28,8 +28,8 @@ import time
 import peewee
 
 from osm_mon.core.config import Config
-from osm_mon.core.database import Alarm
 from osm_mon.core.message_bus_client import MessageBusClient
+from osm_mon.core.models import Alarm
 from osm_mon.core.response import ResponseBuilder
 from osm_mon.evaluator.service import EvaluatorService, AlarmStatus
 
