@@ -79,8 +79,8 @@ class Evaluator:
     def _build_alarm_response(self, alarm: Alarm, status: AlarmStatus):
         response = ResponseBuilder()
         tags = {}
-        for tag in alarm.tags:
-            tags[tag.name] = tag.value
+        for name, value in alarm.tags.items():
+            tags[name] = value
         now = time.strftime("%d-%m-%Y") + " " + time.strftime("%X")
         return response.generate_response(
             'notify_alarm',

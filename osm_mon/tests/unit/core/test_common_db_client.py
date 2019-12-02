@@ -172,8 +172,9 @@ class CommonDbClientTest(unittest.TestCase):
         alarm.uuid = '1'
         common_db_client = CommonDbClient(self.config)
         common_db_client.create_alarm(alarm)
-        create.assert_called_with('alarms', {'tags': {}, 'threshold': 50.0, 'metric': 'metric', 'severity': 'severity',
-                                             'statistic': 'statistic', 'name': 'name', 'uuid': '1'})
+        create.assert_called_with('alarms', {'tags': {}, 'threshold': 50.0, 'metric': 'metric',
+                                             'severity': 'severity', 'statistic': 'statistic',
+                                             'name': 'name', 'operation': 'operation', 'uuid': '1'})
 
     @mock.patch.object(dbmongo.DbMongo, "db_connect", mock.Mock())
     @mock.patch.object(dbmongo.DbMongo, "del_one")

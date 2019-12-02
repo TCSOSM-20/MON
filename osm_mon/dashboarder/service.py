@@ -25,6 +25,7 @@ import logging
 from osm_mon.core.common_db import CommonDbClient
 from osm_mon.core.config import Config
 import osm_mon.dashboarder.backends.grafana as grafana
+from osm_mon import __path__ as mon_path
 
 log = logging.getLogger(__name__)
 
@@ -46,7 +47,7 @@ class DashboarderService:
             project_id = project['_id']
             # Collect Project IDs for periodical dashboard clean-up
             osm_resource_uids.append(project_id)
-            dashboard_path = '/mon/osm_mon/dashboarder/templates/project_scoped.json'
+            dashboard_path = '{}/dashboarder/templates/project_scoped.json'.format(mon_path)
             if project_id not in dashboard_uids:
                 project_name = project['name']
                 grafana.create_dashboard(project_id, project_name,
@@ -60,7 +61,7 @@ class DashboarderService:
         nsrs = self.common_db.get_nsrs()
         for nsr in nsrs:
             nsr_id = nsr['_id']
-            dashboard_path = '/mon/osm_mon/dashboarder/templates/ns_scoped.json'
+            dashboard_path = '{}/dashboarder/templates/ns_scoped.json'.format(mon_path)
             # Collect NS IDs for periodical dashboard clean-up
             osm_resource_uids.append(nsr_id)
             # Check if the NSR's VNFDs contain metrics

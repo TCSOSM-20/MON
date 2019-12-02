@@ -44,7 +44,8 @@ class Alarm:
             'threshold': self.threshold,
             'statistic': self.statistic,
             'metric': self.metric,
-            'tags': self.tags
+            'tags': self.tags,
+            'operation': self.operation
         }
         return alarm
 
@@ -54,8 +55,9 @@ class Alarm:
         alarm.uuid = data.get('uuid', str(uuid.uuid4()))
         alarm.name = data.get('name')
         alarm.severity = data.get('severity')
-        alarm.threshold = data.get('threshold')
+        alarm.threshold = float(data.get('threshold'))
         alarm.statistic = data.get('statistic')
         alarm.metric = data.get('metric')
         alarm.tags = data.get('tags')
+        alarm.operation = data.get('operation')
         return alarm
