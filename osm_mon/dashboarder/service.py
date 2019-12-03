@@ -47,7 +47,7 @@ class DashboarderService:
             project_id = project['_id']
             # Collect Project IDs for periodical dashboard clean-up
             osm_resource_uids.append(project_id)
-            dashboard_path = '{}/dashboarder/templates/project_scoped.json'.format(mon_path)
+            dashboard_path = '{}/dashboarder/templates/project_scoped.json'.format(mon_path[0])
             if project_id not in dashboard_uids:
                 project_name = project['name']
                 grafana.create_dashboard(project_id, project_name,
@@ -61,7 +61,7 @@ class DashboarderService:
         nsrs = self.common_db.get_nsrs()
         for nsr in nsrs:
             nsr_id = nsr['_id']
-            dashboard_path = '{}/dashboarder/templates/ns_scoped.json'.format(mon_path)
+            dashboard_path = '{}/dashboarder/templates/ns_scoped.json'.format(mon_path[0])
             # Collect NS IDs for periodical dashboard clean-up
             osm_resource_uids.append(nsr_id)
             # Check if the NSR's VNFDs contain metrics
