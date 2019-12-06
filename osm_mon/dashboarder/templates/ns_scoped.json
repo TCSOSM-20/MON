@@ -41,7 +41,7 @@
       "decimals": 2,
       "description": "",
       "fill": 1,
-      "fillGradient": 0,
+      "fillGradient": 3,
       "gridPos": {
         "h": 7,
         "w": 12,
@@ -149,7 +149,7 @@
       "decimals": 2,
       "description": "",
       "fill": 1,
-      "fillGradient": 0,
+      "fillGradient": 3,
       "gridPos": {
         "h": 7,
         "w": 12,
@@ -375,7 +375,7 @@
       "decimals": 2,
       "description": "",
       "fill": 1,
-      "fillGradient": 0,
+      "fillGradient": 3,
       "gridPos": {
         "h": 7,
         "w": 12,
@@ -482,7 +482,7 @@
       "decimals": 2,
       "description": "",
       "fill": 1,
-      "fillGradient": 0,
+      "fillGradient": 3,
       "gridPos": {
         "h": 7,
         "w": 12,

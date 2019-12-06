@@ -489,7 +489,7 @@
       "seriesOverrides": [],
       "spaceLength": 10,
       "stack": false,
-      "steppedLine": false,
+      "steppedLine": true,
       "targets": [
         {
           "expr": "osm_vm_status{project_id=\"$project_id\"}",
