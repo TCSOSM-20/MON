@@ -40,8 +40,10 @@ class VCACollector(BaseCollector):
         super().__init__(config)
         self.common_db = CommonDbClient(config)
         self.loop = asyncio.get_event_loop()
-        self.n2vc = N2VC(server=config.get('vca', 'host'), user=config.get('vca', 'user'),
-                         secret=config.get('vca', 'secret'))
+        self.n2vc = N2VC(server=config.get('vca', 'host'),
+                         user=config.get('vca', 'user'),
+                         secret=config.get('vca', 'secret'),
+                         ca_cert=config.get('vca', 'cacert'))
 
     def collect(self, vnfr: dict) -> List[Metric]:
         nsr_id = vnfr['nsr-id-ref']

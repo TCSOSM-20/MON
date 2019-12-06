@@ -60,3 +60,4 @@ vca:
   host: localhost
   secret: secret
   user: admin
+  cacert: cacert
