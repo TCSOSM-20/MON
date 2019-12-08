@@ -80,7 +80,7 @@ class VCACollector(BaseCollector):
                     for measure in measure_list:
                         log.debug("Measure: %s", measure)
                         metric = VnfMetric(nsr_id, vnf_member_index, vdur['name'], measure['key'],
-                                           float(measure['value'], tags))
+                                           float(measure['value']), tags)
                         metrics.append(metric)
         if 'vnf-configuration' in vnfd and 'metrics' in vnfd['vnf-configuration']:
             try:
@@ -94,7 +94,7 @@ class VCACollector(BaseCollector):
             for measure_list in measures.values():
                 for measure in measure_list:
                     log.debug("Measure: %s", measure)
-                    metric = VnfMetric(nsr_id, vnf_member_index, '', measure['key'], float(measure['value'], tags))
+                    metric = VnfMetric(nsr_id, vnf_member_index, '', measure['key'], float(measure['value']), tags)
                     metrics.append(metric)
         return metrics
 
