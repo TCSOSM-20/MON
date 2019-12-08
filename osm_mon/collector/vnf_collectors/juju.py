@@ -90,11 +90,19 @@ class VCACollector(BaseCollector):
                 return metrics
             measures = self.loop.run_until_complete(self.n2vc.GetMetrics(vca_deployment_info['model'],
                                                                          vca_deployment_info['application']))
+            # Search for Mgmt VDU name, needed to query Prometheus based on alarm tags
+            # TODO: check a better way to look for Mgmt VDU
+            for vdur in vnfr['vdur']:
+                for interface in vdur['interfaces']:
+                    if 'mgmt-vnf' in interface:
+                        vdu_name = vdur['name']
+                        break
             log.debug('Measures: %s', measures)
             for measure_list in measures.values():
                 for measure in measure_list:
                     log.debug("Measure: %s", measure)
-                    metric = VnfMetric(nsr_id, vnf_member_index, '', measure['key'], float(measure['value']), tags)
+                    metric = VnfMetric(nsr_id, vnf_member_index, vdu_name,
+                                       measure['key'], float(measure['value']), tags)
                     metrics.append(metric)
         return metrics
 
