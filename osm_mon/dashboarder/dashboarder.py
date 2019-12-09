@@ -22,7 +22,7 @@
 ##
 import logging
 import time
-
+import socket
 import peewee
 
 from osm_mon.dashboarder.service import DashboarderService
@@ -39,6 +39,13 @@ class Dashboarder:
     def dashboard_forever(self):
         log.debug('dashboard_forever')
         while True:
+            try:
+                socket.gethostbyname("grafana")
+                log.debug("Dashboard backend is running")
+            except socket.error:
+                log.debug("Dashboard backend is not available")
+                time.sleep(int(self.conf.get('dashboarder', 'interval')))
+                continue
             try:
                 self.create_dashboards()
                 time.sleep(int(self.conf.get('dashboarder', 'interval')))
