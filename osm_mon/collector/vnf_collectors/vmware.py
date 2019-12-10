@@ -90,14 +90,10 @@ class VMwareCollector(BaseVimCollector):
 
         vim_config = vim_account_info['config']
         vim_account['admin_username'] = vim_config['admin_username']
-        vim_account['admin_password'] = self.common_db.decrypt_vim_password(vim_config['admin_password'],
-                                                                            vim_account_info['schema_version'],
-                                                                            vim_account_id)
+        vim_account['admin_password'] = vim_config['admin_password']
         vim_account['vrops_site'] = vim_config['vrops_site']
         vim_account['vrops_user'] = vim_config['vrops_user']
-        vim_account['vrops_password'] = self.common_db.decrypt_vim_password(vim_config['vrops_password'],
-                                                                            vim_account_info['schema_version'],
-                                                                            vim_account_id)
+        vim_account['vrops_password'] = vim_config['vrops_password']
 
         return vim_account
 

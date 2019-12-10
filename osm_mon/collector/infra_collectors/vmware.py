@@ -92,17 +92,12 @@ class VMwareInfraCollector(BaseVimInfraCollector):
         vim_account['vim_type'] = vim_account_info['vim_type']
         vim_account['vim_url'] = vim_account_info['vim_url']
         vim_account['org_user'] = vim_account_info['vim_user']
-        vim_account['org_password'] = self.common_db.decrypt_vim_password(vim_account_info['vim_password'],
-                                                                          vim_account_info['schema_version'],
-                                                                          vim_account_id)
         vim_account['vim_uuid'] = vim_account_info['_id']
         vim_account['project_id'] = vim_account_info['_admin']['projects_read'][0]
 
         vim_config = vim_account_info['config']
         vim_account['admin_username'] = vim_config['admin_username']
-        vim_account['admin_password'] = self.common_db.decrypt_vim_password(vim_config['admin_password'],
-                                                                            vim_account_info['schema_version'],
-                                                                            vim_account_id)
+        vim_account['admin_password'] = vim_config['admin_password']
 
         if vim_config['orgname'] is not None:
             vim_account['orgname'] = vim_config['orgname']
