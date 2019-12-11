@@ -55,7 +55,7 @@ class VIOCollector(BaseVimCollector):
         if vnfr['_admin']['projects_read']:
             tags['project_id'] = vnfr['_admin']['projects_read'][0]
         else:
-            tags['project_id'] = None
+            tags['project_id'] = ''
 
         # Fetch the list of all known resources from vROPS.
         resource_list = self.vrops.get_vm_resource_list_from_vrops()

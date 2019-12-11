@@ -93,7 +93,10 @@ class VMwareInfraCollector(BaseVimInfraCollector):
         vim_account['vim_url'] = vim_account_info['vim_url']
         vim_account['org_user'] = vim_account_info['vim_user']
         vim_account['vim_uuid'] = vim_account_info['_id']
-        vim_account['project_id'] = vim_account_info['_admin']['projects_read'][0]
+        if vim_account_info['_admin']['projects_read']:
+            vim_account['project_id'] = vim_account_info['_admin']['projects_read'][0]
+        else:
+            vim_account['project_id'] = ''
 
         vim_config = vim_account_info['config']
         vim_account['admin_username'] = vim_config['admin_username']
@@ -181,7 +184,10 @@ class VMwareInfraCollector(BaseVimInfraCollector):
             nsr_id = vnfr['nsr-id-ref']
             ns_name = self.common_db.get_nsr(nsr_id)['name']
             vnf_member_index = vnfr['member-vnf-index-ref']
-            vnfr_project_id = vnfr['_admin']['projects_read'][0]
+            if vnfr['_admin']['projects_read']:
+                vnfr_project_id = vnfr['_admin']['projects_read'][0]
+            else:
+                vnfr_project_id = ''
             for vdur in vnfr['vdur']:
                 resource_uuid = vdur['vim-id']
                 tags = {

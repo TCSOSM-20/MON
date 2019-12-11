@@ -49,7 +49,7 @@ class BaseOpenStackInfraCollector(BaseVimInfraCollector):
         if self.vim_account['_admin']['projects_read']:
             vim_project_id = self.vim_account['_admin']['projects_read'][0]
         else:
-            vim_project_id = None
+            vim_project_id = ''
         vim_tags = {
             'vim_account_id': self.vim_account['_id'],
             'project_id': vim_project_id
@@ -64,7 +64,7 @@ class BaseOpenStackInfraCollector(BaseVimInfraCollector):
             if vnfr['_admin']['projects_read']:
                 vnfr_project_id = vnfr['_admin']['projects_read'][0]
             else:
-                vnfr_project_id = None
+                vnfr_project_id = ''
             for vdur in vnfr['vdur']:
                 if 'vim-id' not in vdur:
                     log.debug("Field vim-id is not present in vdur")

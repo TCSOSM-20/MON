@@ -45,7 +45,7 @@ class OnosInfraCollector(BaseSdncInfraCollector):
         if self.sdnc['_admin']['projects_read']:
             sdnc_project_id = self.sdnc['_admin']['projects_read'][0]
         else:
-            sdnc_project_id = None
+            sdnc_project_id = ''
         sdnc_tags = {
             'sdnc_id': self.sdnc['_id'],
             'project_id': sdnc_project_id

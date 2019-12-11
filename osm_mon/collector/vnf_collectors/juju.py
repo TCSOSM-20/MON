@@ -56,7 +56,7 @@ class VCACollector(BaseCollector):
         if vnfr['_admin']['projects_read']:
             tags['project_id'] = vnfr['_admin']['projects_read'][0]
         else:
-            tags['project_id'] = None
+            tags['project_id'] = ''
 
         metrics = []
         for vdur in vnfr['vdur']:
