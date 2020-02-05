@@ -20,13 +20,13 @@
 # contact: bdiaz@whitestack.com or glavado@whitestack.com
 ##
 
-FROM ubuntu:16.04
+FROM ubuntu:18.04
 
 LABEL authors="Benjamín Díaz"
 
 RUN apt-get --yes update \
  && apt-get --yes install git python3 python3-pip libmysqlclient-dev libssl-dev libffi-dev mysql-client \
- && pip3 install pip==9.0.3
+ && python3 -m pip install -U pip
 
 COPY requirements.txt /mon/requirements.txt
 
