@@ -34,7 +34,8 @@ headers = {
 
 
 def get_all_dashboard_uids():
-    response = requests.request("GET", url + "search?query=%", headers=headers)
+    # Gets only dashboards that were automated by OSM (with tag 'osm_automated')
+    response = requests.request("GET", url + "search?tag=osm_automated", headers=headers)
     dashboards = response.json()
     dashboard_uids = []
     for dashboard in dashboards:
