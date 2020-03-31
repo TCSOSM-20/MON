@@ -1,0 +1,3 @@
+{
+    "cornflakes.linter.executablePath": "/usr/local/bin/flake8"
+}

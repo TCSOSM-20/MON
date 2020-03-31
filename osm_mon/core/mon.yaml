@@ -52,6 +52,8 @@ dashboarder:
 
 grafana:
   url: http://grafana:3000
+  user: admin
+  password: admin
 
 prometheus:
   url: http://prometheus:9090
