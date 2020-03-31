@@ -24,7 +24,7 @@ import logging
 
 from osm_mon.core.common_db import CommonDbClient
 from osm_mon.core.config import Config
-import osm_mon.dashboarder.backends.grafana as grafana
+from osm_mon.dashboarder.backends.grafana import GrafanaBackend
 from osm_mon import __path__ as mon_path
 
 log = logging.getLogger(__name__)
@@ -34,11 +34,12 @@ class DashboarderService:
     def __init__(self, config: Config):
         self.conf = config
         self.common_db = CommonDbClient(self.conf)
+        self.grafana = GrafanaBackend(self.conf)
 
     def create_dashboards(self):
         # TODO lavado: migrate these methods to mongo change streams
         # Lists all dashboards and OSM resources for later comparisons
-        dashboard_uids = grafana.get_all_dashboard_uids()
+        dashboard_uids = self.grafana.get_all_dashboard_uids()
         osm_resource_uids = []
 
         # Reads existing project list and creates a dashboard for each
@@ -50,8 +51,8 @@ class DashboarderService:
             dashboard_path = '{}/dashboarder/templates/project_scoped.json'.format(mon_path[0])
             if project_id not in dashboard_uids:
                 project_name = project['name']
-                grafana.create_dashboard(project_id, project_name,
-                                         dashboard_path)
+                self.grafana.create_dashboard(project_id, project_name,
+                                              dashboard_path)
                 log.debug('Created dashboard for Project: %s', project_id)
             else:
                 log.debug('Dashboard already exists')
@@ -73,8 +74,8 @@ class DashboarderService:
                     if 'monitoring-param' in vnfd:
                         if nsr_id not in dashboard_uids:
                             nsr_name = nsr['name']
-                            grafana.create_dashboard(nsr_id, nsr_name,
-                                                     dashboard_path)
+                            self.grafana.create_dashboard(nsr_id, nsr_name,
+                                                          dashboard_path)
                             log.debug('Created dashboard for NS: %s', nsr_id)
                         else:
                             log.debug('Dashboard already exists')
@@ -88,7 +89,7 @@ class DashboarderService:
         # Delete obsolete dashboards
         for dashboard_uid in dashboard_uids:
             if dashboard_uid not in osm_resource_uids:
-                grafana.delete_dashboard(dashboard_uid)
+                self.grafana.delete_dashboard(dashboard_uid)
                 log.debug('Deleted obsolete dashboard: %s', dashboard_uid)
             else:
                 log.debug('All dashboards in use')
