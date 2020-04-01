@@ -79,6 +79,12 @@ ChangeLog
 __pycache__/
 .idea
 *.db
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
 
 deb_dist
 *.tar.gz
