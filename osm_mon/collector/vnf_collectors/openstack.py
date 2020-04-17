@@ -19,16 +19,17 @@
 # For those usages not covered by the Apache License, Version 2.0 please
 # contact: bdiaz@whitestack.com or glavado@whitestack.com
 ##
-import logging
 from enum import Enum
+import logging
+import time
 from typing import List
 
-import gnocchiclient.exceptions
 from ceilometerclient import client as ceilometer_client
 from ceilometerclient.exc import HTTPException
+import gnocchiclient.exceptions
 from gnocchiclient.v1 import client as gnocchi_client
-from keystoneclient.v3 import client as keystone_client
 from keystoneauth1.exceptions.catalog import EndpointNotFound
+from keystoneclient.v3 import client as keystone_client
 from neutronclient.v2_0 import client as neutron_client
 
 from osm_mon.collector.metric import Metric
@@ -37,6 +38,7 @@ from osm_mon.collector.vnf_collectors.base_vim import BaseVimCollector
 from osm_mon.collector.vnf_metric import VnfMetric
 from osm_mon.core.common_db import CommonDbClient
 from osm_mon.core.config import Config
+
 
 log = logging.getLogger(__name__)
 
@@ -50,7 +52,15 @@ METRIC_MAPPINGS = {
     "packets_out_dropped": "network.incoming.packets.drop",
     "packets_received": "network.incoming.packets.rate",
     "packets_sent": "network.outgoing.packets.rate",
-    "cpu_utilization": "cpu_util",
+    "cpu_utilization": "cpu",
+}
+
+METRIC_MULTIPLIERS = {
+    "cpu": 0.0000001
+}
+
+METRIC_AGGREGATORS = {
+    "cpu": "rate:mean"
 }
 
 INTERFACE_METRICS = ['packets_in_dropped', 'packets_out_dropped', 'packets_received', 'packets_sent']
@@ -212,11 +222,22 @@ class GnocchiBackend(OpenstackBackend):
     def _collect_instance_metric(self, openstack_metric_name, resource_id):
         value = None
         try:
+            aggregation = METRIC_AGGREGATORS.get(openstack_metric_name)
+
             measures = self.client.metric.get_measures(openstack_metric_name,
-                                                       resource_id=resource_id,
-                                                       limit=1)
+                                                       aggregation=aggregation,
+                                                       start=time.time() - 1200,
+                                                       resource_id=resource_id)
+            # measures[-1][0] is the time of the reporting interval
+            # measures[-1][1] is the durcation of the reporting interval
+            # measures[-1][2] is the value of the metric
             if measures:
                 value = measures[-1][2]
+                if aggregation:
+                    # If this is an aggregate, we need to divide the total over the reported time period.
+                    value = value / measures[-1][1]
+                if openstack_metric_name in METRIC_MULTIPLIERS:
+                    value = value * METRIC_MULTIPLIERS[openstack_metric_name]
         except gnocchiclient.exceptions.NotFound as e:
             log.debug("No metric %s found for instance %s: %s", openstack_metric_name, resource_id,
                       e)
