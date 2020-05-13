@@ -52,11 +52,21 @@ class CollectorServiceTest(TestCase):
         collector._collect_vim_metrics({}, 'test_vim_account_id')
         openstack_collect.assert_not_called()
 
+    @mock.patch.object(OpenstackCollector, "__init__", lambda *args, **kwargs: None)
+    @mock.patch.object(OpenstackCollector, "collect")
+    @mock.patch.object(CommonDbClient, "get_vim_account")
+    def test_init_vim_collector_and_collect_vio_with_openstack_collector(self, _get_vim_account, openstack_collect):
+        _get_vim_account.return_value = {'vim_type': 'openstack', 'config': {'vim_type': 'VIO'}}
+        collector = CollectorService(self.config)
+        collector._collect_vim_metrics({}, 'test_vim_account_id')
+        openstack_collect.assert_called_once_with({})
+
     @mock.patch.object(VIOCollector, "__init__", lambda *args, **kwargs: None)
     @mock.patch.object(VIOCollector, "collect")
     @mock.patch.object(CommonDbClient, "get_vim_account")
-    def test_init_vim_collector_and_collect_vio(self, _get_vim_account, vio_collect):
-        _get_vim_account.return_value = {'vim_type': 'openstack', 'config': {'vim_type': 'VIO'}}
+    def test_init_vim_collector_and_collect_vio_with_vrops_collector(self, _get_vim_account, vio_collect):
+        _get_vim_account.return_value = {'vim_type': 'openstack',
+                                         'config': {'vim_type': 'VIO', 'vrops_site': 'https://vrops'}}
         collector = CollectorService(self.config)
         collector._collect_vim_metrics({}, 'test_vim_account_id')
         vio_collect.assert_called_once_with({})

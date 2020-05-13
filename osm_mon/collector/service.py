@@ -139,4 +139,6 @@ class CollectorService:
         vim_type = vim_account['vim_type']
         if 'config' in vim_account and 'vim_type' in vim_account['config']:
             vim_type = vim_account['config']['vim_type'].lower()
+            if vim_type == 'vio' and 'vrops_site' not in vim_account['config']:
+                vim_type = 'openstack'
         return vim_type
