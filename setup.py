@@ -51,7 +51,7 @@ setup(
     packages=[_name],
     package_dir={_name: _name},
     install_requires=[
-        "aiokafka==0.4.*",
+        "aiokafka==0.6.0",
         "requests==2.18.*",
         "python-keystoneclient==3.15.*",
         "six==1.11.*",

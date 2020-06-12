@@ -18,7 +18,7 @@
 
 # For those usages not covered by the Apache License, Version 2.0 please
 # contact: prithiv.mohan@intel.com or adrian.hoban@intel.com
-aiokafka==0.4.*
+aiokafka==0.6.0
 requests==2.18.*
 python-keystoneclient==3.15.*
 six==1.11.*
