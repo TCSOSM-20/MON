@@ -63,6 +63,9 @@ class CollectorTest(TestCase):
             ]
         self.mock_db.return_value.get_vnfd.return_value = self.vnfd
         with requests_mock.Mocker() as mock_requests:
+            mock_http_response(mock_requests, method='POST',
+                               url_pattern='/suite-api/api/auth/token/acquire',
+                               response_file='vrops_token.json')
             mock_http_response(mock_requests,
                                url_pattern='/suite-api/api/resources\\?resourceKind=VirtualMachine',
                                response_file='vrops_resources.json')
@@ -84,6 +87,9 @@ class CollectorTest(TestCase):
         self.vnfd['vdu'][0]['monitoring-param'] = []
         self.mock_db.return_value.get_vnfd.return_value = self.vnfd
         with requests_mock.Mocker() as mock_requests:
+            mock_http_response(mock_requests, method='POST',
+                               url_pattern='/suite-api/api/auth/token/acquire',
+                               response_file='vrops_token.json')
             mock_http_response(mock_requests,
                                url_pattern='/suite-api/api/resources\\?resourceKind=VirtualMachine',
                                response_file='vrops_resources.json')
@@ -97,6 +103,9 @@ class CollectorTest(TestCase):
         del self.vnfd['vdu'][0]['monitoring-param']
         self.mock_db.return_value.get_vnfd.return_value = self.vnfd
         with requests_mock.Mocker() as mock_requests:
+            mock_http_response(mock_requests, method='POST',
+                               url_pattern='/suite-api/api/auth/token/acquire',
+                               response_file='vrops_token.json')
             mock_http_response(mock_requests,
                                url_pattern='/suite-api/api/resources\\?resourceKind=VirtualMachine',
                                response_file='vrops_resources.json')
@@ -111,6 +120,9 @@ class CollectorTest(TestCase):
         del self.vnfr['vdur'][1]['name']
         self.mock_db.return_value.get_vnfd.return_value = self.vnfd
         with requests_mock.Mocker() as mock_requests:
+            mock_http_response(mock_requests, method='POST',
+                               url_pattern='/suite-api/api/auth/token/acquire',
+                               response_file='vrops_token.json')
             mock_http_response(mock_requests,
                                url_pattern='/suite-api/api/resources\\?resourceKind=VirtualMachine',
                                response_file='vrops_resources.json')

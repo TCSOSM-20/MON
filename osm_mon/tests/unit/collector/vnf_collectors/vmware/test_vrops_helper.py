@@ -40,6 +40,9 @@ class vROPS_Helper_Resource_List_Test(TestCase):
 
     def test_get_vm_resource_list_from_vrops(self):
         with requests_mock.Mocker() as mock_requests:
+            mock_http_response(mock_requests, method='POST',
+                               url_pattern='/suite-api/api/auth/token/acquire',
+                               response_file='vrops_token.json')
             mock_http_response(mock_requests,
                                url_pattern='/suite-api/api/resources\\?resourceKind=VirtualMachine',
                                response_file='vrops_resources.json')
@@ -48,6 +51,9 @@ class vROPS_Helper_Resource_List_Test(TestCase):
 
     def test_get_vm_resource_list_from_vrops_http_404(self):
         with requests_mock.Mocker() as mock_requests:
+            mock_http_response(mock_requests, method='POST',
+                               url_pattern='/suite-api/api/auth/token/acquire',
+                               response_file='vrops_token.json')
             mock_http_response(mock_requests,
                                url_pattern='/suite-api/api/resources\\?resourceKind=VirtualMachine',
                                response_file='404.txt', status_code=404)
@@ -56,6 +62,9 @@ class vROPS_Helper_Resource_List_Test(TestCase):
 
     def test_get_vm_resource_list_from_vrops_bad_json(self):
         with requests_mock.Mocker() as mock_requests:
+            mock_http_response(mock_requests, method='POST',
+                               url_pattern='/suite-api/api/auth/token/acquire',
+                               response_file='vrops_token.json')
             mock_http_response(mock_requests,
                                url_pattern='/suite-api/api/resources\\?resourceKind=VirtualMachine',
                                response_file='malformed.json')
@@ -83,6 +92,9 @@ class vROPS_Helper_Get_Metrics_Test(TestCase):
             ]
 
         with requests_mock.Mocker() as mock_requests:
+            mock_http_response(mock_requests, method='POST',
+                               url_pattern='/suite-api/api/auth/token/acquire',
+                               response_file='vrops_token.json')
             mock_http_response(mock_requests,
                                url_pattern='/suite-api/api/resources/stats.*',
                                response_file='vrops_multi.json')
@@ -102,6 +114,9 @@ class vROPS_Helper_Get_Metrics_Test(TestCase):
             ]
 
         with requests_mock.Mocker() as mock_requests:
+            mock_http_response(mock_requests, method='POST',
+                               url_pattern='/suite-api/api/auth/token/acquire',
+                               response_file='vrops_token.json')
             mock_http_response(mock_requests,
                                url_pattern='/suite-api/api/resources/stats.*',
                                response_file='vrops_multi.json')
@@ -123,6 +138,9 @@ class vROPS_Helper_Get_Metrics_Test(TestCase):
             ]
 
         with requests_mock.Mocker() as mock_requests:
+            mock_http_response(mock_requests, method='POST',
+                               url_pattern='/suite-api/api/auth/token/acquire',
+                               response_file='vrops_token.json')
             mock_http_response(mock_requests,
                                url_pattern='/suite-api/api/resources/stats.*',
                                response_file='vrops_multi.json')
@@ -142,6 +160,9 @@ class vROPS_Helper_Get_Metrics_Test(TestCase):
             ]
 
         with requests_mock.Mocker() as mock_requests:
+            mock_http_response(mock_requests, method='POST',
+                               url_pattern='/suite-api/api/auth/token/acquire',
+                               response_file='vrops_token.json')
             mock_http_response(mock_requests,
                                url_pattern='/suite-api/api/resources/stats.*',
                                response_file='vrops_multi.json')
@@ -159,6 +180,9 @@ class vROPS_Helper_Get_Metrics_Test(TestCase):
             ]
 
         with requests_mock.Mocker() as mock_requests:
+            mock_http_response(mock_requests, method='POST',
+                               url_pattern='/suite-api/api/auth/token/acquire',
+                               response_file='vrops_token.json')
             mock_http_response(mock_requests,
                                url_pattern='/suite-api/api/resources/stats.*',
                                response_file='vrops_multi.json')
@@ -176,6 +200,9 @@ class vROPS_Helper_Get_Metrics_Test(TestCase):
             ]
 
         with requests_mock.Mocker() as mock_requests:
+            mock_http_response(mock_requests, method='POST',
+                               url_pattern='/suite-api/api/auth/token/acquire',
+                               response_file='vrops_token.json')
             mock_http_response(mock_requests,
                                url_pattern='/suite-api/api/resources/stats.*',
                                response_file='OK.json')
@@ -192,6 +219,9 @@ class vROPS_Helper_Get_Metrics_Test(TestCase):
             ]
 
         with requests_mock.Mocker() as mock_requests:
+            mock_http_response(mock_requests, method='POST',
+                               url_pattern='/suite-api/api/auth/token/acquire',
+                               response_file='vrops_token.json')
             mock_http_response(mock_requests,
                                url_pattern='/suite-api/api/resources/stats.*',
                                response_file='vrops_multi.json')
@@ -209,6 +239,9 @@ class vROPS_Helper_Get_Metrics_Test(TestCase):
             ]
 
         with requests_mock.Mocker() as mock_requests:
+            mock_http_response(mock_requests, method='POST',
+                               url_pattern='/suite-api/api/auth/token/acquire',
+                               response_file='vrops_token.json')
             mock_http_response(mock_requests,
                                url_pattern='/suite-api/api/resources/stats.*',
                                response_file='404.txt', status_code=404)
@@ -226,6 +259,9 @@ class vROPS_Helper_Get_Metrics_Test(TestCase):
             ]
 
         with requests_mock.Mocker() as mock_requests:
+            mock_http_response(mock_requests, method='POST',
+                               url_pattern='/suite-api/api/auth/token/acquire',
+                               response_file='vrops_token.json')
             mock_http_response(mock_requests,
                                url_pattern='/suite-api/api/resources/stats.*',
                                response_file='404.txt')
@@ -255,6 +291,9 @@ class vROPS_Helper_Get_Metrics_Test(TestCase):
             ]
 
         with requests_mock.Mocker() as mock_requests:
+            mock_http_response(mock_requests, method='POST',
+                               url_pattern='/suite-api/api/auth/token/acquire',
+                               response_file='vrops_token.json')
             mock_http_response(mock_requests,
                                url_pattern='/suite-api/api/resources/stats.*',
                                response_file='vrops_multi.json')

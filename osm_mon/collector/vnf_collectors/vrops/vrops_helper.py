@@ -53,15 +53,32 @@ class vROPS_Helper():
         self.vrops_user = vrops_user
         self.vrops_password = vrops_password
 
+    def get_vrops_token(self):
+        """Fetches token from vrops
+        """
+        auth_url = '/suite-api/api/auth/token/acquire'
+        headers = {'Content-Type': 'application/json', 'Accept': 'application/json'}
+        req_body = {"username": self.vrops_user, "password": self.vrops_password}
+        resp = requests.post(self.vrops_site + auth_url,
+                             json=req_body, verify=False,
+                             headers=headers)
+        if resp.status_code != 200:
+            log.error("Failed to get token from vROPS: {} {}".format(resp.status_code,
+                                                                     resp.content))
+            return None
+
+        resp_data = json.loads(resp.content.decode('utf-8'))
+        return resp_data['token']
+
     def get_vm_resource_list_from_vrops(self):
         """ Find all known resource IDs in vROPs
         """
+        auth_token = self.get_vrops_token()
         api_url = '/suite-api/api/resources?resourceKind=VirtualMachine'
-        headers = {'Accept': 'application/json'}
+        headers = {'Accept': 'application/json', 'Authorization': 'vRealizeOpsToken {}'.format(auth_token)}
         resource_list = []
 
         resp = requests.get(self.vrops_site + api_url,
-                            auth=(self.vrops_user, self.vrops_password),
                             verify=False, headers=headers)
 
         if resp.status_code != 200:
@@ -117,10 +134,12 @@ class vROPS_Helper():
             # Now we can make a single call to vROPS to collect all relevant metrics for resources we need to monitor
             api_url = "/suite-api/api/resources/stats?IntervalType=MINUTES&IntervalCount=1"\
                 "&rollUpType=MAX&currentOnly=true{}{}".format(stats_key, resource_ids)
-            headers = {'Accept': 'application/json'}
+
+            auth_token = self.get_vrops_token()
+            headers = {'Accept': 'application/json', 'Authorization': 'vRealizeOpsToken {}'.format(auth_token)}
 
             resp = requests.get(self.vrops_site + api_url,
-                                auth=(self.vrops_user, self.vrops_password), verify=False, headers=headers)
+                                verify=False, headers=headers)
 
             if resp.status_code != 200:
                 log.error("Failed to get Metrics data from vROPS for {} {}".format(resp.status_code,
