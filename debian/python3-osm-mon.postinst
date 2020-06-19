@@ -23,7 +23,7 @@
 ##
 
 echo "Installing python dependencies via pip..."
-pip3 install aiokafka==0.4.*
+pip3 install aiokafka==0.6.0
 pip3 install requests==2.18.*
 pip3 install python-keystoneclient==3.15.*
 pip3 install six==1.11.*
