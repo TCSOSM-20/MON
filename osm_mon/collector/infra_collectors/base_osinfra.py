@@ -100,8 +100,8 @@ class BaseOpenStackInfraCollector(BaseVimInfraCollector):
 
     def _build_keystone_client(self, vim_account: dict) -> keystone_client.Client:
         sess = OpenstackUtils.get_session(vim_account)
-        return keystone_client.Client(session=sess)
+        return keystone_client.Client(session=sess, timeout=10)
 
     def _build_nova_client(self, vim_account: dict) -> nova_client.Client:
         sess = OpenstackUtils.get_session(vim_account)
-        return nova_client.Client("2", session=sess)
+        return nova_client.Client("2", session=sess, timeout=10)

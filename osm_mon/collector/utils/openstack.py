@@ -49,4 +49,4 @@ class OpenstackUtils:
                            project_name=creds['vim_tenant_name'],
                            project_domain_name=project_domain_name,
                            user_domain_name=user_domain_name)
-        return session.Session(auth=auth, verify=verify_ssl)
+        return session.Session(auth=auth, verify=verify_ssl, timeout=10)

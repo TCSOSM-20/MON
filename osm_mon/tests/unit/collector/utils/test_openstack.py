@@ -43,7 +43,7 @@ class OpenstackUtilsTest(TestCase):
         OpenstackUtils.get_session(creds)
 
         mock_session.Session.assert_called_once_with(
-            auth=mock.ANY, verify=True)
+            auth=mock.ANY, verify=True, timeout=10)
 
     def test_session_with_insecure(self, mock_session):
         creds = {
@@ -58,7 +58,7 @@ class OpenstackUtilsTest(TestCase):
         OpenstackUtils.get_session(creds)
 
         mock_session.Session.assert_called_once_with(
-            auth=mock.ANY, verify=False)
+            auth=mock.ANY, verify=False, timeout=10)
 
     def test_session_with_insecure_false(self, mock_session):
         creds = {
@@ -72,4 +72,4 @@ class OpenstackUtilsTest(TestCase):
         }
         OpenstackUtils.get_session(creds)
         mock_session.Session.assert_called_once_with(
-            auth=mock.ANY, verify=True)
+            auth=mock.ANY, verify=True, timeout=10)
