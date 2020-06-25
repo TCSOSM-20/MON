@@ -127,7 +127,10 @@ class CollectorService:
             processes.append(p)
             p.start()
         for process in processes:
-            process.join(timeout=10)
+            process.join(timeout=20)
+        for process in processes:
+            if process.is_alive():
+                process.kill()
         metrics = []
         while not self.queue.empty():
             metrics.append(self.queue.get())
